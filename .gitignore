@@ -1,0 +1,29 @@
+# system trash
+.DS_Store
+
+# unwanted trash
+*.bak
+*.log
+*.tmp
+
+/**/tmp
+
+# build folders
+/bin
+/out
+/target
+
+# node stuff
+/node_modules
+/packages
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# runtime stuff
+pids
+*.pid
+*.seed
+*.pid.lock
+.npm
