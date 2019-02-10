@@ -1,13 +1,6 @@
-const { app, BrowserWindow } = require('electron')
-let window
+const Trakt = require('trakt.tv')
 
-function build() {
-  window = new BrowserWindow({
-    width: 1000,
-    height: 800
-  })
-  
-  window.loadFile('index.html')
-}
-
-app.on('ready', build)
+const trakt = new Trakt({
+  client_id: "client_id",
+  client_secret: "client_secret"
+})

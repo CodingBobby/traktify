@@ -2,7 +2,7 @@
   "name": "traktify",
   "version": "0.1.0",
   "description": "multi platform desktop app for trakt.tv",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "start": "electron ."
   },
@@ -23,5 +23,8 @@
   "homepage": "https://github.com/CodingBobby/traktify#readme",
   "devDependencies": {
     "electron": "^4.0.4"
+  },
+  "dependencies": {
+    "trakt.tv": "^7.1.0"
   }
 }
