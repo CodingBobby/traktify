@@ -1,0 +1,27 @@
+{
+  "name": "traktify",
+  "version": "0.1.0",
+  "description": "multi platform desktop app for trakt.tv",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodingBobby/traktify.git"
+  },
+  "keywords": [
+    "trakt",
+    "desktop",
+    "app"
+  ],
+  "author": "CodingBobby, Bumbleboss",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodingBobby/traktify/issues"
+  },
+  "homepage": "https://github.com/CodingBobby/traktify#readme",
+  "devDependencies": {
+    "electron": "^4.0.4"
+  }
+}
