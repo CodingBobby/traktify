@@ -1,0 +1,77 @@
+body {
+  background-image: url(../assets/retro-furnish.png);
+  background-color: #202020;
+  margin: 0;
+}
+
+.up-next-title {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 30px;
+  margin: 0;
+  text-transform: uppercase;
+} 
+
+#dashboard {
+  width: fit-content;
+  margin: 25vh auto 0;
+}
+
+.upText {
+  font-size: 22px;
+}
+
+.titleHolder {
+  transform: translate(260px, 130px);
+  width: fit-content;
+  margin: 0;
+}
+
+.media {
+  font-size: 32px;
+}
+
+.red {
+  color: #ED1C24;
+}
+
+.white {
+  color: #FCFCFC;
+}
+
+.grey {
+  color: #CFCFCF;
+}
+
+.container {
+  padding: 0;
+}
+
+.thumbnail {
+  background-color: #ED1C24;
+  border-radius: 10px;
+  width: 140px;
+  height: 190px;
+  display: inline-block;
+  list-style: none;
+  margin-right: 20px;
+}
+
+.thumbnail.main {
+  width: 235px;
+  height: 325px;
+}
+
+.btn {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  padding: 8px 40px;
+  color: #FCFCFC;
+  background-color: #ED1C24;
+  border-radius: 20px 20px 0 0;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin-right: 40px;
+  text-decoration: none;
+  box-shadow: rgba(0, 0, 0, 0.349) 0px 11px 40px;
+}
