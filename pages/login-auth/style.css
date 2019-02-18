@@ -5,12 +5,24 @@ body {
 }
 
 #login {
-  margin: 15vh auto 0;
+  margin: 0 auto 0;
   width: fit-content;
+  height: 100vh;
+}
+
+#floater_1 {
+  float: left;
+  height: 50%;
+  width: 100%;
+  margin-bottom: -68%;
+}
+
+#floater_2 {
+  display: none;
 }
 
 .login-block {
-  vertical-align: middle;
+  clear: both;
   display: inline-block;
   box-shadow: rgba(0, 0, 0, 0.349) 0px 11px 40px;
   text-align: center;
@@ -22,7 +34,31 @@ body {
 }
 
 .login-content {
-  padding: 20% 0;
+  margin: 20% 0;
+}
+
+@media screen and (max-height: 750px) {
+  #floater_1 {
+    display: none;
+  }
+
+  #floater_2 {
+    display: block;
+    float: left;
+    height: 50%;
+    width: 100%;
+    margin-bottom: -48%;
+  }
+
+  .login-block {
+    height: 100vh;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+  }
+  .login-content {
+    margin: 0;
+  }
 }
 
 .login.image {
@@ -53,6 +89,7 @@ body {
 }
 
 .text.title {
+  margin-top: 30px;
   color: #FCFCFC;
   font-size: 30px;
 }
@@ -79,20 +116,4 @@ body {
   margin-right: 40px;
   text-decoration: none;
   box-shadow: rgba(0, 0, 0, 0.349) 0px 11px 40px;
-}
-
-@media screen and (max-height: 750px) {
-  #login {
-    margin: 0 auto;
-  }
-  .login-block {
-    height: 100vh;
-    border-radius: 0;
-  }
-  .donate.btn {
-    margin-right: 10px;
-  }
-  .login-content {
-    padding: 40% 0;
-  }
 }
