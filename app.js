@@ -44,7 +44,7 @@ const windowOptions = {
   backgroundColor: '#1C1C1C',
   title: 'Traktify',
   icon: darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
-    : path.join(__dirname, 'assets/icons/trakt/64x64.png'),
+    : path.join(__dirname, 'assets/icons/trakt/tract.ico'),
   show: true,
   center: true
 }

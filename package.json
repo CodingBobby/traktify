@@ -25,6 +25,10 @@
     "electron": "^4.0.4"
   },
   "dependencies": {
-    "trakt.tv": "^7.1.0"
+    "fs": "0.0.1-security",
+    "http": "0.0.0",
+    "path": "^0.12.7",
+    "trakt.tv": "^7.1.0",
+    "url": "^0.11.0"
   }
 }
