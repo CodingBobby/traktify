@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/CodingBobby/traktify#readme",
   "devDependencies": {
-    "electron": "^4.0.4"
+    "electron": "^4.0.5"
   },
   "dependencies": {
     "fs": "0.0.1-security",

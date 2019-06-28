@@ -107,6 +107,7 @@ async function build() {
   try {
     trakt = new Trakt(traktOptions)
   } catch(err) {
+    alert(err)
     console.error(err)
   }
 
