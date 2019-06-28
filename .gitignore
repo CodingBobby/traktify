@@ -27,3 +27,6 @@ pids
 *.seed
 *.pid.lock
 .npm
+
+# secrets
+*.real.*
