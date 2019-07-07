@@ -1,0 +1,21 @@
+.login {
+  padding: 40px 100px;
+  text-align: center;
+  margin: auto;
+  border-radius: 17px;
+}
+
+.logo {
+  width: 213px;
+  height: 213px;
+  margin-bottom: 35px;
+}
+
+.logoText {
+  font-size: 50px;
+  line-height: 20px;
+}
+.logoText span {
+  font-size: 15px;
+  letter-spacing: 1.7px;
+}

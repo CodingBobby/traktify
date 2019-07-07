@@ -1,0 +1,165 @@
+:root {
+  --black: #242424;
+  --black_d: #191919;
+  --white: #FFF;
+  --white_d: #CECECE;
+  --red: #ED1C24;
+  --red_d: #C61017;
+}
+/*---fonts---*/
+@font-face {
+  font-family: 'manrope';
+  font-weight: 200;
+  src: url('./fonts/manrope-thin.woff2');
+}
+@font-face {
+  font-family: 'manrope';
+  font-weight: 300;
+  src: url('./fonts/manrope-light.woff2');
+}
+@font-face {
+  font-family: 'manrope';
+  font-weight: 500;
+  src: url('./fonts/manrope-medium.woff2');
+}
+@font-face {
+  font-family: 'manrope';
+  font-weight: 600;
+  src: url('./fonts/manrope-semibold.woff2');
+}
+@font-face {
+  font-family: 'manrope';
+  font-weight: 700;
+  src: url('./fonts/manrope-bold.woff2');
+}
+/*---typography---*/
+.h1 {
+  font: 600 32px manrope;
+}
+.h2 {
+  font: 600 27px manrope;
+}
+.h3 {
+  font: 500 23px manrope;
+}
+.p {
+  font: 200 18px manrope;
+}
+
+.fw200 {
+  font-weight: 200;
+}
+.fw500 {
+  font-weight: 500;
+}
+.fw600 {
+  font-weight: 600;
+}
+.fw700 {
+  font-weight: 700;
+}
+
+.fs14 {
+  font-size: 14px;
+}
+.fs12 {
+  font-size: 12px;
+}
+
+.tu {
+  text-transform: uppercase;
+}
+/*---colors---*/
+.black_t {
+  color: var(--black);
+}
+.black_d_t {
+  color: var(--black_d);
+}
+.white_t {
+  color: var(--white);
+}
+.white_d_t {
+  color: var(--white_d);
+}
+.red_t {
+  color: var(--red);
+}
+.red_d_t {
+  color: var(--red_d);
+}
+
+.black_b {
+  background-color: var(--black);
+}
+.black_d_b {
+  background-color: var(--black_d);
+}
+.white_b {
+  background-color: var(--white);
+}
+.white_d_b {
+  background-color: var(--white_d);
+}
+.red_b {
+  background-color: var(--red);
+}
+.red_d_b {
+  background-color: var(--red_d);
+}
+/*---shadows---*/
+.shadow_h {
+  box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.16);
+}
+.shadow_b {
+  box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
+}
+/*---components---*/
+body {
+  margin: 0;
+  background: url('./retro-furnish.png') repeat var(--black_d);
+  font-family: manrope;
+}
+.wrapper {
+  padding: 30px;
+}
+.wrapper.flex {
+  display: flex;
+  min-height: calc(100vh - 60px);
+  margin: auto;
+}
+.overlay {
+  background-color: rgba(0, 0, 0, 0.67);
+}
+.btn {
+  padding: 10px 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.btn:hover {
+  filter: grayscale(20%);
+}
+
+/* for responsivness
+@media screen and (max-width: 0px) {
+  .h1 {
+    font-size: 27px;
+  }
+  .h2 {
+    font-size: 23px;
+  }
+  .h3 {
+    font-size: 18px;
+  }
+  .p {
+    font-size: 16px;
+  }
+  .wrapper {
+    padding: 20px;
+  }
+  .wrapper.flex {
+    min-height: calc(100vh - 40px);
+  }
+}
+*/
