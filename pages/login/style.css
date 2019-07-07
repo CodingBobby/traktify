@@ -5,17 +5,16 @@
   border-radius: 17px;
 }
 
-.logo {
+.logo img {
   width: 213px;
   height: 213px;
   margin-bottom: 35px;
 }
-
-.logoText {
+.logo div {
   font-size: 50px;
   line-height: 20px;
 }
-.logoText span {
+.logo div span {
   font-size: 15px;
   letter-spacing: 1.7px;
 }

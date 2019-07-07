@@ -121,6 +121,7 @@ body {
   font-family: manrope;
 }
 .wrapper {
+  position: relative;
   padding: 30px;
 }
 .wrapper.flex {
@@ -139,6 +140,13 @@ body {
 }
 .btn:hover {
   filter: grayscale(20%);
+}
+.btn.bottom {
+  position: fixed;
+  bottom: 0;
+  right: 30px;
+  padding: 10px 19px;
+  border-radius: 20px 20px 0 0;
 }
 
 /* for responsivness
@@ -160,6 +168,9 @@ body {
   }
   .wrapper.flex {
     min-height: calc(100vh - 40px);
+  }
+  .btn.bottom {
+    right: 20px;
   }
 }
 */
