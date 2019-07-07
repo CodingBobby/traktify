@@ -1,8 +1,16 @@
+.wrapper.login {
+  padding: 0;
+}
+
 .login {
   padding: 40px 100px;
   text-align: center;
   margin: auto;
   border-radius: 17px;
+}
+
+.login h1 {
+  font-size: 32px;
 }
 
 .logo img {
@@ -17,4 +25,15 @@
 .logo div span {
   font-size: 15px;
   letter-spacing: 1.7px;
+}
+
+@media screen and (max-width: 898px) {
+  .login {
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    justify-content: center;
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+  }
 }

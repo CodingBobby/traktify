@@ -148,9 +148,8 @@ body {
   padding: 10px 19px;
   border-radius: 20px 20px 0 0;
 }
-
-/* for responsivness
-@media screen and (max-width: 0px) {
+/*---responsive---*/
+@media screen and (max-width: 898px) {
   .h1 {
     font-size: 27px;
   }
@@ -163,14 +162,15 @@ body {
   .p {
     font-size: 16px;
   }
+
   .wrapper {
     padding: 20px;
   }
   .wrapper.flex {
     min-height: calc(100vh - 40px);
   }
+  
   .btn.bottom {
     right: 20px;
   }
 }
-*/
