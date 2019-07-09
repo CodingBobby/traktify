@@ -1,0 +1,31 @@
+.wrapper.dashboard {
+  min-height: calc(100vh - 168px)
+}
+
+.dashboard {
+  margin: auto;
+}
+
+.titles {
+  margin: 10px 20px;
+  transform: translateX(236px) translateY(131px);
+  max-width: 625px;
+}
+
+.titles h1,
+.titles h3 {
+  margin: 0;
+  line-height: 36px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+@media screen and (max-width: 952px) {
+  .titles h1,
+  .titles h3 {
+    margin: 0;
+    line-height: 27px;
+  }
+}

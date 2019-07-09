@@ -1,9 +1,10 @@
 .wrapper.login {
   padding: 0;
+  min-height: 100vh;
 }
 
 .login {
-  padding: 40px 100px;
+  padding: 100px;
   text-align: center;
   margin: auto;
   border-radius: 17px;
@@ -27,7 +28,7 @@
   letter-spacing: 1.7px;
 }
 
-@media screen and (max-width: 898px) {
+@media screen and (max-width: 952px) {
   .login {
     display: flex;
     flex-flow: column;
