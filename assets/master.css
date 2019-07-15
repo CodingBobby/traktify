@@ -69,6 +69,26 @@
 .tu {
   text-transform: uppercase;
 }
+/*---positioning---*/
+.top,
+.bottom,
+.right,
+.left {
+  position: fixed;
+}
+
+.top {
+  top: 0;
+}
+.bottom {
+  bottom: 0;
+}
+.right {
+  right: 30px;
+}
+.left {
+  left: 30px;
+}
 /*---colors---*/
 .black_t {
   color: var(--black);
@@ -136,21 +156,42 @@ body {
   background-color: rgba(0, 0, 0, 0.67);
 }
 
+.btns {
+  list-style: none;
+  padding: 0;
+}
+.btns .btn {
+  margin-bottom: 8px;
+}
+
 .btn {
   padding: 10px 30px;
   border-radius: 20px;
   cursor: pointer;
   transition: all 200ms ease;
+  display: block;
 }
 .btn:hover {
   filter: grayscale(20%);
 }
+.btn.selected {
+  background-color: var(--red);
+}
 .btn.bottom {
-  position: fixed;
-  bottom: 0;
-  right: 30px;
   padding: 10px 19px;
   border-radius: 20px 20px 0 0;
+}
+
+.btn.icon {
+  border-radius: 50%;
+  padding: 12px;
+  display: flex;
+}
+.btn.icon img {
+  filter: invert(1);
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
 }
 
 .posters {
@@ -204,16 +245,19 @@ body {
     font-size: 16px;
   }
 
+  .right {
+    right: 20px;
+  }
+  .left {
+    left: 20px;
+  }
+
   .wrapper {
     padding: 20px;
   }
   .wrapper.flex {
     min-height: calc(100vh - 40px);
     min-width: calc(100vh - 40px);
-  }
-  
-  .btn.bottom {
-    right: 20px;
   }
 
   .poster:nth-child(4) {

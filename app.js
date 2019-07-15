@@ -27,7 +27,8 @@ const {
 } = electron
 
 // configuration and boolean checks that we need frequently
-let config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
+// currently checks a non-commited file for testing purposes
+let config = JSON.parse(fs.readFileSync("./alpha_config.json", "utf8"))
 let darwin = process.platform == 'darwin'
 
 // instances we define later on but need to be
