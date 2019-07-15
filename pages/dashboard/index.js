@@ -1,3 +1,7 @@
+if(!remote.getGlobal('darwin')) {
+  document.getElementById('dragger').remove()
+}
+
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {

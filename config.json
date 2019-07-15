@@ -1,7 +1,4 @@
 {
-    "client": {
-        "id": "CLIENT_ID",
-        "secret": "CLIENT_SECRET"
-    },
+    "client": {},
     "user": {}
 }

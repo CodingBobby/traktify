@@ -141,6 +141,13 @@ body {
   font-family: manrope;
 }
 
+#dragger {
+  position: absolute;
+  width: 100vw;
+  height: 20px;
+  -webkit-app-region: drag;
+}
+
 .wrapper {
   position: relative;
   padding: 30px;
@@ -231,7 +238,7 @@ body {
   border-radius: 10px;
 }
 /*---responsive---*/
-@media screen and (max-width: 952px) {
+@media screen and (max-height: 650px) {
   .h1 {
     font-size: 27px;
   }

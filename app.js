@@ -27,9 +27,13 @@ const {
 } = electron
 
 // configuration and boolean checks that we need frequently
-// currently checks a non-commited file for testing purposes
-let config = JSON.parse(fs.readFileSync("./alpha_config.json", "utf8"))
+// the config file will be used to save preferences the user can change
+// (like darkmode, behavior etc.)
+let config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
 let darwin = process.platform == 'darwin'
+
+global.openExternal = shell.openExternal
+global.darwin = darwin
 
 // instances we define later on but need to be
 // accessible globally
@@ -38,23 +42,25 @@ let trakt
 
 // here we set some options we need later
 const windowOptions = {
-  width: 900,
-  height: 650,
-  resizable: false,
+  minWidth: 800,
+  maxWidth: 1200,
+  minHeight: 500,
+  maxHeight: 900,
+  width: 880,
+  height: 620,
   useContentSize: true,
   titleBarStyle: 'hidden',
-  backgroundColor: '#1C1C1C',
+  backgroundColor: '#242424',
   title: 'Traktify',
   icon: darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
     : path.join(__dirname, 'assets/icons/trakt/tract.ico'),
-  show: true,
+  show: false,
   center: true
 }
 
 const traktOptions = {
-  client_id: config.client.id,
-  client_secret: config.client.secret,
-  redirect_uri: 'http://localhost:3456'
+  client_id: process.env.trakt_id,
+  client_secret: process.env.trakt_secret
 }
 
 // here we create a template for the main menu,
@@ -112,7 +118,10 @@ async function build() {
     console.error(err)
   }
 
-  window.loadFile('./index.html')
+  // show the window when the page is built
+  window.once('ready-to-show', () => {
+    window.show()
+  })
 
   // we have initialized everything important and log how long
   // it took, remember to remove it in release version

@@ -30,6 +30,4 @@ pids
 
 # secrets
 *.real.*
-
-# private
-alpha_config.json
+.env

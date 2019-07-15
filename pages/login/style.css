@@ -28,7 +28,7 @@
   letter-spacing: 1.7px;
 }
 
-@media screen and (max-width: 952px) {
+@media screen and (max-height: 650px) {
   .login {
     display: flex;
     flex-flow: column;
