@@ -8,7 +8,12 @@
 |*|   from the 21th Feb. 2019
 \*/
 
-console.time('init')
+// Uncomment this line for publishing!
+//process.env.NODE_ENV = 'production'
+
+if(process.env.NODE_ENV !== 'production') {
+  console.time('init')
+}
 
 const electron = require('electron')
 const Trakt = require('trakt.tv')
@@ -29,16 +34,25 @@ const {
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
 // (like darkmode, behavior etc.)
-let config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
-let darwin = process.platform == 'darwin'
+global.config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
 
+// defining global variables that can be accessed from other scripts
 global.openExternal = shell.openExternal
-global.darwin = darwin
+global.darwin = process.platform == 'darwin'
+
+// Comment out these lines when in production! Used as helpers to move around the app from the command line.
+global.loadDashboard = loadDashboard
+global.loadLogin = loadLogin
 
 // instances we define later on but need to be
 // accessible globally
 let window = null
 let trakt
+
+const traktOptions = {
+  client_id: process.env.trakt_id,
+  client_secret: process.env.trakt_secret
+}
 
 // here we set some options we need later
 const windowOptions = {
@@ -50,19 +64,13 @@ const windowOptions = {
   titleBarStyle: 'hidden',
   backgroundColor: '#242424',
   title: 'Traktify',
-  icon: darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
+  icon: global.darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
     : path.join(__dirname, 'assets/icons/trakt/tract.ico'),
   show: false,
   center: true
 }
 
-const traktOptions = {
-  client_id: process.env.trakt_id,
-  client_secret: process.env.trakt_secret
-}
-
-// here we create a template for the main menu,
-// to get the right shortcut, we check if we're running on darwin
+// here we create a template for the main menu, to get the right shortcut, we check if we're running on darwin
 let menuTemplate = [{
   label: 'File',
   submenu: [{
@@ -72,7 +80,7 @@ let menuTemplate = [{
     }
   }, {
     label: 'Quit Traktify',
-    accelerator: darwin ? 'Command+Q'
+    accelerator: global.darwin ? 'Command+Q'
       : 'Ctrl+Q',
     click() {
       app.quit()
@@ -87,14 +95,14 @@ if(process.env.NODE_ENV !== 'production') {
     label: 'Dev Tools',
     submenu: [{
       label: 'Toggle Dev Tools',
-      accelerator: darwin ? 'Command+I'
+      accelerator: global.darwin ? 'Command+I'
         : 'Ctrl+I',
       click(item, focusedWindow){
         focusedWindow.toggleDevTools()
       }
     }, {
       label: 'Reload App',
-      accelerator: darwin ? 'Command+R'
+      accelerator: global.darwin ? 'Command+R'
         : 'Ctrl+R',
       role: 'reload'
     }]
@@ -107,7 +115,6 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 // and handles window.on() events
 async function build() {
   window = new BrowserWindow(windowOptions)
-
   Menu.setApplicationMenu(mainMenu)
 
   try {
@@ -123,11 +130,16 @@ async function build() {
 
   // we have initialized everything important and log how long
   // it took, remember to remove it in release version
-  console.timeEnd('init')
+  if(process.env.NODE_ENV !== 'production') {
+    console.timeEnd('init')
+  }
   
   // now we call the login function which returns if the user was
   // successfully logged in
   loadLogin()
+
+
+  // EVENTS
 
   // if the window gets closed, the app will quit
   window.on('closed', function() {
@@ -139,10 +151,10 @@ async function build() {
 	})
 }
 
-// this loads the login page where you can be directed to
-// trakt's authenticator and returns the success of it
+// Loading the login page. When asking to authenticate, opening the trakt login on an external browser and loading the dashboard after success
 function loadLogin() {
   window.loadFile('pages/login/index.html')
+
   global.authenticate = function authenticate() {
     return trakt.get_codes().then(function(poll) {
       clipboard.writeText(poll.user_code) // give the user the code
@@ -151,16 +163,21 @@ function loadLogin() {
         clipboard.writeText(poll.user_code)
       }
       shell.openExternal(poll.verification_url)
+
       return trakt.poll_access(poll)
     }.bind(this)).then(function(auth) {
       trakt.import_token(auth)
-      // head into dashboard
+      // going back to the app and heading into dashboard
+      window.focus()
       loadDashboard()
+
       return true
     }.bind(this)).catch(function(err) {
-      console.error('Trakt: authentication failed', err)
-      // reload page
+      // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
+      window.focus()
       loadLogin()
+      alert('Oh oops!\nAuthenticating failed for some reason.')
+
       return err
     })
   }
@@ -172,7 +189,7 @@ function loadDashboard() {
 
 // this function can be called to save changes in the config file
 function saveConfig() {
-  fs.writeFile("./config.json", JSON.stringify(config), err => {
+  fs.writeFile("./config.json", JSON.stringify(global.config), err => {
     if(err) console.error(err)
   })
 }
@@ -182,5 +199,5 @@ app.on('ready', build)
 
 // this quits the whole app
 app.on('window-all-closed', () => {
-	app.quit();
-});
+	app.quit()
+})

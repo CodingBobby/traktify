@@ -1,6 +1,6 @@
 if(!remote.getGlobal('darwin')) {
    document.getElementById('dragger').remove()
- }
+}
 
 function codeToClipboard() {
    remote.getGlobal('codeToClipboard')()
