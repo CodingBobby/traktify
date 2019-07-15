@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" type="text/css" href="../../assets/master.css">
   <link rel="stylesheet" type="text/css" href="./style.css">
-  <title>Traktify – Login</title>
+  <script>
+    const remote = require('electron').remote;
+  </script>
+  <title>Traktify | Login</title>
 </head>
 <body>
   <div class="wrapper flex login">
@@ -15,9 +18,22 @@
         <div class="fw700 red_t tu">traktify<br><span>a trakt.tv desktop app</span></div>
       </div>
       <h1 class="h1 white_t" style="margin: 5px 0 15px">Sign in to Trakt</h1>
-      <a class="btn fw600 fs14 red_d_b white_t tu">click here</a>
+
+      <a class="btn fw600 fs14 red_d_b white_t tu" id="sign_in_btn" onclick="authenticate()">
+        sign in
+      </a>
+      <p class="white_t" style="display: none" id="sign_in_alert">
+        We've already copied the code into your clipboard.
+        <br>
+        You just have to paste it in :)
+      </p>
+      <a class="btn fw600 fs14 red_d_b white_t tu" id="get_code_again" style="display: none" onclick="codeToClipboard()">
+        Need the code again?
+      </a>
     </div>
   </div>
   <a class="btn bottom fw300 fs14 red_d_b white_t">Buy us a coffee?</a>
+
+  <script src="./index.js"></script>
 </body>
 </html>

@@ -22,7 +22,8 @@ const {
   app,
   BrowserWindow,
   Menu,
-  shell
+  shell,
+  clipboard
 } = electron
 
 // configuration and boolean checks that we need frequently
@@ -118,12 +119,7 @@ async function build() {
   
   // now we call the login function which returns if the user was
   // successfully logged in
-  new Promise((res, rej) => {
-    loadLogin() ? res('user logged in!')
-      : rej('login failed')
-  })
-  .then(val => console.log(val))
-  .catch(err => console.error(err))
+  loadLogin()
 
   // if the window gets closed, the app will quit
   window.on('closed', function() {
@@ -137,43 +133,33 @@ async function build() {
 
 // this loads the login page where you can be directed to
 // trakt's authenticator and returns the success of it
-async function loadLogin() {
-  // first we check if the user was logged in in a previous session
-  // if the saved one was expired, we get a new token and save it
-  // we exit and return the success of the login
-  if(config.user.token) {
-    trakt.import_token(config.user.token)
-    .then(newToken => {
-      config.user.token = newToken
-      saveConfig()
+function loadLogin() {
+  window.loadFile('pages/login/index.html')
+  global.authenticate = function authenticate() {
+    return trakt.get_codes().then(function(poll) {
+      clipboard.writeText(poll.user_code) // give the user the code
+      global.codeToClipboard = function codeToClipboard() {
+        // provides the user the option to get the code again
+        clipboard.writeText(poll.user_code)
+      }
+      shell.openExternal(poll.verification_url)
+      return trakt.poll_access(poll)
+    }.bind(this)).then(function(auth) {
+      trakt.import_token(auth)
+      // head into dashboard
+      loadDashboard()
       return true
-    })
-    .catch(err => {
-      console.error(err)
-      return false
+    }.bind(this)).catch(function(err) {
+      console.error('Trakt: authentication failed', err)
+      // reload page
+      loadLogin()
+      return err
     })
   }
-  // if the user is logging in the first time, we let him login
-  // from the trakt login page and fetch the resulting code from
-  // the localhost server we're creating teporarily
-  else {
-    const traktAuthUrl = trakt.get_url()
-    window.loadURL(traktAuthUrl)
-    http.createServer(req => {
-      let query = url.parse(req.url,true).query
-      trakt.exchange_code(query.code, query.state)
-      .then(result => {
-        // config.user.token = trakt.export_token()
-        config.user.token = result
-        saveConfig()
-        return true
-      })
-      .catch(err => {
-        console.error(err)
-        return false
-      })
-    }).listen(3456)
-  }
+}
+
+function loadDashboard() {
+  window.loadFile('pages/dashboard/index.html')
 }
 
 // this function can be called to save changes in the config file
