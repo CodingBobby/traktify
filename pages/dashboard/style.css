@@ -22,7 +22,7 @@
 }
 
 
-@media screen and (max-height: 650px) {
+@media screen and (max-width: 952px) {
   .titles h1,
   .titles h3 {
     margin: 0;

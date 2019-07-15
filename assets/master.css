@@ -238,7 +238,7 @@ body {
   border-radius: 10px;
 }
 /*---responsive---*/
-@media screen and (max-height: 650px) {
+@media screen and (max-width: 952px) {
   .h1 {
     font-size: 27px;
   }

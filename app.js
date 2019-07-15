@@ -43,9 +43,7 @@ let trakt
 // here we set some options we need later
 const windowOptions = {
   minWidth: 800,
-  maxWidth: 1200,
   minHeight: 500,
-  maxHeight: 900,
   width: 880,
   height: 620,
   useContentSize: true,
