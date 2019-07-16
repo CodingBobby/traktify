@@ -137,8 +137,9 @@
 /*---components---*/
 body {
   margin: 0;
-  background: url('./retro-furnish.png') repeat var(--black_d);
+  background: var(--black_d);
   font-family: manrope;
+  user-select: none;
 }
 
 #dragger {
@@ -146,6 +147,13 @@ body {
   width: 100vw;
   height: 20px;
   -webkit-app-region: drag;
+}
+
+#background_img {
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
 }
 
 .wrapper {
@@ -161,6 +169,10 @@ body {
 
 .overlay {
   background-color: rgba(0, 0, 0, 0.67);
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
 }
 
 .btns {
