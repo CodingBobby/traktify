@@ -22,6 +22,58 @@
   text-overflow: ellipsis;
 }
 
+.poster-dashboard::after {
+  opacity: 0;
+  content: '';
+  display: block;
+  position: relative;
+  height: 120px;
+  margin-top: -128px;
+  border-radius: 0 0 5px 5px;
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, #000000e0 80%);
+  transition: all 400ms ease;
+}
+.poster-dashboard:hover::after {
+  opacity: 1;
+}
+
+.poster-content {
+  position: absolute;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  opacity: 0;
+  width: calc(100% - 24px);
+  flex-direction: column;
+  align-items: center;
+  transition: all 400ms ease;
+}
+.poster-dashboard:hover > .poster-content {
+  opacity: 1;
+}
+.poster-dashboard.big .poster-content {
+  flex-direction: row;
+  align-items: initial;
+}
+
+.poster-content-left,
+.poster-content-right {
+  display: inline-block;
+  vertical-align: middle;
+}
+.poster-content-left img,
+.poster-content-left span {
+  vertical-align: middle;
+}
+.poster-content-right {
+  cursor: pointer;
+}
+.poster-content-left img {
+  width: 25px;
+  height: 22px;
+}
 
 @media screen and (max-width: 952px) {
   .titles h1,

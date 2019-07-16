@@ -69,6 +69,9 @@
 .tu {
   text-transform: uppercase;
 }
+.t_ {
+  text-decoration: underline;
+}
 /*---positioning---*/
 .top,
 .bottom,
@@ -129,7 +132,7 @@
 }
 /*---shadows---*/
 .shadow_h {
-  box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.16);
+  box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.3);
 }
 .shadow_b {
   box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
@@ -168,7 +171,7 @@ body {
 }
 
 .overlay {
-  background-color: rgba(0, 0, 0, 0.67);
+  background-color: rgba(0, 0, 0, 0.7);
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -226,10 +229,6 @@ body {
   margin-right: 20px;
   display: inline-block;
   transition: all 400ms ease;
-  cursor: pointer;
-}
-.poster:hover {
-  filter: grayscale(50%);
 }
 .poster:last-child {
   margin-right: 0;
@@ -247,7 +246,7 @@ body {
 
 .poster, 
 .poster img {
-  border-radius: 10px;
+  border-radius: 5px;
 }
 /*---responsive---*/
 @media screen and (max-width: 952px) {
