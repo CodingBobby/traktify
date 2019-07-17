@@ -225,6 +225,132 @@ function addSearchResult(result) {
   panel.appendChild(result_box)
 }
 
+function removeSearchResults() {
+  let panel = document.getElementById('search_results')
+  boxes = panel.getElementsByClassName('search_result_box')
+  while(boxes[0]) {
+    boxes[0].parentNode.removeChild(boxes[0])
+  }
+}
+
+let searchSubmitted = false
+
+function search(text) {
+  if(text == '') {
+    // empty search submitted
+    return
+  }
+
+  if(!searchSubmitted) {
+    searchSubmitted = true
+  } else {
+    removeSearchResults()
+    searchSubmitted = false
+  }
+
+  let searchOptions = [
+    'show', 'shows', 'tv', 'movie', 'person', 'episode', 'ep', 's', 'm', 'p', 'e'
+  ].map(o => o + ':')
+
+  let query = startsWithFilter(text, searchOptions, ':')
+
+  // This converts the simplified search type into a request-friendly one
+  switch(query.found) {
+    case 's':
+    case 'show':
+    case 'shows':
+    case 'tv': {
+      query.type = 'show'
+      break
+    }
+    case 'm':
+    case 'movie': {
+      query.type = 'movie'
+      break
+    }
+    case 'e':
+    case 'ep':
+    case 'episode': {
+      query.type = 'episode'
+      break
+    }
+    case 'p':
+    case 'person': {
+      query.type = 'person'
+      break
+    }
+    default: {
+      break
+    }
+  }
+
+  console.log(query.type, query.filtered)
+
+  trakt.search.text({
+    type: query.type,
+    query: query.filtered
+  }).then(result1 => {
+    new Promise((resolve1, reject1) => {
+      let arr1 = []
+      result1.forEach(r1 => {
+        let obj1 = {
+          title: r1[query.type].title,
+          type: query.type,
+          id: r1[query.type].ids
+        }
+        arr1.push(obj1)
+      })
+      resolve1(arr1)
+    }).then(result2 => {
+      new Promise((resolve2, reject2) => {
+        result2.forEach(r2 => {
+          new Promise(async (resolve3, reject3) => {
+            await trakt[r2.type+'s'].ratings({
+              id: r2.id.trakt
+            }).then(result2a => {
+              r2.rating = Math.round(result2a.rating * 10)
+            }).catch(err => console.log(err))
+            resolve3(r2)
+          }).then(result3 => {
+            new Promise(async (resolve4, reject4) => {
+              let mv = result3.type == 'movie' ? 'm' : 'v'
+              await fanart[result3.type+'s'].get(result3.id['t'+mv+'db'])
+              .then(result3a => {
+                if(result3a.tvposter) {
+                  result3.img = result3a.tvposter[0].url
+                } else if(result3a.movieposter) {
+                  result3.img = result3a.movieposter[0].url
+                }
+              }).catch(err => console.log(err))
+              resolve4(result3)
+            }).then(result4 => {
+              addSearchResult(result4)
+            }).catch(err => console.log(err))
+          })
+        })
+        resolve2()
+      }).catch(err => console.log(err))
+    }).catch(err => console.log(err))
+  }).catch(err => console.log(err))
+}
+
+function startsWithFilter(string, options, removeFromFilter) {
+  string = string.toString()
+  for(let opt in options) {
+    if(string.startsWith(options[opt])) {
+      return {
+        found: options[opt].split(removeFromFilter || '').join(''),
+        filtered: string.split(options[opt])[1]
+      }
+    }
+  }
+  return {
+    found: null,
+    filtered: string
+  }
+}
+
+
 function testFanart() {
    let img = document.createElement('img')
    remote.getGlobal('fanart').shows.get(75682).then(res => {
