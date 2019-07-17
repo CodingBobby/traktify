@@ -5,7 +5,13 @@
   --white_d: #CECECE;
   --red: #ED1C24;
   --red_d: #C61017;
+  --side_dist: 30px;
 }
+
+*:focus {
+  outline: none;
+}
+
 /*---fonts---*/
 @font-face {
   font-family: 'manrope';
@@ -84,10 +90,10 @@
   bottom: 0;
 }
 .right {
-  right: 30px;
+  right: var(--side_dist);
 }
 .left {
-  left: 30px;
+  left: var(--side_dist);
 }
 /*---colors---*/
 .black_t {
@@ -150,7 +156,7 @@ body {
 
 .wrapper {
   position: relative;
-  padding: 30px;
+  padding: var(--side_dist);
 }
 .wrapper.flex {
   display: flex;
@@ -237,8 +243,17 @@ body {
 .poster img {
   border-radius: 10px;
 }
+
+.above_all {
+  z-index: 5;
+}
+
 /*---responsive---*/
 @media screen and (max-width: 952px) {
+  :root {
+    --side_dist: 20px;
+  }
+  
   .h1 {
     font-size: 27px;
   }
@@ -251,17 +266,7 @@ body {
   .p {
     font-size: 16px;
   }
-
-  .right {
-    right: 20px;
-  }
-  .left {
-    left: 20px;
-  }
-
-  .wrapper {
-    padding: 20px;
-  }
+  
   .wrapper.flex {
     min-height: calc(100vh - 40px);
     min-width: calc(100vh - 40px);

@@ -67,7 +67,10 @@ const windowOptions = {
   icon: global.darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
     : path.join(__dirname, 'assets/icons/trakt/tract.ico'),
   show: false,
-  center: true
+  center: true,
+  webPreferences: {
+    experimentalFeatures: true
+  }
 }
 
 // here we create a template for the main menu, to get the right shortcut, we check if we're running on darwin

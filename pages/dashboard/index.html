@@ -13,17 +13,25 @@
 <body>
   <div id="dragger"></div>
   <div class="wrapper flex dashboard">
-    <div class="dashboard">
-      <ul class="btns top right">
-        <li><div class="btn icon black_b shadow_b selected" onclick="show(this)"><img src="../../assets/icons/app/search.svg"></div></li>
-        <li><div class="btn icon black_b shadow_b" onclick="show(this)"><img src="../../assets/icons/app/settings.svg"></div></li>
-        <li><div class="btn icon black_b shadow_b" onclick="show(this); signout()"><img src="../../assets/icons/app/signout.svg"></div></li>
-      </ul>
+    
+    <ul class="btns top right above_all" id="side_buttons">
+      <li><div class="btn icon black_b shadow_b selected" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" onclick="show(this); openSettings()"><img src="../../assets/icons/app/settings.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" onclick="show(this); openLogout()"><img src="../../assets/icons/app/signout.svg"></div></li>
+    </ul>
+
+    <div id="side_panel"></div>
+
+    <div id="dash_overlay"></div>
+
+    <div class="dashboard" id="dash">
+
       <div class="titles">
         <h3 class="h3 red_t tu">up next to watch</h3>
         <h1 class="h1 white_t tu">my hero academia</h1>
         <h1 class="h1 white_d_t">1 x 01 (1) Izuku Midoriya: Origin</h1>
       </div>
+
       <ul class="posters">
         <li class="poster big shadow_h">
           <img src="https://images-na.ssl-images-amazon.com/images/I/91kjVOEopVL._SY606_.jpg">
@@ -41,9 +49,13 @@
           <img src="https://images-na.ssl-images-amazon.com/images/I/51fWOBx3agL.jpg">
         </li>
       </ul>
+
     </div>
   </div>
+
   <a class="btn bottom right fw300 fs14 red_b white_t">History</a>
+
+  <script src="../main.js"></script>
   <script src="./index.js"></script>
 </body>
 </html>
