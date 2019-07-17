@@ -212,6 +212,14 @@ function openLogout() {
   triggersSidePanel('logout')
 }
 
+function closeSidePanel() {
+  try {
+    triggersSidePanel(sideBar.status)
+  } catch(err) {
+    console.log(err)
+  }
+}
+
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
   let panel = document.getElementById('search_results')
@@ -335,29 +343,33 @@ function search(text) {
       new Promise((resolve2, reject2) => {
         result2.forEach(r2 => {
           new Promise(async (resolve3, reject3) => {
-            await trakt[r2.type+'s'].ratings({
-              id: r2.id.trakt
-            }).then(result2a => {
-              r2.rating = Math.round(result2a.rating * 10)
-            }).catch(err => console.log(err))
+            if(r2.type != 'person') {
+              await trakt[r2.type+'s'].ratings({
+                id: r2.id.trakt
+              }).then(result2a => {
+                r2.rating = Math.round(result2a.rating * 10)
+              }).catch(err => console.log(err))
+            }            
             resolve3(r2)
           }).then(result3 => {
             new Promise(async (resolve4, reject4) => {
-              let mv = result3.type == 'movie' ? 'm' : 'v'
-              await fanart[result3.type+'s'].get(result3.id['t'+mv+'db'])
-              .then(result3a => {
-                if(result3a.tvposter) {
-                  result3.img = result3a.tvposter[0].url
-                } else if(result3a.movieposter) {
-                  result3.img = result3a.movieposter[0].url
-                } else {
-                  throw 'no poster' // couldn't find a poster
-                }
-              }).catch(err => {
-                console.log((err == 'no poster') ? err : '' || 'not in fanart')
-                // put a placeholder for the unavailable image
-                result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-              })
+              if(result3.type != 'person') {
+                let mv = result3.type == 'movie' ? 'm' : 'v'
+                await fanart[result3.type+'s'].get(result3.id['t'+mv+'db'])
+                .then(result3a => {
+                  if(result3a.tvposter) {
+                    result3.img = result3a.tvposter[0].url
+                  } else if(result3a.movieposter) {
+                    result3.img = result3a.movieposter[0].url
+                  } else {
+                    throw 'no poster' // couldn't find a poster
+                  }
+                }).catch(err => {
+                  console.log((err == 'no poster') ? err : '' || 'not in fanart')
+                  // put a placeholder for the unavailable image
+                  result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                })
+              }
               resolve4(result3)
             }).then(result4 => {
               addSearchResult(result4)
