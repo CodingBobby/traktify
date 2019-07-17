@@ -248,6 +248,15 @@ body {
   z-index: 5;
 }
 
+.vertical_align {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+}
+
+.vertical_align * {
+  grid-row: 2;
+}
+
 /*---responsive---*/
 @media screen and (max-width: 952px) {
   :root {

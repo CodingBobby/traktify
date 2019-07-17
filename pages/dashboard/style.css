@@ -132,11 +132,15 @@
   transform: scale(1.01, 1.01);
 }
 
+.search_result_box .vertical_align {
+  grid-row: 1;
+}
+
 .search_result_box img {
-  grid-column: 1;
   height: var(--search_result_height);
   left: 0;
   top: 0;
+  max-width: 105px;
 }
 
 .search_result_box .search_result_text {

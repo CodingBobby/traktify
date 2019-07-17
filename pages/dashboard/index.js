@@ -1,6 +1,8 @@
 const trakt = remote.getGlobal('trakt')
 const fanart = remote.getGlobal('fanart')
 
+
+// This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
@@ -13,6 +15,27 @@ function show(x) {
 }
 
 
+// Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
+document.onkeydown = function() {
+  if(event.metaKey && event.keyCode == 83) { // meta + S
+    show(document.getElementById('search_button_side'))
+    triggersSidePanel('search')
+    return false
+  } else if(event.metaKey && event.keyCode == 188) { // meta + ,
+    show(document.getElementById('settings_button_side'))
+    triggersSidePanel('settings')
+    return false
+  } else if(event.keyCode == 27) { // ESC
+    // close the currently open panel
+    try {
+      triggersSidePanel(sideBar.status)
+    } catch(err) {
+      console.log(err)
+    }
+  }
+}
+
+// This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
   element: document.getElementById('side_panel'),
   // This variable tells which sidebar is currently open. The possible values are:
@@ -98,26 +121,27 @@ let sideBar = {
       this.parent.appendChild(this.create())
     }
   },
+  // Removes the panel contents from the sidebar
   removeAll: function() {
     let panels = this.element.getElementsByClassName('panel')
     while(panels[0]) {
       panels[0].parentNode.removeChild(panels[0])
     }
   },
+  // This helper initializes the available panels by providing the sidebar element as a parent. The method is called right after the creation of this object.
   init: function() {
-    this.search.parent = this.element
-    this.settings.parent = this.element
-    this.logout.parent = this.element
+    this.panels.forEach(panel => {
+      this[panel].parent = this.element
+    })
     delete this.init
     return this
   }
 }.init()
 
-function openSidePanel(panelName) {
+function triggersSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
   if(!sideBar.panels.includes(panelName)) {
-    console.error('panel not available')
-    return
+    throw 'panel not available'
   }
 
   let overlay = document.getElementById('dash_overlay')
@@ -161,6 +185,9 @@ function openSidePanel(panelName) {
       overlay.style.display = 'none'
       sideBar.removeAll()
     }, 220)
+
+    // re-highlight the search button
+    show(document.getElementById('search_button_side'))
   }
 
   // When another button than the currently open panel was clicked, the sidebar stays open and changes it's content
@@ -172,17 +199,17 @@ function openSidePanel(panelName) {
 }
 
 
+// These functions are called by onclicks in the HTML
 function openSearch() {
-  // This opens the sidepanel
-  openSidePanel('search')
+  triggersSidePanel('search')
 }
 
 function openSettings() {
-  openSidePanel('settings')
+  triggersSidePanel('settings')
 }
 
 function openLogout() {
-  openSidePanel('logout')
+  triggersSidePanel('logout')
 }
 
 // This function generates a html element for one search result and adds it to the sidebar.
@@ -191,8 +218,10 @@ function addSearchResult(result) {
   let result_box = document.createElement('div')
   result_box.classList.add('search_result_box')
 
-  let result_img = document.createElement('img')
+  let result_img_box = document.createElement('div')
+  result_img_box.classList.add('vertical_align')
 
+  let result_img = document.createElement('img')
   if(result.img) {
     result_img.src = result.img
   } else {
@@ -220,7 +249,8 @@ function addSearchResult(result) {
   result_type.innerHTML = `${result.type}`
 
   result_text.append(result_rating, result_type)
-  result_box.append(result_img, result_text)
+  result_img_box.append(result_img)
+  result_box.append(result_img_box, result_text)
 
   panel.appendChild(result_box)
 }
@@ -284,7 +314,7 @@ function search(text) {
     }
   }
 
-  console.log(query.type, query.filtered)
+  console.log(query.type+':', query.filtered)
 
   trakt.search.text({
     type: query.type,
@@ -320,8 +350,14 @@ function search(text) {
                   result3.img = result3a.tvposter[0].url
                 } else if(result3a.movieposter) {
                   result3.img = result3a.movieposter[0].url
+                } else {
+                  throw 'no poster' // couldn't find a poster
                 }
-              }).catch(err => console.log(err))
+              }).catch(err => {
+                console.log((err == 'no poster') ? err : '' || 'not in fanart')
+                // put a placeholder for the unavailable image
+                result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+              })
               resolve4(result3)
             }).then(result4 => {
               addSearchResult(result4)
