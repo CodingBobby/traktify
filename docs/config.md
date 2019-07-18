@@ -1,4 +1,4 @@
-# Cofiguration
+# Configuration
 The configuration file has the following structure:
 ```cson
 config:
