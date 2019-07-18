@@ -27,7 +27,8 @@ const {
   BrowserWindow,
   Menu,
   shell,
-  clipboard
+  clipboard,
+  dialog
 } = electron
 
 // configuration and boolean checks that we need frequently
@@ -58,8 +59,8 @@ const traktOptions = {
 const windowOptions = {
   minWidth: 800,
   minHeight: 500,
-  width: 880,
-  height: 620,
+  width: 900,
+  height: 750,
   useContentSize: true,
   titleBarStyle: 'hidden',
   backgroundColor: '#242424',
@@ -75,7 +76,7 @@ const windowOptions = {
 
 // here we create a template for the main menu, to get the right shortcut, we check if we're running on darwin
 let menuTemplate = [{
-  label: 'File',
+  label: 'App',
   submenu: [{
     label: 'About',
     click() {
@@ -87,6 +88,24 @@ let menuTemplate = [{
       : 'Ctrl+Q',
     click() {
       app.quit()
+    }
+  }, {
+    type: 'separator'
+  }, {
+    label: 'Reset Traktify',
+    click() {
+      dialog.showMessageBox({
+        type: 'question',
+        title: 'Reset Traktify',
+        message: 'Are you sure? This removes all data from Traktify and you have to login again.',
+        buttons: ['alright', 'hell no'],
+        defaultId: 1,
+        normalizeAccessKeys: false
+      }, button => {
+        if(button == 0) {
+          resetTraktify(true)
+        }
+      })
     }
   }]
 }]
@@ -236,6 +255,96 @@ function saveConfig() {
   fs.writeFile("./config.json", JSON.stringify(global.config), err => {
     if(err) console.error(err)
   })
+}
+
+function resetTraktify(removeLogin) {
+  let userTemp = false
+  if(removeLogin) {
+    disconnect()
+  } else {
+    userTemp = clone(user)
+  }
+  global.config = JSON.parse(fs.readFileSync("./def_config.json", "utf8"))
+  if(userTemp) {
+    global.config.user = userTemp
+  }
+  saveConfig()
+}
+
+function clone(object) {
+  if(null == object || "object" != typeof object) return object
+  // create new blank object of same type
+  let copy = object.constructor()
+
+  // copy all attributes into it
+  for(let attr in object) {
+     if(object.hasOwnProperty(attr)) {
+        copy[attr] = object[attr]
+     }
+  }
+  return copy
+}
+
+
+function getSettings(scope) {
+  let settings = global.config.client.settings
+  if(settings.hasOwnProperty(scope)) {
+    return settings[scope]
+  } else {
+    console.error('Invalid scope at getSetting()')
+  }
+}
+global.getSettings = getSettings
+
+
+function setSetting(scope, settingOption, newStatus) {
+  let settings = global.config.client.settings[scope]
+  let setting = settings[settingOption]
+
+  if(newStatus == 'default') {
+    setting.status = setting.default
+  } else {
+    switch(setting.type) {
+      case 'select': {
+        if(setting.options.hasOwnProperty(newStatus)) {
+          setting.status = newStatus
+        }
+        break
+      }
+      case 'slider': {
+        if(inRange(newStatus, setting.range)) {
+          setting.status = newStatus
+        }
+        break
+      }
+      case 'toggle': {
+        if(typeof newStatus == 'boolean') {
+          setting.status = newStatus
+        }
+        break
+      }
+      default: { break }
+    }
+  }
+
+  saveConfig()
+}
+global.setSetting = setSetting
+
+
+function defaultAll(scope) {
+  let settings = getSettings(scope)
+  for(let s in settings) {
+    setSetting(scope, s, 'default')
+  }
+}
+global.defaultAll = defaultAll
+
+
+// Range must be an array of two numeric values
+function inRange(value, range) {
+  let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
+  return value >= min && value <= max
 }
 
 // here we finally build the app
