@@ -52,7 +52,8 @@ let window = null
 
 const traktOptions = {
   client_id: process.env.trakt_id,
-  client_secret: process.env.trakt_secret
+  client_secret: process.env.trakt_secret,
+  debug: true
 }
 
 // here we set some options we need later
@@ -133,9 +134,8 @@ if(process.env.NODE_ENV !== 'production') {
 
 const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
-// this function builds the app window, shows the correct pages
-// and handles window.on() events
-async function build() {
+// this function builds the app window, shows the correct page and handles window.on() events
+function build() {
   window = new BrowserWindow(windowOptions)
   Menu.setApplicationMenu(mainMenu)
 
@@ -157,9 +157,8 @@ async function build() {
     console.timeEnd('init')
   }
   
-  // now we call the login function which returns if the user was
-  // successfully logged in
-  loadLogin()
+  // Now we launch the app renderer
+  launchApp()
 
 
   // EVENTS
@@ -174,11 +173,19 @@ async function build() {
 	})
 }
 
-// Loading the login page. When asking to authenticate, opening the trakt login on an external browser and loading the dashboard after success
-function loadLogin() {
-  window.loadFile('pages/login/index.html')
-
+// This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
+function launchApp() {
   if(user.trakt.auth) {
+    tryLogin()
+  } else {
+    loadLogin()
+  }
+}
+
+function tryLogin() {
+  loadLoadingScreen()
+  // This timeout fakes a time consuming process. Currently only existing to demonstrate the fancy loading screen.
+  setTimeout(() => {
     global.trakt.import_token(user.trakt.auth).then(() => {
       global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
         user.trakt.auth = newAuth
@@ -196,49 +203,46 @@ function loadLogin() {
         }
       })
     })
-  }
+  }, 2000);
+}
 
-  global.authenticate = function authenticate() {
-    return global.trakt.get_codes().then(poll => {
-      clipboard.writeText(poll.user_code) // give the user the code
-      global.codeToClipboard = function codeToClipboard() {
-        // provides the user the option to get the code again
-        clipboard.writeText(poll.user_code)
-      }
-      shell.openExternal(poll.verification_url)
+function authenticate() {
+  return global.trakt.get_codes().then(poll => {
+    clipboard.writeText(poll.user_code) // give the user the code
+    global.codeToClipboard = function codeToClipboard() {
+      // provides the user the option to get the code again
+      clipboard.writeText(poll.user_code)
+    }
+    shell.openExternal(poll.verification_url)
 
-      return global.trakt.poll_access(poll)
-    }).then(auth => {
-      console.log('user signed in')
-      global.trakt.import_token(auth)
+    return global.trakt.poll_access(poll)
+  }).then(auth => {
+    console.log('user signed in')
+    global.trakt.import_token(auth)
 
-      user.trakt.auth = auth
-      user.trakt.status = true
+    user.trakt.auth = auth
+    user.trakt.status = true
+    saveConfig()
+
+    // going back to the app and heading into dashboard
+    window.focus()
+    loadDashboard()
+
+    return true
+  }).catch(err => {
+    // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
+    if(err) {
+      user.trakt.auth = false
+      user.trakt.status = false
       saveConfig()
 
-      // going back to the app and heading into dashboard
       window.focus()
-      loadDashboard()
-
-      return true
-    }).catch(err => {
-      // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
-      if(err) {
-        user.trakt.auth = false
-        user.trakt.status = false
-        saveConfig()
-  
-        window.focus()
-        loadLogin()
-        alert('Oh oops!\nAuthenticating failed for some reason.')
-      }
-    })
-  }
+      loadLogin()
+      alert('Oh oops!\nAuthenticating failed for some reason.')
+    }
+  })
 }
-
-function loadDashboard() {
-  window.loadFile('pages/dashboard/index.html')
-}
+global.authenticate = authenticate
 
 function disconnect() {
   global.trakt.revoke_token()
@@ -247,8 +251,20 @@ function disconnect() {
   saveConfig()
   loadLogin()
 }
-
 global.disconnect = disconnect
+
+
+// These two functions do nothing but load a render page
+function loadLogin() {
+  window.loadFile('pages/login/index.html')
+}
+function loadDashboard() {
+  window.loadFile('pages/dashboard/index.html')
+}
+function loadLoadingScreen() {
+  window.loadFile('pages/loading/index.html')
+}
+
 
 // this function can be called to save changes in the config file
 function saveConfig() {
