@@ -8,57 +8,76 @@
 |*|   from the 21th Feb. 2019
 \*/
 
-console.time('init')
+// Uncomment this line for publishing!
+//process.env.NODE_ENV = 'production'
+
+if(process.env.NODE_ENV !== 'production') {
+  console.time('init')
+}
 
 const electron = require('electron')
-const Trakt = require('trakt.tv')
 const fs = require('fs')
 const path = require('path')
-const http = require('http')
-const url = require('url')
+const Trakt = require('trakt.tv')
+const Fanart = require('fanart.tv')
 
 // the electron items we need
 const {
   app,
   BrowserWindow,
   Menu,
-  shell
+  shell,
+  clipboard,
+  dialog
 } = electron
 
 // configuration and boolean checks that we need frequently
-let config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
-let darwin = process.platform == 'darwin'
+// the config file will be used to save preferences the user can change
+// (like darkmode, behavior etc.)
+global.config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
+let user = global.config.user
 
-// instances we define later on but need to be
-// accessible globally
+// defining global variables that can be accessed from other scripts
+global.openExternal = shell.openExternal
+global.darwin = process.platform == 'darwin'
+
+// Comment out these lines when in production! Used as helpers to move around the app from the command line.
+global.loadDashboard = loadDashboard
+global.loadLogin = loadLogin
+
+global.trakt
+global.fanart
+
 let window = null
-let trakt
+
+const traktOptions = {
+  client_id: process.env.trakt_id,
+  client_secret: process.env.trakt_secret,
+  debug: true
+}
 
 // here we set some options we need later
 const windowOptions = {
+  minWidth: 800,
+  minHeight: 500,
   width: 900,
-  height: 650,
-  resizable: false,
+  height: 750,
   useContentSize: true,
   titleBarStyle: 'hidden',
-  backgroundColor: '#1C1C1C',
+  backgroundColor: '#242424',
   title: 'Traktify',
-  icon: darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
+  icon: global.darwin ? path.join(__dirname, 'assets/icons/trakt/trakt.icns')
     : path.join(__dirname, 'assets/icons/trakt/tract.ico'),
-  show: true,
-  center: true
+  show: false,
+  center: true,
+  webPreferences: {
+    experimentalFeatures: true
+  }
 }
 
-const traktOptions = {
-  client_id: config.client.id,
-  client_secret: config.client.secret,
-  redirect_uri: 'http://localhost:3456'
-}
-
-// here we create a template for the main menu,
-// to get the right shortcut, we check if we're running on darwin
+// here we create a template for the main menu, to get the right shortcut, we check if we're running on darwin
 let menuTemplate = [{
-  label: 'File',
+  label: 'App',
   submenu: [{
     label: 'About',
     click() {
@@ -66,10 +85,28 @@ let menuTemplate = [{
     }
   }, {
     label: 'Quit Traktify',
-    accelerator: darwin ? 'Command+Q'
+    accelerator: global.darwin ? 'Command+Q'
       : 'Ctrl+Q',
     click() {
       app.quit()
+    }
+  }, {
+    type: 'separator'
+  }, {
+    label: 'Reset Traktify',
+    click() {
+      dialog.showMessageBox({
+        type: 'question',
+        title: 'Reset Traktify',
+        message: 'Are you sure? This removes all data from Traktify and you have to login again.',
+        buttons: ['alright', 'hell no'],
+        defaultId: 1,
+        normalizeAccessKeys: false
+      }, button => {
+        if(button == 0) {
+          resetTraktify(true)
+        }
+      })
     }
   }]
 }]
@@ -81,14 +118,14 @@ if(process.env.NODE_ENV !== 'production') {
     label: 'Dev Tools',
     submenu: [{
       label: 'Toggle Dev Tools',
-      accelerator: darwin ? 'Command+I'
+      accelerator: global.darwin ? 'Command+I'
         : 'Ctrl+I',
       click(item, focusedWindow){
         focusedWindow.toggleDevTools()
       }
     }, {
       label: 'Reload App',
-      accelerator: darwin ? 'Command+R'
+      accelerator: global.darwin ? 'Command+R'
         : 'Ctrl+R',
       role: 'reload'
     }]
@@ -97,33 +134,34 @@ if(process.env.NODE_ENV !== 'production') {
 
 const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
-// this function builds the app window, shows the correct pages
-// and handles window.on() events
-async function build() {
+// this function builds the app window, shows the correct page and handles window.on() events
+function build() {
   window = new BrowserWindow(windowOptions)
-
   Menu.setApplicationMenu(mainMenu)
 
   try {
-    trakt = new Trakt(traktOptions)
+    global.trakt = new Trakt(traktOptions)
+    global.fanart = new Fanart(process.env.fanart_key)
   } catch(err) {
     console.error(err)
   }
 
-  window.loadFile('./index.html')
+  // show the window when the page is built
+  window.once('ready-to-show', () => {
+    window.show()
+  })
 
   // we have initialized everything important and log how long
   // it took, remember to remove it in release version
-  console.timeEnd('init')
+  if(process.env.NODE_ENV !== 'production') {
+    console.timeEnd('init')
+  }
   
-  // now we call the login function which returns if the user was
-  // successfully logged in
-  new Promise((res, rej) => {
-    loadLogin() ? res('user logged in!')
-      : rej('login failed')
-  })
-  .then(val => console.log(val))
-  .catch(err => console.error(err))
+  // Now we launch the app renderer
+  launchApp()
+
+
+  // EVENTS
 
   // if the window gets closed, the app will quit
   window.on('closed', function() {
@@ -135,52 +173,194 @@ async function build() {
 	})
 }
 
-// this loads the login page where you can be directed to
-// trakt's authenticator and returns the success of it
-async function loadLogin() {
-  // first we check if the user was logged in in a previous session
-  // if the saved one was expired, we get a new token and save it
-  // we exit and return the success of the login
-  if(config.user.token) {
-    trakt.import_token(config.user.token)
-    .then(newToken => {
-      config.user.token = newToken
-      saveConfig()
-      return true
-    })
-    .catch(err => {
-      console.error(err)
-      return false
-    })
-  }
-  // if the user is logging in the first time, we let him login
-  // from the trakt login page and fetch the resulting code from
-  // the localhost server we're creating teporarily
-  else {
-    const traktAuthUrl = trakt.get_url()
-    window.loadURL(traktAuthUrl)
-    http.createServer(req => {
-      let query = url.parse(req.url,true).query
-      trakt.exchange_code(query.code, query.state)
-      .then(result => {
-        // config.user.token = trakt.export_token()
-        config.user.token = result
-        saveConfig()
-        return true
-      })
-      .catch(err => {
-        console.error(err)
-        return false
-      })
-    }).listen(3456)
+// This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
+function launchApp() {
+  if(user.trakt.auth) {
+    tryLogin()
+  } else {
+    loadLogin()
   }
 }
 
+function tryLogin() {
+  loadLoadingScreen()
+  // This timeout fakes a time consuming process. Currently only existing to demonstrate the fancy loading screen.
+  setTimeout(() => {
+    global.trakt.import_token(user.trakt.auth).then(() => {
+      global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+        user.trakt.auth = newAuth
+        user.trakt.status = true
+        saveConfig()
+        console.log('success')
+        loadDashboard()
+      }).catch(err => {
+        if(err) {
+          user.trakt.auth = false
+          user.trakt.status = false
+          saveConfig()
+          console.error('failed: ', err)
+          loadLogin()
+        }
+      })
+    })
+  }, 2000);
+}
+
+function authenticate() {
+  return global.trakt.get_codes().then(poll => {
+    clipboard.writeText(poll.user_code) // give the user the code
+    global.codeToClipboard = function codeToClipboard() {
+      // provides the user the option to get the code again
+      clipboard.writeText(poll.user_code)
+    }
+    shell.openExternal(poll.verification_url)
+
+    return global.trakt.poll_access(poll)
+  }).then(auth => {
+    console.log('user signed in')
+    global.trakt.import_token(auth)
+
+    user.trakt.auth = auth
+    user.trakt.status = true
+    saveConfig()
+
+    // going back to the app and heading into dashboard
+    window.focus()
+    loadDashboard()
+
+    return true
+  }).catch(err => {
+    // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
+    if(err) {
+      user.trakt.auth = false
+      user.trakt.status = false
+      saveConfig()
+
+      window.focus()
+      loadLogin()
+      alert('Oh oops!\nAuthenticating failed for some reason.')
+    }
+  })
+}
+global.authenticate = authenticate
+
+function disconnect() {
+  global.trakt.revoke_token()
+  user.trakt.auth = false
+  user.trakt.status = false
+  saveConfig()
+  loadLogin()
+}
+global.disconnect = disconnect
+
+
+// These two functions do nothing but load a render page
+function loadLogin() {
+  window.loadFile('pages/login/index.html')
+}
+function loadDashboard() {
+  window.loadFile('pages/dashboard/index.html')
+}
+function loadLoadingScreen() {
+  window.loadFile('pages/loading/index.html')
+}
+
+
 // this function can be called to save changes in the config file
 function saveConfig() {
-  fs.writeFile("./config.json", JSON.stringify(config), err => {
+  fs.writeFile("./config.json", JSON.stringify(global.config), err => {
     if(err) console.error(err)
   })
+}
+
+function resetTraktify(removeLogin) {
+  let userTemp = false
+  if(removeLogin) {
+    disconnect()
+  } else {
+    userTemp = clone(user)
+  }
+  global.config = JSON.parse(fs.readFileSync("./def_config.json", "utf8"))
+  if(userTemp) {
+    global.config.user = userTemp
+  }
+  saveConfig()
+}
+
+function clone(object) {
+  if(null == object || "object" != typeof object) return object
+  // create new blank object of same type
+  let copy = object.constructor()
+
+  // copy all attributes into it
+  for(let attr in object) {
+     if(object.hasOwnProperty(attr)) {
+        copy[attr] = object[attr]
+     }
+  }
+  return copy
+}
+
+
+function getSettings(scope) {
+  let settings = global.config.client.settings
+  if(settings.hasOwnProperty(scope)) {
+    return settings[scope]
+  } else {
+    console.error('Invalid scope at getSetting()')
+  }
+}
+global.getSettings = getSettings
+
+
+function setSetting(scope, settingOption, newStatus) {
+  let settings = global.config.client.settings[scope]
+  let setting = settings[settingOption]
+
+  if(newStatus == 'default') {
+    setting.status = setting.default
+  } else {
+    switch(setting.type) {
+      case 'select': {
+        if(setting.options.hasOwnProperty(newStatus)) {
+          setting.status = newStatus
+        }
+        break
+      }
+      case 'slider': {
+        if(inRange(newStatus, setting.range)) {
+          setting.status = newStatus
+        }
+        break
+      }
+      case 'toggle': {
+        if(typeof newStatus == 'boolean') {
+          setting.status = newStatus
+        }
+        break
+      }
+      default: { break }
+    }
+  }
+
+  saveConfig()
+}
+global.setSetting = setSetting
+
+
+function defaultAll(scope) {
+  let settings = getSettings(scope)
+  for(let s in settings) {
+    setSetting(scope, s, 'default')
+  }
+}
+global.defaultAll = defaultAll
+
+
+// Range must be an array of two numeric values
+function inRange(value, range) {
+  let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
+  return value >= min && value <= max
 }
 
 // here we finally build the app
@@ -188,5 +368,5 @@ app.on('ready', build)
 
 // this quits the whole app
 app.on('window-all-closed', () => {
-	app.quit();
-});
+	app.quit()
+})

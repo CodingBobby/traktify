@@ -1,5 +1,6 @@
 # system trash
 .DS_Store
+.stignore
 
 # unwanted trash
 *.bak
@@ -30,3 +31,4 @@ pids
 
 # secrets
 *.real.*
+.env
