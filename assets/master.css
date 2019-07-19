@@ -230,12 +230,12 @@ body {
   display: inline-block;
   transition: all 400ms ease;
 }
-.poster:last-child {
-  margin-right: 0;
-}
-.poster.big {
+.poster:first-child {
   width: 236px;
   height: 324px;
+}
+.poster:last-child {
+  margin-right: 0;
 }
 
 .poster img {
