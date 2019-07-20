@@ -6,7 +6,7 @@ const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
 
 // Here we update the app with saved settings after the window is created
-window.onload = function() {
+window.onload = function () {
   updateApp()
   createPosters()
 }
@@ -16,9 +16,9 @@ ipcRenderer.on('modify-root', (event, data) => {
     .cssRules[0].style.cssText.split(';')
 
   let result = {}
-  for(let i in variables) {
+  for (let i in variables) {
     let a = variables[i].split(':')
-    if(a[0] !== '') {
+    if (a[0] !== '') {
       result[a[0].trim()] = a[1].trim()
     }
   }
@@ -32,7 +32,7 @@ ipcRenderer.on('modify-root', (event, data) => {
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
-    if(element.children[0] == x) {
+    if (element.children[0] == x) {
       x.classList.add('selected');
     } else {
       element.children[0].classList.remove('selected');
@@ -42,13 +42,13 @@ function show(x) {
 
 
 function syncWatched() {
-  return tr.sync.watched({
+  return trakt.sync.watched({
     type: 'shows'
   }).then(res => res)
 }
 
 function hiddenItems() {
-  return tr.users.hidden.get({
+  return trakt.users.hidden.get({
     section: 'progress_watched',
     limit: 100
   }).then(res => res)
@@ -70,16 +70,16 @@ function createPosters() {
     // filters completed shows and creates first title
     let first = true;
     arr.forEach(item => {
-      tr.shows.progress.watched({
+      trakt.shows.progress.watched({
         id: item.show.ids.trakt,
         extended: 'full'
       }).then(res4 => {
-        if(res4.aired > res4.completed) {
+        if (res4.aired > res4.completed) {
           let ep = res4.next_episode
           let title = item.show.title
-          let subtitle = `${ep.season} x ${ep.number} (${ep.number_abs}) ${ep.title}`
+          let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
 
-          if(first) {
+          if (first) {
             createTitle({
               title: title,
               subtitle: subtitle
@@ -116,7 +116,7 @@ function createPoster(x) {
   heart.src = '../../assets/icons/app/heart.svg'
 
   let rate = document.createElement('span')
-  rate.innerText = `${Math.round(x.rating*10)}%`
+  rate.innerText = `${Math.round(x.rating * 10)}%`
 
   poster_content_left.appendChild(heart)
   poster_content_left.appendChild(rate)
@@ -130,13 +130,13 @@ function createPoster(x) {
 
   let img = document.createElement('img')
 
-  fr.shows.get(x.id).then(res => {
-    if(res) {
-      if(res.seasonposter) {
+  fanart.shows.get(x.id).then(res => {
+    if (res) {
+      if (res.seasonposter) {
         img.src = res.seasonposter[0].url
-      }else if(res.tvposter) {
+      } else if (res.tvposter) {
         img.src = res.tvposter[0].url
-      }else{
+      } else {
         img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
       }
     }
@@ -177,8 +177,8 @@ function animateText(x, onenter) {
   let title = x.getAttribute('data_title')
   let subtitle = x.getAttribute('data_subtitle')
 
-  if(title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if(onenter) {
+  if (title.toLowerCase() != container_title.innerText.toLowerCase()) {
+    if (onenter) {
       animationToggle(container_title, 'animation_slide_up', title)
       animationToggle(container_subtitle, 'animation_slide_up', subtitle)
     }
@@ -188,13 +188,14 @@ function animateText(x, onenter) {
   let poster_title = poster.getAttribute('data_title')
   let poster_subtitle = poster.getAttribute('data_subtitle')
 
-  if(poster_title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if(!onenter) {
+  if (poster_title.toLowerCase() != container_title.innerText.toLowerCase()) {
+    if (!onenter) {
       animationToggle(container_title, 'animation_slide_up', poster_title)
       animationToggle(container_subtitle, 'animation_slide_up', poster_subtitle)
     }
   }
-  
+}
+
 function animationToggle(x, y, z) {
   x.classList.remove(y)
   void x.offsetWidth
@@ -203,20 +204,20 @@ function animationToggle(x, y, z) {
 }
 
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
-document.onkeydown = function() {
-  if(event.metaKey && event.keyCode == 83) { // meta + S
+document.onkeydown = function () {
+  if (event.metaKey && event.keyCode == 83) { // meta + S
     show(document.getElementById('search_button_side'))
     triggerSidePanel('search')
     return false
-  } else if(event.metaKey && event.keyCode == 188) { // meta + ,
+  } else if (event.metaKey && event.keyCode == 188) { // meta + ,
     show(document.getElementById('settings_button_side'))
     triggerSidePanel('settings')
     return false
-  } else if(event.keyCode == 27) { // ESC
+  } else if (event.keyCode == 27) { // ESC
     // close the currently open panel
     try {
       triggerSidePanel(sideBar.status)
-    } catch(err) {
+    } catch (err) {
       console.log(err)
     }
   }
@@ -232,7 +233,7 @@ let sideBar = {
   panels: ['search', 'settings', 'logout'],
   // Now these are the panel creators
   search: {
-    create: function() {
+    create: function () {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'search_panel'
@@ -240,8 +241,8 @@ let sideBar = {
       let search_field = document.createElement('input')
       search_field.id = 'search_field'
       search_field.type = 'text'
-      search_field.onkeydown = function() {
-        if(event.keyCode == 13) {
+      search_field.onkeydown = function () {
+        if (event.keyCode == 13) {
           search(search_field.value)
           return false
         }
@@ -266,12 +267,12 @@ let sideBar = {
 
       return panel
     },
-    open: function() {
+    open: function () {
       this.parent.appendChild(this.create())
     }
   },
   settings: {
-    create: function() {
+    create: function () {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'settings_panel'
@@ -281,7 +282,7 @@ let sideBar = {
       setting_list.id = 'setting_list'
 
       let settings = getSettings('app')
-      for(let s in settings) {
+      for (let s in settings) {
         let settingBox = addSetting(settings[s], s)
         setting_list.appendChild(settingBox)
       }
@@ -289,12 +290,12 @@ let sideBar = {
       panel.appendChild(setting_list)
       return panel
     },
-    open: function() {
+    open: function () {
       this.parent.appendChild(this.create())
     }
   },
   logout: {
-    create: function() {
+    create: function () {
       let panel = document.createElement('div')
       panel.classList.add('panel', 'vertical_align')
       panel.id = 'logout_panel'
@@ -302,7 +303,7 @@ let sideBar = {
       let logout_button = document.createElement('button')
       logout_button.id = 'logout_button'
       logout_button.innerText = 'Logout'
-      logout_button.onclick = function() {
+      logout_button.onclick = function () {
         signout()
         return false
       }
@@ -314,19 +315,19 @@ let sideBar = {
       panel.appendChild(logout_text)
       return panel
     },
-    open: function() {
+    open: function () {
       this.parent.appendChild(this.create())
     }
   },
   // Removes the panel contents from the sidebar
-  removeAll: function() {
+  removeAll: function () {
     let panels = this.element.getElementsByClassName('panel')
-    while(panels[0]) {
+    while (panels[0]) {
       panels[0].parentNode.removeChild(panels[0])
     }
   },
   // This helper initializes the available panels by providing the sidebar element as a parent. The method is called right after the creation of this object.
-  init: function() {
+  init: function () {
     this.panels.forEach(panel => {
       this[panel].parent = this.element
     })
@@ -337,7 +338,7 @@ let sideBar = {
 
 function triggerSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
-  if(!sideBar.panels.includes(panelName)) {
+  if (!sideBar.panels.includes(panelName)) {
     throw 'panel not available'
   }
 
@@ -346,7 +347,7 @@ function triggerSidePanel(panelName) {
   let side_buttons = document.getElementById('side_buttons')
   let side_panel = document.getElementById('side_panel')
 
-  if(sideBar.status == 'none') {
+  if (sideBar.status == 'none') {
     sideBar.status = panelName
 
     // fading out the background
@@ -362,8 +363,8 @@ function triggerSidePanel(panelName) {
   }
 
   // When the panel-button of the currently opened panel was clicked, the whole sidebar will close
-  else if(sideBar.status == panelName) {
-    if(sideBar.status == 'search') {
+  else if (sideBar.status == panelName) {
+    if (sideBar.status == 'search') {
       removeSearchResults()
     }
     sideBar.status = 'none'
@@ -412,7 +413,7 @@ function openLogout() {
 function closeSidePanel() {
   try {
     triggerSidePanel(sideBar.status)
-  } catch(err) {
+  } catch (err) {
     console.log(err)
   }
 }
@@ -427,7 +428,7 @@ function addSearchResult(result) {
   result_img_box.classList.add('vertical_align')
 
   let result_img = document.createElement('img')
-  if(result.img) {
+  if (result.img) {
     result_img.src = result.img
   } else {
     result_img.style.width = '105px'
@@ -463,7 +464,7 @@ function addSearchResult(result) {
 function removeSearchResults() {
   let panel = document.getElementById('search_results')
   boxes = panel.getElementsByClassName('search_result_box')
-  while(boxes[0]) {
+  while (boxes[0]) {
     boxes[0].parentNode.removeChild(boxes[0])
   }
 }
@@ -471,12 +472,12 @@ function removeSearchResults() {
 let searchSubmitted = false
 
 function search(text) {
-  if(text == '') {
+  if (text == '') {
     // empty search submitted
     return
   }
 
-  if(!searchSubmitted) {
+  if (!searchSubmitted) {
     searchSubmitted = true
   } else {
     removeSearchResults()
@@ -490,7 +491,7 @@ function search(text) {
   let query = startsWithFilter(text, searchOptions, ':')
 
   // This converts the simplified search type into a request-friendly one
-  switch(query.found) {
+  switch (query.found) {
     case 's':
     case 'show':
     case 'shows':
@@ -519,7 +520,7 @@ function search(text) {
     }
   }
 
-  console.log(query.type+':', query.filtered)
+  console.log(query.type + ':', query.filtered)
 
   trakt.search.text({
     type: query.type,
@@ -540,32 +541,32 @@ function search(text) {
       new Promise((resolve2, reject2) => {
         result2.forEach(r2 => {
           new Promise(async (resolve3, reject3) => {
-            if(r2.type != 'person') {
-              await trakt[r2.type+'s'].ratings({
+            if (r2.type != 'person') {
+              await trakt[r2.type + 's'].ratings({
                 id: r2.id.trakt
               }).then(result2a => {
                 r2.rating = Math.round(result2a.rating * 10)
               }).catch(err => console.log(err))
-            }            
+            }
             resolve3(r2)
           }).then(result3 => {
             new Promise(async (resolve4, reject4) => {
-              if(result3.type != 'person') {
+              if (result3.type != 'person') {
                 let mv = result3.type == 'movie' ? 'm' : 'v'
-                await fanart[result3.type+'s'].get(result3.id['t'+mv+'db'])
-                .then(result3a => {
-                  if(result3a.tvposter) {
-                    result3.img = result3a.tvposter[0].url
-                  } else if(result3a.movieposter) {
-                    result3.img = result3a.movieposter[0].url
-                  } else {
-                    throw 'no poster' // couldn't find a poster
-                  }
-                }).catch(err => {
-                  console.log((err == 'no poster') ? err : '' || 'not in fanart')
-                  // put a placeholder for the unavailable image
-                  result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-                })
+                await fanart[result3.type + 's'].get(result3.id['t' + mv + 'db'])
+                  .then(result3a => {
+                    if (result3a.tvposter) {
+                      result3.img = result3a.tvposter[0].url
+                    } else if (result3a.movieposter) {
+                      result3.img = result3a.movieposter[0].url
+                    } else {
+                      throw 'no poster' // couldn't find a poster
+                    }
+                  }).catch(err => {
+                    console.log((err == 'no poster') ? err : '' || 'not in fanart')
+                    // put a placeholder for the unavailable image
+                    result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                  })
               }
               resolve4(result3)
             }).then(result4 => {
@@ -581,8 +582,8 @@ function search(text) {
 
 function startsWithFilter(string, options, removeFromFilter) {
   string = string.toString()
-  for(let opt in options) {
-    if(string.startsWith(options[opt])) {
+  for (let opt in options) {
+    if (string.startsWith(options[opt])) {
       return {
         found: options[opt].split(removeFromFilter || '').join(''),
         filtered: string.split(options[opt])[1]
@@ -601,11 +602,11 @@ function addSetting(setting, name) {
   let setting_title = document.createElement('h3')
   setting_title.innerText = name
 
-  switch(setting.type) {
+  switch (setting.type) {
     case 'select': {
       classname = 'setting_select'
 
-      for(let o in setting.options) {
+      for (let o in setting.options) {
         let opt = setting.options[o]
 
         let preview = document.createElement('div')
@@ -614,19 +615,19 @@ function addSetting(setting, name) {
         let def = document.createElement('div')
         def.classList.add('setting_def', 'white_d_t')
 
-        if(setting.default == o) {
+        if (setting.default == o) {
           def.innerText = 'default'
         }
 
-        if(setting.status == o) {
+        if (setting.status == o) {
           preview.classList.add('selected')
         }
 
-        preview.onclick = function() {
-          if(!preview.classList.contains('selected')) {
+        preview.onclick = function () {
+          if (!preview.classList.contains('selected')) {
             let par = preview.parentElement;
             [...par.children].forEach(element => {
-              if(element == preview) {
+              if (element == preview) {
                 preview.classList.add('selected')
                 setSetting('app', name, o)
                 updateApp()
@@ -637,7 +638,7 @@ function addSetting(setting, name) {
           }
         }
 
-        if(opt.preview) {
+        if (opt.preview) {
           preview.classList.add('preview_img')
           preview.style.backgroundImage = `url('../../assets/previews/${opt.value}')`
         } else {
@@ -654,7 +655,7 @@ function addSetting(setting, name) {
       classname = 'setting_toggle'
       let check_no = ''
       let check_yes = ''
-      if(setting.status) {
+      if (setting.status) {
         check_yes = 'checked'
       } else {
         check_no = 'checked'
@@ -674,7 +675,7 @@ function addSetting(setting, name) {
       </p>
       `
 
-      toggle_switch.onclick = function() {
+      toggle_switch.onclick = function () {
         let radio = document.getElementById(`setting_${name}`).children[0]
         setSetting('app', name, !radio.checked)
         updateApp()
@@ -684,7 +685,7 @@ function addSetting(setting, name) {
       def.classList.add('setting_def', 'white_d_t')
 
       def.innerText = 'default: '
-      if(setting.default) {
+      if (setting.default) {
         def.innerText += 'on'
       } else {
         def.innerText += 'off'
@@ -699,13 +700,13 @@ function addSetting(setting, name) {
 
       let slider = document.createElement('input')
       slider.type = 'range'
-      slider.min = setting.range[0]/setting.accuracy
-      slider.max = setting.range[1]/setting.accuracy
-      slider.value = setting.status/setting.accuracy
+      slider.min = setting.range[0] / setting.accuracy
+      slider.max = setting.range[1] / setting.accuracy
+      slider.value = setting.status / setting.accuracy
       slider.classList.add('slider')
 
-      slider.oninput = function() {
-        let value = slider.value*setting.accuracy
+      slider.oninput = function () {
+        let value = slider.value * setting.accuracy
         setSetting('app', name, value)
         updateApp()
       }
@@ -713,8 +714,8 @@ function addSetting(setting, name) {
       let def = document.createElement('div')
       def.classList.add('setting_def', 'white_d_t')
 
-      def.innerText = 'default: '+setting.default
-      
+      def.innerText = 'default: ' + setting.default
+
       setting_area.appendChild(slider)
       setting_area.appendChild(def)
       break
