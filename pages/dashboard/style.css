@@ -9,7 +9,6 @@
 .titles {
   margin: 10px 20px;
   transform: translateX(236px) translateY(131px);
-  max-width: 625px;
   width: min-content;
   overflow: visible;
 }
@@ -20,9 +19,11 @@
   line-height: 36px;
   white-space: nowrap;
   text-overflow: ellipsis;
+  overflow: hidden;
+  max-width: 625px;
 }
 
-.poster-dashboard:nth-child(n+5) {
+.poster-dashboard:nth-child(n+6) {
   display: none;
 }
 .poster-dashboard:first-child {
@@ -91,6 +92,7 @@
   .titles h3 {
     margin: 0;
     line-height: 27px;
+    max-width: 450px;
   }
 
   .poster-dashboard:nth-child(4) {

@@ -243,21 +243,21 @@ body {
 }
 /*---animations---*/
 .animation_slide_up {
-  animation: slide_up 1.2s cubic-bezier(.165,.84,.44,1) 1 forwards;
+  animation: slide_up 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
 @keyframes slide_up {
-  0% {opacity:0;transform: translateY(100px)}
-  50% {opacity:0;transform: translateY(50px)}
+  0% {opacity:0;transform: translateY(50px)}
+  50% {opacity:0;transform: translateY(25px)}
   100% {opacity:1;transform: translateY(0)}
 }
 
 .animation_slide_down {
-  animation: slide_down 1.2s cubic-bezier(.165,.84,.44,1) 1 forwards;
+  animation: slide_down 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
 @keyframes slide_down {
   0% {opacity:0;transform: translateY(0)}
-  50% {opacity:0;transform: translateY(50px)}
-  100% {opacity:1;transform: translateY(100px)}
+  50% {opacity:0;transform: translateY(25px)}
+  100% {opacity:1;transform: translateY(50px)}
 }
 /*---responsive---*/
 @media screen and (max-width: 952px) {

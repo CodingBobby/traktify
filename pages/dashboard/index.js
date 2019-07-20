@@ -1,7 +1,6 @@
 if(!remote.getGlobal('darwin')) {
   document.getElementById('dragger').remove()
 }
-
 createPosters()
 
 function signout() {
@@ -49,7 +48,8 @@ function createPosters() {
     let array2Ids = arr2.map(item => item.show.ids.trakt);
     arr = arr.filter((item) => !array2Ids.includes(item.show.ids.trakt));
 
-    // filters completed shows
+    // filters completed shows and creates first title
+    let first = true;
     arr.forEach(item => {
       tr.shows.progress.watched({
         id: item.show.ids.trakt,
@@ -57,9 +57,19 @@ function createPosters() {
       }).then(res4 => {
         if(res4.aired > res4.completed) {
           let ep = res4.next_episode
+          let title = item.show.title
+          let subtitle = `${ep.season} x ${ep.number} (${ep.number_abs}) ${ep.title}`
+
+          if(first) {
+            createTitle({
+              title: title,
+              subtitle: subtitle
+            })
+            first = false
+          }
           createPoster({
-            title: item.show.title,
-            subtitle: `${ep.season} x ${ep.number} (${ep.number_abs}) ${ep.title}`,
+            title: title,
+            subtitle: subtitle,
             rating: ep.rating,
             id: item.show.ids.tvdb
           })
@@ -74,6 +84,8 @@ function createPoster(x) {
   li.classList = 'poster poster-dashboard shadow_h'
   li.setAttribute('data_title', x.title)
   li.setAttribute('data_subtitle', x.subtitle)
+  li.setAttribute('onmouseover', 'animateText(this, true)')
+  li.setAttribute('onmouseleave', 'animateText(this, false)')
 
   let poster_content = document.createElement('div')
   poster_content.classList = 'poster-content'
@@ -118,11 +130,8 @@ function createPoster(x) {
   posters.appendChild(li);
 }
 
-function createTitle() {
+function createTitle(x) {
   let title = document.getElementById('poster_title')
-  let info = document.getElementById('posters').firstChild
-
-  console.log(info.classList)
 
   let h3 = document.createElement('h3')
   h3.classList = 'h3 red_t tu'
@@ -130,13 +139,47 @@ function createTitle() {
 
   let h1 = document.createElement('h1')
   h1.classList = 'h1 white_t tu'
-  h1.innerText = info.getAttribute('data_title')
+  h1.innerText = x.title
 
   let h1_2 = document.createElement('h1')
   h1_2.classList = 'h1 white_d_t'
-  h1_2.innerText = info.getAttribute('data_subtitle')
+  h1_2.innerText = x.subtitle
 
   title.appendChild(h3)
   title.appendChild(h1)
   title.appendChild(h1_2)
+}
+
+function animateText(x, onenter) {
+  let container = document.getElementById('poster_title')
+  let container_title = container.children[1]
+  let container_subtitle = container.children[2]
+
+  let title = x.getAttribute('data_title')
+  let subtitle = x.getAttribute('data_subtitle')
+
+  if(title.toLowerCase() != container_title.innerText.toLowerCase()) {
+    if(onenter) {
+      animationToggle(container_title, 'animation_slide_up', title)
+      animationToggle(container_subtitle, 'animation_slide_up', subtitle)
+    }
+  }
+
+  let poster = document.getElementById('posters').firstChild
+  let poster_title = poster.getAttribute('data_title')
+  let poster_subtitle = poster.getAttribute('data_subtitle')
+
+  if(poster_title.toLowerCase() != container_title.innerText.toLowerCase()) {
+    if(!onenter) {
+      animationToggle(container_title, 'animation_slide_up', poster_title)
+      animationToggle(container_subtitle, 'animation_slide_up', poster_subtitle)
+    }
+  }
+}
+
+function animationToggle(x, y, z) {
+  x.classList.remove(y)
+  void x.offsetWidth
+  x.innerText = z
+  x.classList.add(y)
 }
