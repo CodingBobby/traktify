@@ -28,8 +28,6 @@
 .poster-dashboard:first-child {
   width: 236px;
   height: 324px;
-  flex-direction: row;
-  align-items: initial;
 }
 .poster-dashboard:last-child {
   margin-right: 0;
@@ -62,6 +60,10 @@
   flex-direction: column;
   align-items: center;
   transition: all 400ms ease;
+}
+.poster-dashboard:first-child > .poster-content {
+  flex-direction: row;
+  align-items: initial;
 }
 .poster-dashboard:hover > .poster-content {
   opacity: 1;
