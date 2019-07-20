@@ -25,30 +25,30 @@ body {
 
 .loading {
    animation: fly_in 0.5s;
-   transform: scale(2);
+   transform: scale(1);
 }
 
 .loading img {
-  height: 90px;
-  width: 90px;
+  height: 180px;
+  width: 180px;
   position: absolute;
 }
 
 .loader,
 .loader:after {
   border-radius: 50%;
-  width: 80px;
-  height: 80px;
+  width: 160px;
+  height: 160px;
   z-index: 1;
   position: absolute;
 }
 .loader {
-  font-size: 10px;
+  font-size: 20px;
   position: relative;
-  border-top: 5px solid red;
-  border-right: 5px solid transparent;
-  border-bottom: 5px solid transparent;
-  border-left: 5px solid transparent;
+  border-top: 10px solid red;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 10px solid transparent;
   animation: load 2s infinite linear;
 }
 @-webkit-keyframes load {
@@ -69,11 +69,11 @@ body {
 }
 @keyframes fly_in {
    0% {
-      transform: translateY(120px) scale(0.8);
+      transform: translateY(120px) scale(0.4);
       opacity: 0;
    }
    100% {
-      transform: translateY(0) scale(2);
+      transform: translateY(0) scale(1);
       opacity: 1;
    }
 }

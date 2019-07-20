@@ -20,6 +20,7 @@ const fs = require('fs')
 const path = require('path')
 const Trakt = require('trakt.tv')
 const Fanart = require('fanart.tv')
+const windowStateKeeper = require('electron-window-state')
 
 // the electron items we need
 const {
@@ -111,8 +112,7 @@ let menuTemplate = [{
   }]
 }]
 
-// if the app is in development mode, these menu items will be pushed
-// to the menu template
+// if the app is in development mode, these menu items will be pushed to the menu template
 if(process.env.NODE_ENV !== 'production') {
   menuTemplate.push({
     label: 'Dev Tools',
@@ -134,10 +134,27 @@ if(process.env.NODE_ENV !== 'production') {
 
 const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
-// this function builds the app window, shows the correct page and handles window.on() events
+// This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 900,
+    defaultHeight: 750
+  })
+
+  if(getSettings('app')['keep window state'].status) {
+    debugLog('keeping window state changes')
+    windowOptions.x = mainWindowState.x
+    windowOptions.y = mainWindowState.y
+    windowOptions.width = mainWindowState.width
+    windowOptions.height = mainWindowState.height
+  }
+
   window = new BrowserWindow(windowOptions)
   Menu.setApplicationMenu(mainMenu)
+
+  if(getSettings('app')['keep window state'].status) {
+    mainWindowState.manage(window)
+  }
 
   try {
     global.trakt = new Trakt(traktOptions)
@@ -164,13 +181,13 @@ function build() {
   // EVENTS
 
   // if the window gets closed, the app will quit
-  window.on('closed', function() {
+  window.on('closed', () => {
     win = null
   })
 
 	window.on('restore', () => {
 		window.focus()
-	})
+  })
 }
 
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
@@ -191,7 +208,7 @@ function tryLogin() {
         user.trakt.auth = newAuth
         user.trakt.status = true
         saveConfig()
-        console.log('success')
+        debugLog('success')
         loadDashboard()
       }).catch(err => {
         if(err) {
@@ -217,7 +234,7 @@ function authenticate() {
 
     return global.trakt.poll_access(poll)
   }).then(auth => {
-    console.log('user signed in')
+    debugLog('user signed in')
     global.trakt.import_token(auth)
 
     user.trakt.auth = auth
@@ -327,7 +344,7 @@ function setSetting(scope, settingOption, newStatus) {
         }
         break
       }
-      case 'slider': {
+      case 'range': {
         if(inRange(newStatus, setting.range)) {
           setting.status = newStatus
         }
@@ -357,11 +374,56 @@ function defaultAll(scope) {
 global.defaultAll = defaultAll
 
 
+function updateApp() {
+  let settings = getSettings('app')
+  for(let s in settings) {
+    debugLog('updating setting:', s)
+    let setting = settings[s]
+    switch(s) {
+      case 'accent color': {
+        let value = setting.options[setting.status].value
+        window.webContents.send('modify-root', {
+          name: '--accent_color',
+          value: value
+        })
+        break
+      }
+      case 'background image': {
+        let value = setting.options[setting.status].value
+        window.webContents.send('modify-root', {
+          name: '--background_image',
+          value: `url('./${value}')`
+        })
+        break
+      }
+      case 'background opacity': {
+        let value = setting.status
+        window.webContents.send('modify-root', {
+          name: '--background_opacity',
+          value: value/100
+        })
+        break
+      }
+      default: { break }
+    }
+  }
+}
+global.updateApp = updateApp
+
+
 // Range must be an array of two numeric values
 function inRange(value, range) {
   let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
   return value >= min && value <= max
 }
+
+// This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
+function debugLog(...args) {
+  if(process.env.NODE_ENV !== 'production') {
+    console.log.apply(null, args)
+  }
+}
+global.debugLog = debugLog
 
 // here we finally build the app
 app.on('ready', build)

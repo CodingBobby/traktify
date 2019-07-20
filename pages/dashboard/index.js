@@ -1,5 +1,30 @@
 const trakt = remote.getGlobal('trakt')
 const fanart = remote.getGlobal('fanart')
+const getSettings = remote.getGlobal('getSettings')
+const setSetting = remote.getGlobal('setSetting')
+const defaultAll = remote.getGlobal('defaultAll')
+const updateApp = remote.getGlobal('updateApp')
+
+// Here we update the app with saved settings after the window is created
+window.onload = function() {
+  updateApp()
+}
+
+ipcRenderer.on('modify-root', (event, data) => {
+  let variables = document.styleSheets[0]
+    .cssRules[0].style.cssText.split(';')
+
+  let result = {}
+  for(let i in variables) {
+    let a = variables[i].split(':')
+    if(a[0] !== '') {
+      result[a[0].trim()] = a[1].trim()
+    }
+  }
+
+  let keys = Object.keys(result)
+  document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
+});
 
 
 // This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
@@ -19,16 +44,16 @@ function show(x) {
 document.onkeydown = function() {
   if(event.metaKey && event.keyCode == 83) { // meta + S
     show(document.getElementById('search_button_side'))
-    triggersSidePanel('search')
+    triggerSidePanel('search')
     return false
   } else if(event.metaKey && event.keyCode == 188) { // meta + ,
     show(document.getElementById('settings_button_side'))
-    triggersSidePanel('settings')
+    triggerSidePanel('settings')
     return false
   } else if(event.keyCode == 27) { // ESC
     // close the currently open panel
     try {
-      triggersSidePanel(sideBar.status)
+      triggerSidePanel(sideBar.status)
     } catch(err) {
       console.log(err)
     }
@@ -88,8 +113,18 @@ let sideBar = {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'settings_panel'
+      panel.innerHTML = '<h2>Settings</h2>'
 
-      panel.innerText = 'Settings Panel'
+      let setting_list = document.createElement('div')
+      setting_list.id = 'setting_list'
+
+      let settings = getSettings('app')
+      for(let s in settings) {
+        let settingBox = addSetting(settings[s], s)
+        setting_list.appendChild(settingBox)
+      }
+
+      panel.appendChild(setting_list)
       return panel
     },
     open: function() {
@@ -99,7 +134,7 @@ let sideBar = {
   logout: {
     create: function() {
       let panel = document.createElement('div')
-      panel.classList.add('panel')
+      panel.classList.add('panel', 'vertical_align')
       panel.id = 'logout_panel'
 
       let logout_button = document.createElement('button')
@@ -138,7 +173,7 @@ let sideBar = {
   }
 }.init()
 
-function triggersSidePanel(panelName) {
+function triggerSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
   if(!sideBar.panels.includes(panelName)) {
     throw 'panel not available'
@@ -201,20 +236,20 @@ function triggersSidePanel(panelName) {
 
 // These functions are called by onclicks in the HTML
 function openSearch() {
-  triggersSidePanel('search')
+  triggerSidePanel('search')
 }
 
 function openSettings() {
-  triggersSidePanel('settings')
+  triggerSidePanel('settings')
 }
 
 function openLogout() {
-  triggersSidePanel('logout')
+  triggerSidePanel('logout')
 }
 
 function closeSidePanel() {
   try {
-    triggersSidePanel(sideBar.status)
+    triggerSidePanel(sideBar.status)
   } catch(err) {
     console.log(err)
   }
@@ -398,11 +433,137 @@ function startsWithFilter(string, options, removeFromFilter) {
   }
 }
 
+function addSetting(setting, name) {
+  let setting_area = document.createElement('div')
+  setting_area.classList.add('col_2')
+  let setting_title = document.createElement('h3')
+  setting_title.innerText = name
 
-function testFanart() {
-   let img = document.createElement('img')
-   remote.getGlobal('fanart').shows.get(75682).then(res => {
-      img.src = res.seasonposter[0].url
-   })
-   document.body.appendChild(img)
+  switch(setting.type) {
+    case 'select': {
+      classname = 'setting_select'
+
+      for(let o in setting.options) {
+        let opt = setting.options[o]
+
+        let preview = document.createElement('div')
+        preview.classList.add('setting_preview')
+
+        let def = document.createElement('div')
+        def.classList.add('setting_def', 'white_d_t')
+
+        if(setting.default == o) {
+          def.innerText = 'default'
+        }
+
+        if(setting.status == o) {
+          preview.classList.add('selected')
+        }
+
+        preview.onclick = function() {
+          if(!preview.classList.contains('selected')) {
+            let par = preview.parentElement;
+            [...par.children].forEach(element => {
+              if(element == preview) {
+                preview.classList.add('selected')
+                setSetting('app', name, o)
+                updateApp()
+              } else {
+                element.classList.remove('selected')
+              }
+            })
+          }
+        }
+
+        if(opt.preview) {
+          preview.classList.add('preview_img')
+          preview.style.backgroundImage = `url('../../assets/previews/${opt.value}')`
+        } else {
+          preview.classList.add('preview_color')
+          preview.style.backgroundColor = opt.value
+        }
+
+        setting_area.appendChild(preview)
+        setting_area.appendChild(def)
+      }
+      break
+    }
+    case 'toggle': {
+      classname = 'setting_toggle'
+      let check_no = ''
+      let check_yes = ''
+      if(setting.status) {
+        check_yes = 'checked'
+      } else {
+        check_no = 'checked'
+      }
+
+      let toggle_switch = document.createElement('div')
+      toggle_switch.innerHTML = `
+      <p class="btn-switch" id="setting_${name}">
+        <input ${check_no} type="radio" id="no" name="switch" class="btn-switch__radio btn-switch__radio_no"/>
+        <input ${check_yes} type="radio" id="yes" name="switch" class="btn-switch__radio btn-switch__radio_yes"/>
+        <label for="yes" class="btn-switch__label btn-switch__label_yes">
+          <span class="btn-switch__txt"></span>
+        </label>
+        <label for="no" class="btn-switch__label btn-switch__label_no">
+          <span class="btn-switch__txt"></span>
+        </label>
+      </p>
+      `
+
+      toggle_switch.onclick = function() {
+        let radio = document.getElementById(`setting_${name}`).children[0]
+        setSetting('app', name, !radio.checked)
+        updateApp()
+      }
+
+      let def = document.createElement('div')
+      def.classList.add('setting_def', 'white_d_t')
+
+      def.innerText = 'default: '
+      if(setting.default) {
+        def.innerText += 'on'
+      } else {
+        def.innerText += 'off'
+      }
+
+      setting_area.appendChild(toggle_switch)
+      setting_area.appendChild(def)
+      break
+    }
+    case 'range': {
+      classname = 'setting_range'
+
+      let slider = document.createElement('input')
+      slider.type = 'range'
+      slider.min = setting.range[0]/setting.accuracy
+      slider.max = setting.range[1]/setting.accuracy
+      slider.value = setting.status/setting.accuracy
+      slider.classList.add('slider')
+
+      slider.oninput = function() {
+        let value = slider.value*setting.accuracy
+        setSetting('app', name, value)
+        updateApp()
+      }
+
+      let def = document.createElement('div')
+      def.classList.add('setting_def', 'white_d_t')
+
+      def.innerText = 'default: '+setting.default
+      
+      setting_area.appendChild(slider)
+      setting_area.appendChild(def)
+      break
+    }
+    default: { break }
+  }
+
+  let box = document.createElement('div')
+  box.classList.add('setting_box')
+
+  box.appendChild(setting_title)
+  box.appendChild(setting_area)
+  return box
 }

@@ -3,9 +3,12 @@
   --black_d: #191919;
   --white: #FFF;
   --white_d: #CECECE;
-  --red: #ED1C24;
-  --red_d: #C61017;
+  --accent_color: #ED1C24;
+  --accent_color_d: #C61017;
+  --gray: #696969;
   --side_dist: 30px;
+  --background_image: url('./furniture.png');
+  --background_opacity : 1;
 }
 
 *:focus {
@@ -109,10 +112,10 @@
   color: var(--white_d);
 }
 .red_t {
-  color: var(--red);
+  color: var(--accent_color);
 }
 .red_d_t {
-  color: var(--red_d);
+  color: var(--accent_color_d);
 }
 
 .black_b {
@@ -128,10 +131,10 @@
   background-color: var(--white_d);
 }
 .red_b {
-  background-color: var(--red);
+  background-color: var(--accent_color);
 }
 .red_d_b {
-  background-color: var(--red_d);
+  background-color: var(--accent_color_d);
 }
 /*---shadows---*/
 .shadow_h {
@@ -143,8 +146,21 @@
 /*---components---*/
 body {
   margin: 0;
-  background: url('./retro-furnish.png') repeat var(--black_d);
   font-family: manrope;
+  overflow: hidden;
+  background: var(--black_d);
+}
+
+body::after {
+  content: '';
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  background: var(--background_image) repeat;
+  opacity: var(--background_opacity);
 }
 
 #dragger {
@@ -188,7 +204,7 @@ body {
   filter: grayscale(20%);
 }
 .btn.selected {
-  background-color: var(--red);
+  background-color: var(--accent_color);
 }
 .btn.bottom {
   padding: 10px 19px;
@@ -200,13 +216,26 @@ body {
   padding: 12px;
   display: flex;
 }
+.btn.icon_small {
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  height: min-content;
+  width: min-content;
+}
+
 .btn.icon img {
   filter: invert(1);
   width: 20px;
   height: 20px;
   vertical-align: middle;
 }
-
+.btn.icon_small img {
+  filter: invert(1);
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+}
 .posters {
   list-style: none;
   padding: 0;

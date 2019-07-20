@@ -51,6 +51,8 @@
   animation-fill-mode: forwards;
 }
 
+/*:::: SIDEPANEL ::::*/
+
 #side_panel {
   display: block;
   position: absolute;
@@ -108,13 +110,13 @@
 }
 
 .panel {
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
   padding: 16px 20px 16px 35px;
   overflow-y: scroll;
   overflow-x: hidden;
   height: calc(100vh - 32px);
 }
+
+/* search boxes */
 
 .search_result_box {
   height: min-content;
@@ -140,7 +142,6 @@
   height: var(--search_result_height);
   left: 0;
   top: 0;
-  /*  */
   max-width: 140px;
 }
 
@@ -206,6 +207,85 @@
   grid-row-gap: 15px;
 }
 
+/* settings */
+
+#setting_list {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-row-gap: 15px;
+}
+
+.setting_box {
+  height: min-content;
+  background-color: var(--black_d);
+  border-radius: 5px;
+  animation: right_in 0.2s;
+  padding: 12px;
+}
+
+.setting_box h3 {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+}
+
+.setting_box .col_2 {
+  display: grid;
+  grid-template-columns: auto max-content;
+  grid-row-gap: 15px;
+  grid-column-gap: 15px;
+  padding: 10px;
+}
+
+.setting_box .col_2 * {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.setting_box .col_3 {
+  display: grid;
+  grid-template-columns: min-content auto min-content;
+  grid-row-gap: 15px;
+  grid-column-gap: 20px;
+  padding: 8px 20px;
+}
+
+.setting_box .col_3 * {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.setting_box .setting_def {
+  font-style: italic;
+  font-size: 15px;
+  text-align: right;
+}
+
+.setting_box .preview_img  {
+  width: 100%;
+  height: 45px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1.5px;
+  border-color: var(--white_d);
+  background-size: 150px;
+  cursor: pointer;
+}
+
+.setting_box .preview_color {
+  width: 100%;
+  height: 20px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 1.5px;
+  border-color: var(--white_d);
+  cursor: pointer;
+}
+
+.setting_box .selected {
+  border-color: var(--accent_color) !important;
+}
+
 #logout_button {
   height: 44px;
   padding: 0px;
@@ -228,6 +308,110 @@
   height: min-content;
   text-align: center;
 }
+
+/* toggle switch */
+
+.btn-switch {
+  font-size: 10px;
+  position: relative;
+  display: inline-block;
+  user-select: none;
+}
+
+.btn-switch__radio {
+  display: none;
+}
+
+.btn-switch__label {
+  display: inline-block;
+  padding: 0.6em 0.75em 1em 0.5em;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.btn-switch__txt {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  min-width: 18px;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.btn-switch__label:before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: var(--accent_color);
+  border-radius: 1.5em;
+  box-shadow: inset 0 0.0715em 0.3572em rgba(43, 43, 43, 0.05);
+  transition: background 0.2s ease-in-out;
+}
+
+.btn-switch__radio_no:checked ~ .btn-switch__label:before {
+  background: var(--gray);
+}
+
+.btn-switch__label_no:after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0.5em;
+  bottom: 0.5em;
+  left: 0.5em;
+  width: 2em;
+  background: var(--white);
+  border-radius: 1em;
+  pointer-events: none;
+  box-shadow: 0 0.1429em 0.2143em rgba(43, 43, 43, 0.2),
+    0 0.3572em 0.3572em rgba(43, 43, 43, 0.1);
+  transition: left 0.2s ease-in-out, background 0.2s ease-in-out;
+}
+
+.btn-switch__radio_yes:checked ~ .btn-switch__label_no:after {
+  left: calc(100% - 2.5em);
+  background: var(--white);
+}
+
+.btn-switch__radio_no:checked ~ .btn-switch__label_yes:before,
+.btn-switch__radio_yes:checked ~ .btn-switch__label_no:before {
+  z-index: 1;
+}
+
+.btn-switch__radio_no:checked ~ .btn-switch__label_yes {
+  color: var(--white);
+}
+
+/* slider */
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 5px;
+  background: var(--white_d);
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #d3d3d3;
+  border-radius: 50%;
+  border: 3px solid;
+  border-color: var(--accent_color);
+  cursor: pointer;
+}
+
+
+/*:::: ANIMATIONS ::::*/
 
 @keyframes blend_in {
   0% {
@@ -307,6 +491,8 @@
     opacity: 1;
   }
 }
+
+/*:::: RESPONSIVENESS ::::*/
 
 @media screen and (max-width: 952px) {
   :root {

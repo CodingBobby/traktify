@@ -8,20 +8,16 @@
                     "default": "red",
                     "options": {
                         "red": {
-                            "value": "#ED1C24",
-                            "preview": "x.png"
+                            "value": "#ED1C24"
                         },
                         "green": {
-                            "value": "",
-                            "preview": "x.png"
+                            "value": "#0FD67C"
                         },
                         "blue": {
-                            "value": "",
-                            "preview": "x.png"
+                            "value": "#04BA9C"
                         },
                         "yellow": {
-                            "value": "",
-                            "preview": "x.png"
+                            "value": "#FF980D"
                         }
                     },
                     "needsReload": false
@@ -32,20 +28,20 @@
                     "default": "furniture",
                     "options": {
                         "furniture": {
-                            "value": "./assets/retro-furnish.png",
-                            "preview": "furniture.png"
-                        },
-                        "tech": {
-                            "value": "",
-                            "preview": "x.png"
+                            "value": "furniture.png",
+                            "preview": true
                         },
                         "grid": {
-                            "value": "",
-                            "preview": "x.png"
+                            "value": "grid.png",
+                            "preview": true
+                        },
+                        "grunge": {
+                            "value": "grunge.png",
+                            "preview": true
                         },
                         "blank": {
-                            "value": "./assets/blank.png",
-                            "preview": "blank.png"
+                            "value": "blank.png",
+                            "preview": true
                         }
                     },
                     "needsReload": false
@@ -54,14 +50,14 @@
                     "type": "range",
                     "status": 100,
                     "default": 100,
-                    "digits": 0,
+                    "accuracy": 5,
                     "range": [
-                        50,
+                        0,
                         100
                     ],
                     "needsReload": false
                 },
-                "keep window position": {
+                "keep window state": {
                     "type": "toggle",
                     "status": false,
                     "default": false,

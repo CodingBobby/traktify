@@ -48,13 +48,13 @@ setting:
    needsReload: boolean
 ```
 
-The `range` type has a minimum and maximum possible value. The accuracy is defined by the `digits` property.
+The `range` type has a minimum and maximum possible value. The accuracy is defined by the `accuracy` property.
 ```cson
 setting:
    type: 'range'
    status: number
    default: number
-   digits: number
+   accuracy: number
    range: [number, number]
    needsReload: boolean
 ```
