@@ -6,9 +6,10 @@
   <link rel="stylesheet" type="text/css" href="../../assets/master.css">
   <link rel="stylesheet" type="text/css" href="./style.css">
   <script>
-    const remote = require('electron').remote;
-    const tr = remote.getGlobal('trakt');
-    const fr = remote.getGlobal('fanart');
+    const {
+      remote,
+      ipcRenderer
+    } = require('electron');
   </script>
   <title>Traktify | Dashboard</title>
 </head>
@@ -16,18 +17,21 @@
   <div id="dragger"></div>
   <div id="background_img" style="background-image:url('../../assets/retro-furnish.png')"></div>
   <div class="wrapper flex dashboard">
-    <div class="dashboard">
-      <ul class="btns top right">
-        <li><div class="btn icon black_b shadow_b selected" onclick="show(this)"><img src="../../assets/icons/app/search.svg"></div></li>
-        <li><div class="btn icon black_b shadow_b" onclick="show(this)"><img src="../../assets/icons/app/settings.svg"></div></li>
-        <li><div class="btn icon black_b shadow_b" onclick="show(this);signout()"><img src="../../assets/icons/app/signout.svg"></div></li>
-        <li><div class="btn icon black_b shadow_b" onclick="show(this);reload()"><img src="../../assets/icons/app/sync.svg"></div></li>
-      </ul>
+    <ul class="btns top right above_all" id="side_buttons">
+      <li><div class="btn icon black_b shadow_b selected" id="search_button_side" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" id="settings_button_side" onclick="show(this); openSettings()"><img src="../../assets/icons/app/settings.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" id="logout_button_side" onclick="show(this); openLogout()"><img src="../../assets/icons/app/signout.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" onclick="show(this);reload()"><img src="../../assets/icons/app/sync.svg"></div></li>
+    </ul>
+    <div id="side_panel"></div>
+    <div id="dash_overlay" onclick="closeSidePanel()"></div>
+    <div class="dashboard" id="dash">
       <div class="titles" id="poster_title"></div>
       <ul class="posters" id="posters"></ul>
     </div>
   </div>
   <a class="btn bottom right fw300 fs14 red_b white_t">History</a>
+  <script src="../main.js"></script>
   <script src="./index.js"></script>
 </body>
 </html>
