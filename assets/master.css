@@ -230,13 +230,6 @@ body {
   display: inline-block;
   transition: all 400ms ease;
 }
-.poster:first-child {
-  width: 236px;
-  height: 324px;
-}
-.poster:last-child {
-  margin-right: 0;
-}
 
 .poster img {
   object-fit: cover;
@@ -247,6 +240,24 @@ body {
 .poster, 
 .poster img {
   border-radius: 5px;
+}
+/*---animations---*/
+.animation_slide_up {
+  animation: slide_up 1.2s cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+@keyframes slide_up {
+  0% {opacity:0;transform: translateY(100px)}
+  50% {opacity:0;transform: translateY(50px)}
+  100% {opacity:1;transform: translateY(0)}
+}
+
+.animation_slide_down {
+  animation: slide_down 1.2s cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+@keyframes slide_down {
+  0% {opacity:0;transform: translateY(0)}
+  50% {opacity:0;transform: translateY(50px)}
+  100% {opacity:1;transform: translateY(100px)}
 }
 /*---responsive---*/
 @media screen and (max-width: 952px) {
@@ -276,12 +287,5 @@ body {
   .wrapper.flex {
     min-height: calc(100vh - 40px);
     min-width: calc(100vh - 40px);
-  }
-
-  .poster:nth-child(4) {
-    margin-right: 0;
-  }
-  .poster:last-child {
-    display: none;
   }
 }

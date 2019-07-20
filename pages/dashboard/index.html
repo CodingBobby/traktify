@@ -7,6 +7,8 @@
   <link rel="stylesheet" type="text/css" href="./style.css">
   <script>
     const remote = require('electron').remote;
+    const tr = remote.getGlobal('trakt');
+    const fr = remote.getGlobal('fanart');
   </script>
   <title>Traktify | Dashboard</title>
 </head>
@@ -20,13 +22,8 @@
         <li><div class="btn icon black_b shadow_b" onclick="show(this)"><img src="../../assets/icons/app/settings.svg"></div></li>
         <li><div class="btn icon black_b shadow_b" onclick="show(this); signout()"><img src="../../assets/icons/app/signout.svg"></div></li>
       </ul>
-      <div class="titles">
-        <h3 class="h3 red_t tu">up next to watch</h3>
-        <h1 class="h1 white_t tu">my hero academia</h1>
-        <h1 class="h1 white_d_t">1 x 01 (1) Izuku Midoriya: Origin</h1>
-      </div>
-      <ul class="posters" id="posters">
-      </ul>
+      <div class="titles" id="poster_title"></div>
+      <ul class="posters" id="posters"></ul>
     </div>
   </div>
   <a class="btn bottom right fw300 fs14 red_b white_t">History</a>
