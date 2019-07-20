@@ -107,7 +107,7 @@
 
   position: absolute;
   overflow: hidden;
-  z-index: 1;
+  z-index: 2;
   background-color: rgb(20, 20, 20);
 
   opacity: 0.75;
@@ -125,7 +125,7 @@
   width: var(--side_panel_width);
   background: var(--black);
   color: var(--white);
-  z-index: 2;
+  z-index: 3;
   top: 0;
   right: calc(-1 * var(--side_panel_width));
 }
