@@ -8,6 +8,10 @@ function signout() {
   remote.getGlobal('disconnect')()
 }
 
+function reload() {
+  remote.getGlobal('loadDashboard')()
+}
+
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
@@ -68,8 +72,8 @@ function createPosters() {
 function createPoster(x) {
   let li = document.createElement('li')
   li.classList = 'poster poster-dashboard shadow_h'
-  li.setAttribute('title', x.title)
-  li.setAttribute('subtitle', x.subtitle)
+  li.setAttribute('data_title', x.title)
+  li.setAttribute('data_subtitle', x.subtitle)
 
   let poster_content = document.createElement('div')
   poster_content.classList = 'poster-content'
@@ -126,11 +130,11 @@ function createTitle() {
 
   let h1 = document.createElement('h1')
   h1.classList = 'h1 white_t tu'
-  h1.innerText = info.getAttribute('title')
+  h1.innerText = info.getAttribute('data_title')
 
   let h1_2 = document.createElement('h1')
   h1_2.classList = 'h1 white_d_t'
-  h1_2.innerText = info.getAttribute('subtitle')
+  h1_2.innerText = info.getAttribute('data_subtitle')
 
   title.appendChild(h3)
   title.appendChild(h1)

@@ -217,6 +217,7 @@ function loadLogin() {
 function loadDashboard() {
   window.loadFile('pages/dashboard/index.html')
 }
+global.loadDashboard = loadDashboard
 
 function disconnect() {
   global.trakt.revoke_token()
@@ -225,7 +226,6 @@ function disconnect() {
   saveConfig()
   loadLogin()
 }
-
 global.disconnect = disconnect
 
 // this function can be called to save changes in the config file
