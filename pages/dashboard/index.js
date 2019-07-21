@@ -93,9 +93,9 @@ function createPosters() {
             id: item.show.ids.tvdb
           })
         }
-      }).catch(err => console.log(err))
+      }).catch(err => debugLog('error:', err))
     })
-  }).catch(err => console.log(err))
+  }).catch(err => debugLog('error:', err))
 }
 
 function createPoster(x) {
@@ -203,6 +203,7 @@ function animationToggle(x, y, z) {
   x.classList.add(y)
 }
 
+
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
 document.onkeydown = function () {
   if (event.metaKey && event.keyCode == 83) { // meta + S
@@ -218,7 +219,7 @@ document.onkeydown = function () {
     try {
       triggerSidePanel(sideBar.status)
     } catch (err) {
-      console.log(err)
+      debugLog('error:', err)
     }
   }
 }
@@ -413,8 +414,8 @@ function openLogout() {
 function closeSidePanel() {
   try {
     triggerSidePanel(sideBar.status)
-  } catch (err) {
-    console.log(err)
+  } catch(err) {
+    debugLog('error:', err)
   }
 }
 
@@ -477,7 +478,7 @@ function search(text) {
     return
   }
 
-  if (!searchSubmitted) {
+  if(!searchSubmitted) {
     searchSubmitted = true
   } else {
     removeSearchResults()
@@ -491,7 +492,7 @@ function search(text) {
   let query = startsWithFilter(text, searchOptions, ':')
 
   // This converts the simplified search type into a request-friendly one
-  switch (query.found) {
+  switch(query.found) {
     case 's':
     case 'show':
     case 'shows':
@@ -520,7 +521,7 @@ function search(text) {
     }
   }
 
-  console.log(query.type + ':', query.filtered)
+  debugLog(query.type+':', query.filtered)
 
   trakt.search.text({
     type: query.type,
@@ -541,12 +542,12 @@ function search(text) {
       new Promise((resolve2, reject2) => {
         result2.forEach(r2 => {
           new Promise(async (resolve3, reject3) => {
-            if (r2.type != 'person') {
+            if(r2.type != 'person') {
               await trakt[r2.type + 's'].ratings({
                 id: r2.id.trakt
               }).then(result2a => {
                 r2.rating = Math.round(result2a.rating * 10)
-              }).catch(err => console.log(err))
+              }).catch(err => debugLog('error:', err))
             }
             resolve3(r2)
           }).then(result3 => {
@@ -563,7 +564,7 @@ function search(text) {
                       throw 'no poster' // couldn't find a poster
                     }
                   }).catch(err => {
-                    console.log((err == 'no poster') ? err : '' || 'not in fanart')
+                    debugLog('error:', (err == 'no poster') ? err : '' || 'not in fanart')
                     // put a placeholder for the unavailable image
                     result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
                   })
@@ -571,13 +572,13 @@ function search(text) {
               resolve4(result3)
             }).then(result4 => {
               addSearchResult(result4)
-            }).catch(err => console.log(err))
+            }).catch(err => debugLog('error:', err))
           })
         })
         resolve2()
-      }).catch(err => console.log(err))
-    }).catch(err => console.log(err))
-  }).catch(err => console.log(err))
+      }).catch(err => debugLog('error:', err))
+    }).catch(err => debugLog('error:', err))
+  }).catch(err => debugLog('error:', err))
 }
 
 function startsWithFilter(string, options, removeFromFilter) {

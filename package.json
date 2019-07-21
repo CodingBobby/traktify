@@ -20,13 +20,14 @@
   "bugs": {
     "url": "https://github.com/CodingBobby/traktify/issues"
   },
-  "homepage": "https://github.com/CodingBobby/traktify#readme",
+  "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
-    "electron": "^4.2.7"
+    "electron": "^4.2.8"
   },
   "dependencies": {
     "electron-window-state": "^5.0.3",
     "fanart.tv": "^2.1.0",
+    "flat-cache": "^2.0.1",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "trakt.tv": "^7.2.0"
