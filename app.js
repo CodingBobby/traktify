@@ -11,9 +11,7 @@
 // Uncomment this line for publishing!
 //process.env.NODE_ENV = 'production'
 
-if(process.env.NODE_ENV !== 'production') {
-  console.time('init')
-}
+let initTime = Date.now()
 
 const electron = require('electron')
 const fs = require('fs')
@@ -142,7 +140,7 @@ function build() {
   })
 
   if(getSettings('app')['keep window state'].status) {
-    debugLog('keeping window state changes')
+    debugLog('app', 'keeping window state changes')
     windowOptions.x = mainWindowState.x
     windowOptions.y = mainWindowState.y
     windowOptions.width = mainWindowState.width
@@ -168,11 +166,7 @@ function build() {
     window.show()
   })
 
-  // we have initialized everything important and log how long
-  // it took, remember to remove it in release version
-  if(process.env.NODE_ENV !== 'production') {
-    console.timeEnd('init')
-  }
+  debugLog('init', (Date.now() - initTime)+'ms')
   
   // Now we launch the app renderer
   launchApp()
@@ -208,14 +202,14 @@ function tryLogin() {
         user.trakt.auth = newAuth
         user.trakt.status = true
         saveConfig()
-        debugLog('success')
+        debugLog('login', 'success')
         loadDashboard()
       }).catch(err => {
         if(err) {
           user.trakt.auth = false
           user.trakt.status = false
           saveConfig()
-          console.error('failed: ', err)
+          debugLog('login failed', err)
           loadLogin()
         }
       })
@@ -234,7 +228,7 @@ function authenticate() {
 
     return global.trakt.poll_access(poll)
   }).then(auth => {
-    debugLog('user signed in')
+    debugLog('trakt', 'user signed in')
     global.trakt.import_token(auth)
 
     user.trakt.auth = auth
@@ -377,7 +371,7 @@ global.defaultAll = defaultAll
 function updateApp() {
   let settings = getSettings('app')
   for(let s in settings) {
-    debugLog('updating setting:', s)
+    debugLog('updating setting', s)
     let setting = settings[s]
     switch(s) {
       case 'accent color': {
@@ -420,7 +414,18 @@ function inRange(value, range) {
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
 function debugLog(...args) {
   if(process.env.NODE_ENV !== 'production') {
-    console.log.apply(null, args)
+    if(args[0] == 'err' || args[0] == 'error') {
+      console.log(`\x1b[41m\x1b[37m> ${args[0]}:\x1b[0m`, args[1])
+      if(args[2]) {
+        console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
+      }
+    } else {
+      console.log(`\x1b[47m\x1b[30m> ${args[0]}:\x1b[0m`, args[1])
+      if(args.length > 2) {
+        console.log.apply(null, args.splice(2, args.length-2))
+      }
+    }
+    console.log('\n')
   }
 }
 global.debugLog = debugLog

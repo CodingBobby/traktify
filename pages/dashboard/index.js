@@ -8,7 +8,7 @@ const updateApp = remote.getGlobal('updateApp')
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
   updateApp()
-  createPosters()
+  // createPosters()
 }
 
 ipcRenderer.on('modify-root', (event, data) => {
@@ -25,7 +25,7 @@ ipcRenderer.on('modify-root', (event, data) => {
 
   let keys = Object.keys(result)
   document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
-});
+})
 
 
 // This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
@@ -93,9 +93,9 @@ function createPosters() {
             id: item.show.ids.tvdb
           })
         }
-      }).catch(err => debugLog('error:', err))
+      }).catch(err => debugLog('error', err))
     })
-  }).catch(err => debugLog('error:', err))
+  }).catch(err => debugLog('error', err))
 }
 
 function createPoster(x) {
@@ -177,8 +177,8 @@ function animateText(x, onenter) {
   let title = x.getAttribute('data_title')
   let subtitle = x.getAttribute('data_subtitle')
 
-  if (title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if (onenter) {
+  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(onenter) {
       animationToggle(container_title, 'animation_slide_up', title)
       animationToggle(container_subtitle, 'animation_slide_up', subtitle)
     }
@@ -188,8 +188,8 @@ function animateText(x, onenter) {
   let poster_title = poster.getAttribute('data_title')
   let poster_subtitle = poster.getAttribute('data_subtitle')
 
-  if (poster_title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if (!onenter) {
+  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(!onenter) {
       animationToggle(container_title, 'animation_slide_up', poster_title)
       animationToggle(container_subtitle, 'animation_slide_up', poster_subtitle)
     }
@@ -205,21 +205,21 @@ function animationToggle(x, y, z) {
 
 
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
-document.onkeydown = function () {
-  if (event.metaKey && event.keyCode == 83) { // meta + S
+document.onkeydown = function() {
+  if (event.metaKey && event.keyCode === 83) { // meta + S
     show(document.getElementById('search_button_side'))
     triggerSidePanel('search')
     return false
-  } else if (event.metaKey && event.keyCode == 188) { // meta + ,
+  } else if (event.metaKey && event.keyCode === 188) { // meta + ,
     show(document.getElementById('settings_button_side'))
     triggerSidePanel('settings')
     return false
-  } else if (event.keyCode == 27) { // ESC
+  } else if (event.keyCode === 27) { // ESC
     // close the currently open panel
     try {
       triggerSidePanel(sideBar.status)
     } catch (err) {
-      debugLog('error:', err)
+      debugLog('error', err)
     }
   }
 }
@@ -415,7 +415,7 @@ function closeSidePanel() {
   try {
     triggerSidePanel(sideBar.status)
   } catch(err) {
-    debugLog('error:', err)
+    debugLog('error', err)
   }
 }
 
@@ -472,7 +472,7 @@ function removeSearchResults() {
 
 let searchSubmitted = false
 
-function search(text) {
+function searchOld(text) {
   if (text == '') {
     // empty search submitted
     return
@@ -577,14 +577,134 @@ function search(text) {
         })
         resolve2()
       }).catch(err => debugLog('error:', err))
-    }).catch(err => debugLog('error:', err))
-  }).catch(err => debugLog('error:', err))
+    }).catch(err => debugLog('error', err)) 
+  }).catch(err => debugLog('error', err))
+}
+
+// new search
+function search(text) {
+  let query = formatSearch(text)
+  if(!query) return null
+
+  let cache = new Cache('searchQuery')
+
+  trakt.search.text({
+    type: query.type,
+    query: query.filtered
+  })
+  // got search results from trakt
+  .then(searchResults => {
+    debugLog('api request', 'trakt')
+    debugLog('search results', searchResults.map(r => r[r.type].ids.trakt))
+
+    new Promise((resolve, reject) => {
+      let fanartQueue = []
+
+      searchResults.forEach(result => {
+        let mv = result.type == 'movie' ? 'm' : 'v'
+
+        fanartQueue.push(fanart[result.type + 's']
+          .get(result[result.type].ids['t' + mv + 'db'])
+          // got data from fanart
+          .then(fanResult => {
+            debugLog('api request', 'fanart')
+            return fanResult
+          }).catch(err => debugLog('error', 'fanart', new Error().stack))
+        )
+      })
+
+      resolve([searchResults, fanartQueue])
+    })
+    // search queue filled with promises
+    .then(([trakt, fanart]) => {
+      debugLog('queue', 'starting')
+
+      Promise.all(fanart.map(p => p.catch(e => e)))
+      .then(resolvedQueue => {
+        let requestArray = []
+
+        resolvedQueue.forEach((item, index) => {
+          requestArray.push({
+            trakt: trakt[index],
+            fanart: item
+          })
+        })
+
+        let data = {
+          date: Date.now(),
+          result: requestArray
+        }
+
+        cache.setKey(text, data)
+        debugLog('cached', text, data)
+
+      })
+      .catch(err => {
+        debugLog('error', 'promise', new Error().stack)
+      })
+    })
+  }).catch(err => {
+    debugLog('error', 'trakt', new Error().stack)
+  })
+}
+
+function formatSearch(text) {
+  if(text == '') {
+    // empty search submitted
+    return false
+  }
+
+  if(!searchSubmitted) {
+    searchSubmitted = true
+  } else {
+    removeSearchResults()
+    searchSubmitted = false
+  }
+
+  let searchOptions = [
+    'show', 'shows', 'tv', 'movie', 'person', 'episode', 'ep', 's', 'm', 'p', 'e'
+  ].map(o => o + ':')
+
+  let query = startsWithFilter(text, searchOptions, ':')
+
+  // This converts the simplified search type into a request-friendly one
+  switch(query.found) {
+    case 's':
+    case 'show':
+    case 'shows':
+    case 'tv': {
+      query.type = 'show'
+      break
+    }
+    case 'm':
+    case 'movie': {
+      query.type = 'movie'
+      break
+    }
+    case 'e':
+    case 'ep':
+    case 'episode': {
+      query.type = 'episode'
+      break
+    }
+    case 'p':
+    case 'person': {
+      query.type = 'person'
+      break
+    }
+    default: {
+      break
+    }
+  }
+
+  debugLog('query', query)
+  return query
 }
 
 function startsWithFilter(string, options, removeFromFilter) {
   string = string.toString()
-  for (let opt in options) {
-    if (string.startsWith(options[opt])) {
+  for(let opt in options) {
+    if(string.startsWith(options[opt])) {
       return {
         found: options[opt].split(removeFromFilter || '').join(''),
         filtered: string.split(options[opt])[1]
