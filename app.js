@@ -9,7 +9,7 @@
 \*/
 
 // Uncomment this line for publishing!
-//process.env.NODE_ENV = 'production'
+// process.env.NODE_ENV = 'production'
 
 let initTime = Date.now()
 
@@ -51,8 +51,11 @@ let window = null
 
 const traktOptions = {
   client_id: process.env.trakt_id,
-  client_secret: process.env.trakt_secret,
-  debug: true
+  client_secret: process.env.trakt_secret
+}
+
+if(process.env.NODE_ENV !== 'production') {
+  traktOptions.debug = true
 }
 
 // here we set some options we need later
