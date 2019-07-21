@@ -436,7 +436,7 @@ function addSearchResult(result) {
 
   let result_text = document.createElement('div')
   result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.overview}</p>`
+  result_text.innerHTML = `<h3>${result.title}</h3><p>${(result.overview?result.overview:'N/A')}</p>`
 
   let result_rating = document.createElement('div')
   result_rating.classList.add('search_result_rating')
@@ -444,7 +444,7 @@ function addSearchResult(result) {
     float: 'left',
     height: '15px'
   })
-  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
+  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height:15px;vertical-align:middle;"><span>${result.rating}%</span>`
 
   let result_type = document.createElement('div')
   result_type.classList.add('search_result_type')
