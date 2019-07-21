@@ -5,6 +5,8 @@ const setSetting = remote.getGlobal('setSetting')
 const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
 
+let searchQueryCache = new Cache('searchQuery')
+
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
   updateApp()
@@ -470,134 +472,66 @@ function removeSearchResults() {
   }
 }
 
-let searchSubmitted = false
+async function search(text) {
+  let requestTime = Date.now()
+  removeSearchResults()
 
-function searchOld(text) {
-  if (text == '') {
+  if(text == '') {
     // empty search submitted
-    return
+    return false
   }
 
-  if(!searchSubmitted) {
-    searchSubmitted = true
-  } else {
-    removeSearchResults()
-    searchSubmitted = false
-  }
+  let data = await searchRequestHelper(text).then(res => res)
+  debugLog('request finished', data.date)
 
-  let searchOptions = [
-    'show', 'shows', 'tv', 'movie', 'person', 'episode', 'ep', 's', 'm', 'p', 'e'
-  ].map(o => o + ':')
+  data.result.forEach(item => {
+    debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
+    // fallback for unavailable images
+    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
 
-  let query = startsWithFilter(text, searchOptions, ':')
+    if(item.fanart !== undefined) {
+      if(item.fanart.hasOwnProperty('tvposter')) {
+        img = item.fanart.tvposter[0].url
+      } else if(item.fanart.hasOwnProperty('movieposter')) {
+        img = item.fanart.movieposter[0].url
+      }
+    }
 
-  // This converts the simplified search type into a request-friendly one
-  switch(query.found) {
-    case 's':
-    case 'show':
-    case 'shows':
-    case 'tv': {
-      query.type = 'show'
-      break
-    }
-    case 'm':
-    case 'movie': {
-      query.type = 'movie'
-      break
-    }
-    case 'e':
-    case 'ep':
-    case 'episode': {
-      query.type = 'episode'
-      break
-    }
-    case 'p':
-    case 'person': {
-      query.type = 'person'
-      break
-    }
-    default: {
-      break
-    }
-  }
+    // render search result
+    addSearchResult({
+      title: item.trakt[item.trakt.type].title,
+      type: item.trakt.type,
+      rating: Math.round(item.trakt[item.trakt.type].rating * 10),
+      img: img,
+      description: item.trakt[item.trakt.type].tagline
+    })
+  })
 
-  debugLog(query.type+':', query.filtered)
-
-  trakt.search.text({
-    type: query.type,
-    query: query.filtered
-  }).then(result1 => {
-    new Promise((resolve1, reject1) => {
-      let arr1 = []
-      result1.forEach(r1 => {
-        let obj1 = {
-          title: r1[query.type].title,
-          type: query.type,
-          id: r1[query.type].ids
-        }
-        arr1.push(obj1)
-      })
-      resolve1(arr1)
-    }).then(result2 => {
-      new Promise((resolve2, reject2) => {
-        result2.forEach(r2 => {
-          new Promise(async (resolve3, reject3) => {
-            if(r2.type != 'person') {
-              await trakt[r2.type + 's'].ratings({
-                id: r2.id.trakt
-              }).then(result2a => {
-                r2.rating = Math.round(result2a.rating * 10)
-              }).catch(err => debugLog('error:', err))
-            }
-            resolve3(r2)
-          }).then(result3 => {
-            new Promise(async (resolve4, reject4) => {
-              if (result3.type != 'person') {
-                let mv = result3.type == 'movie' ? 'm' : 'v'
-                await fanart[result3.type + 's'].get(result3.id['t' + mv + 'db'])
-                  .then(result3a => {
-                    if (result3a.tvposter) {
-                      result3.img = result3a.tvposter[0].url
-                    } else if (result3a.movieposter) {
-                      result3.img = result3a.movieposter[0].url
-                    } else {
-                      throw 'no poster' // couldn't find a poster
-                    }
-                  }).catch(err => {
-                    debugLog('error:', (err == 'no poster') ? err : '' || 'not in fanart')
-                    // put a placeholder for the unavailable image
-                    result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-                  })
-              }
-              resolve4(result3)
-            }).then(result4 => {
-              addSearchResult(result4)
-            }).catch(err => debugLog('error:', err))
-          })
-        })
-        resolve2()
-      }).catch(err => debugLog('error:', err))
-    }).catch(err => debugLog('error', err)) 
-  }).catch(err => debugLog('error', err))
+  debugLog('time taken', (Date.now() - requestTime)+'ms')
 }
 
-// new search
-function search(text) {
+
+function searchRequestHelper(text) {
+  let cacheContent = searchQueryCache.getKey(text)
+  if(cacheContent !== undefined) {
+    debugLog('cache content', cacheContent)
+    return Promise.resolve(cacheContent)
+  }
+
   let query = formatSearch(text)
   if(!query) return null
 
-  let cache = new Cache('searchQuery')
-
-  trakt.search.text({
+  return trakt.search.text({
     type: query.type,
-    query: query.filtered
+    query: query.filtered,
+    extended: 'full'
   })
   // got search results from trakt
   .then(searchResults => {
     debugLog('api request', 'trakt')
     debugLog('search results', searchResults.map(r => r[r.type].ids.trakt))
 
-    new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       let fanartQueue = []
 
       searchResults.forEach(result => {
@@ -619,7 +553,7 @@ function search(text) {
     .then(([trakt, fanart]) => {
       debugLog('queue', 'starting')
 
-      Promise.all(fanart.map(p => p.catch(e => e)))
+      return Promise.all(fanart.map(p => p.catch(e => e)))
       .then(resolvedQueue => {
         let requestArray = []
 
@@ -635,9 +569,11 @@ function search(text) {
           result: requestArray
         }
 
-        cache.setKey(text, data)
-        debugLog('cached', text, data)
+        searchQueryCache.setKey(text, data)
+        searchQueryCache.save()
 
+        debugLog('cached', text, data)
+        return data
       })
       .catch(err => {
         debugLog('error', 'promise', new Error().stack)
@@ -649,18 +585,6 @@ function search(text) {
 }
 
 function formatSearch(text) {
-  if(text == '') {
-    // empty search submitted
-    return false
-  }
-
-  if(!searchSubmitted) {
-    searchSubmitted = true
-  } else {
-    removeSearchResults()
-    searchSubmitted = false
-  }
-
   let searchOptions = [
     'show', 'shows', 'tv', 'movie', 'person', 'episode', 'ep', 's', 'm', 'p', 'e'
   ].map(o => o + ':')
