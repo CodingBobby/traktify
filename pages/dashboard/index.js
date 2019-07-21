@@ -32,7 +32,7 @@ ipcRenderer.on('modify-root', (event, data) => {
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
-    if (element.children[0] == x) {
+    if (element.children[0] === x) {
       x.classList.add('selected');
     } else {
       element.children[0].classList.remove('selected');
@@ -40,7 +40,7 @@ function show(x) {
   });
 }
 
-
+/*:::: UP-NEXT-TO-WATCH ::::*/
 function syncWatched() {
   return trakt.sync.watched({
     type: 'shows'
@@ -77,7 +77,7 @@ function createPosters() {
         if (res4.aired > res4.completed) {
           let ep = res4.next_episode
           let title = item.show.title
-          let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
+          let subtitle = `${ep.season} x ${ep.number}${ep.number_abs ? ` (${ep.number_abs})` : ''} ${ep.title}`
 
           if (first) {
             createTitle({
@@ -107,7 +107,7 @@ function createPoster(x) {
   li.setAttribute('onmouseleave', 'animateText(this, false)')
 
   let poster_content = document.createElement('div')
-  poster_content.classList = 'poster-content'
+  poster_content.classList = 'poster-content z1'
 
   let poster_content_left = document.createElement('div')
   poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
@@ -202,7 +202,7 @@ function animationToggle(x, y, z) {
   x.innerText = z
   x.classList.add(y)
 }
-
+/*:::: SHORTCUT-KEYS ::::*/
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
 document.onkeydown = function () {
   if (event.metaKey && event.keyCode == 83) { // meta + S
@@ -236,10 +236,9 @@ let sideBar = {
     create: function () {
       let panel = document.createElement('div')
       panel.classList.add('panel')
-      panel.id = 'search_panel'
 
       let search_field = document.createElement('input')
-      search_field.id = 'search_field'
+      search_field.classList = 'panel_header search fs23 fw500 white_t black_d_b z4'
       search_field.type = 'text'
       search_field.onkeydown = function () {
         if (event.keyCode == 13) {
@@ -253,17 +252,18 @@ let sideBar = {
       }, 220)
       panel.appendChild(search_field)
 
-      let field_box = document.createElement('div')
-      field_box.id = 'field_box'
-      panel.appendChild(field_box)
+      let box = document.createElement('div')
+      box.classList = 'panel_header_box top z3'
+      panel.appendChild(box)
 
-      let field_gradient = document.createElement('div')
-      field_gradient.id = 'field_gradient'
-      panel.appendChild(field_gradient)
+      let gradient = document.createElement('div')
+      gradient.classList = 'panel_header_gradient top_p z3'
+      panel.appendChild(gradient)
 
-      let search_results = document.createElement('div')
-      search_results.id = 'search_results'
-      panel.appendChild(search_results)
+      let results = document.createElement('div')
+      results.classList = 'results'
+      results.id = 'results'
+      panel.appendChild(results)
 
       return panel
     },
@@ -342,8 +342,7 @@ function triggerSidePanel(panelName) {
     throw 'panel not available'
   }
 
-  let overlay = document.getElementById('dash_overlay')
-  let dash = document.getElementById('dash')
+  let overlay = document.getElementById('overlay')
   let side_buttons = document.getElementById('side_buttons')
   let side_panel = document.getElementById('side_panel')
 
@@ -351,7 +350,7 @@ function triggerSidePanel(panelName) {
     sideBar.status = panelName
 
     // fading out the background
-    overlay.classList.add('dark_overlay')
+    overlay.classList.add('show')
 
     // now showing the settings panel
     side_panel.classList.remove('side_panel_animate_out')
@@ -377,7 +376,7 @@ function triggerSidePanel(panelName) {
 
     // fading in the background
     overlay.style.display = 'block'
-    overlay.classList.remove('dark_overlay')
+    overlay.classList.remove('show')
     // the timeout makes a fadeout animation possible
     setTimeout(() => {
       overlay.style.display = 'none'
@@ -420,7 +419,7 @@ function closeSidePanel() {
 
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
-  let panel = document.getElementById('search_results')
+  let panel = document.getElementById('results')
   let result_box = document.createElement('div')
   result_box.classList.add('search_result_box')
 
@@ -437,7 +436,7 @@ function addSearchResult(result) {
 
   let result_text = document.createElement('div')
   result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
+  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.overview}</p>`
 
   let result_rating = document.createElement('div')
   result_rating.classList.add('search_result_rating')
@@ -462,7 +461,7 @@ function addSearchResult(result) {
 }
 
 function removeSearchResults() {
-  let panel = document.getElementById('search_results')
+  let panel = document.getElementById('results')
   boxes = panel.getElementsByClassName('search_result_box')
   while (boxes[0]) {
     boxes[0].parentNode.removeChild(boxes[0])
@@ -524,55 +523,46 @@ function search(text) {
 
   trakt.search.text({
     type: query.type,
-    query: query.filtered
-  }).then(result1 => {
+    query: query.filtered,
+    extended: 'full'
+  }).then(res1 => {
     new Promise((resolve1, reject1) => {
       let arr1 = []
-      result1.forEach(r1 => {
+      res1.forEach(r1 => {
         let obj1 = {
           title: r1[query.type].title,
           type: query.type,
-          id: r1[query.type].ids
+          id: r1[query.type].ids,
+          overview: r1[query.type].overview,
+          rating: Math.round(r1[query.type].rating * 10)
         }
         arr1.push(obj1)
       })
       resolve1(arr1)
-    }).then(result2 => {
+    }).then(res2 => {
       new Promise((resolve2, reject2) => {
-        result2.forEach(r2 => {
+        res2.forEach(r2 => {
           new Promise(async (resolve3, reject3) => {
             if (r2.type != 'person') {
-              await trakt[r2.type + 's'].ratings({
-                id: r2.id.trakt
-              }).then(result2a => {
-                r2.rating = Math.round(result2a.rating * 10)
-              }).catch(err => console.log(err))
+              let mv = r2.type == 'movie' ? 'm' : 'v'
+              await fanart[r2.type + 's'].get(r2.id['t' + mv + 'db']).then(res3 => {
+                if (res3.tvposter) {
+                  r2.img = res3.tvposter[0].url
+                } else if (res3.movieposter) {
+                  r2.img = res3.movieposter[0].url
+                } else {
+                  throw 'no poster' // couldn't find a poster
+                }
+              }).catch(err => {
+                console.log((err == 'no poster') ? err : '' || 'not in fanart')
+                // put a placeholder for the unavailable image
+                r2.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+              })
             }
             resolve3(r2)
-          }).then(result3 => {
-            new Promise(async (resolve4, reject4) => {
-              if (result3.type != 'person') {
-                let mv = result3.type == 'movie' ? 'm' : 'v'
-                await fanart[result3.type + 's'].get(result3.id['t' + mv + 'db'])
-                  .then(result3a => {
-                    if (result3a.tvposter) {
-                      result3.img = result3a.tvposter[0].url
-                    } else if (result3a.movieposter) {
-                      result3.img = result3a.movieposter[0].url
-                    } else {
-                      throw 'no poster' // couldn't find a poster
-                    }
-                  }).catch(err => {
-                    console.log((err == 'no poster') ? err : '' || 'not in fanart')
-                    // put a placeholder for the unavailable image
-                    result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-                  })
-              }
-              resolve4(result3)
-            }).then(result4 => {
-              addSearchResult(result4)
-            }).catch(err => console.log(err))
-          })
+          }).then(res4 => {
+            addSearchResult(res4)
+          }).catch(err => console.log(err))
         })
         resolve2()
       }).catch(err => console.log(err))
