@@ -418,6 +418,25 @@ function closeSidePanel() {
 }
 
 // This function generates a html element for one search result and adds it to the sidebar.
+
+
+/*
+<div class="panel_box">
+  <img class="poster" src="poster_url">
+  <div class="panel_box_container">
+    <h3 class="fs18">Title</h3>
+    <p class="fs14">Description</p>
+    <div class="poster-content search">
+      <div class="poster-content-left">
+        <img src="heart_url">
+        <span class="fs16">N%</span>
+      </div>
+      <div class="poster-content-right fs16 tu">type</div>
+    </div>
+  </div>
+</div>
+*/
+
 function addSearchResult(result) {
   let panel = document.getElementById('results')
   let result_box = document.createElement('div')

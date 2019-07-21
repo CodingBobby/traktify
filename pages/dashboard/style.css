@@ -465,29 +465,6 @@
 
 
 /*:::: ANIMATIONS ::::*/
-
-@keyframes blend_in {
-  0% {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  100% {
-    opacity: 0.75;
-    backdrop-filter: blur(8px);
-  }
-}
-
-@keyframes blend_out {
-  0% {
-    opacity: 0.75;
-    backdrop-filter: blur(8px);
-  }
-  100% {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-}
-
 @keyframes move_in_right {
   0% {
     opacity: 0;
@@ -533,8 +510,7 @@
     right: var(--side_dist);
   }
 }
-/*:::: RESPONSIVENESS ::::*/
-
+/*::::::::::::::::::::::::::::::::::::::::::::::: RESPONSIVE :::::::::::::::::::::::::::::::::::::::::::::::*/
 @media screen and (max-width: 952px) {
   .titles h1,
   .titles h3 {
