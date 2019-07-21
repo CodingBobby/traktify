@@ -9,6 +9,7 @@
 
 .dashboard {
   margin: auto;
+  min-width: 716px;
 }
 
 .titles {
