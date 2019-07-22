@@ -161,7 +161,7 @@ function build() {
     global.trakt = new Trakt(traktOptions)
     global.fanart = new Fanart(process.env.fanart_key)
   } catch(err) {
-    console.error(err)
+    debugLog('error', 'trakt authentication', new Error().stack)
   }
 
   // show the window when the page is built
@@ -428,7 +428,7 @@ function debugLog(...args) {
         console.log.apply(null, args.splice(2, args.length-2))
       }
     }
-    console.log('\n')
+    // console.log('\n') // for an extra empty line
   }
 }
 global.debugLog = debugLog
