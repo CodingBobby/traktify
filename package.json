@@ -29,6 +29,8 @@
     "fanart.tv": "^2.1.0",
     "flat-cache": "^2.0.1",
     "fs": "0.0.1-security",
+    "moviedb-promise": "^1.4.1",
+    "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
     "trakt.tv": "^7.2.0"
   }

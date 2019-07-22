@@ -13,14 +13,9 @@
 
 let initTime = Date.now()
 
+// electron stuff
 const electron = require('electron')
-const fs = require('fs')
-const path = require('path')
-const Trakt = require('trakt.tv')
-const Fanart = require('fanart.tv')
 const windowStateKeeper = require('electron-window-state')
-
-// the electron items we need
 const {
   app,
   BrowserWindow,
@@ -29,6 +24,17 @@ const {
   clipboard,
   dialog
 } = electron
+
+// file stuff
+const fs = require('fs')
+const path = require('path')
+
+// api stuff
+const Trakt = require('trakt.tv')
+const Fanart = require('fanart.tv')
+const TvDB = require('node-tvdb')
+const TmDB = require('moviedb-promise')
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -44,8 +50,11 @@ global.darwin = process.platform == 'darwin'
 global.loadDashboard = loadDashboard
 global.loadLogin = loadLogin
 
+// these are the api globals
 global.trakt
 global.fanart
+global.tvdb
+global.tmdb
 
 let window = null
 
@@ -137,6 +146,7 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
 // This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  debugLog('app', 'now building')
   let mainWindowState = windowStateKeeper({
     defaultWidth: 900,
     defaultHeight: 750
@@ -158,18 +168,41 @@ function build() {
   }
 
   try {
+    debugLog('api', 'creating trakt instance')
     global.trakt = new Trakt(traktOptions)
-    global.fanart = new Fanart(process.env.fanart_key)
   } catch(err) {
     debugLog('error', 'trakt authentication', new Error().stack)
   }
 
+  try {
+    debugLog('api', 'creating fanart instance')
+    global.fanart = new Fanart(process.env.fanart_key)
+  } catch(err) {
+    debugLog('error', 'fanart authentication', new Error().stack)
+  }
+
+  try {
+    debugLog('api', 'creating tvdb instance')
+    global.tvdb = new TvDB(process.env.tvdb_key)
+  } catch(err) {
+    debugLog('error', 'tvdb authentication', new Error().stack)
+  }
+
+  try {
+    debugLog('api', 'creating tmdb instance')
+    global.tmdb = new TmDB(process.env.tmdb_key)
+  } catch(err) {
+    debugLog('error', 'tmdb authentication', new Error().stack)
+  }
+
+
   // show the window when the page is built
   window.once('ready-to-show', () => {
+    debugLog('window', 'ready')
     window.show()
   })
 
-  debugLog('init', (Date.now() - initTime)+'ms')
+  debugLog('init time', (Date.now() - initTime)+'ms')
   
   // Now we launch the app renderer
   launchApp()
@@ -179,10 +212,12 @@ function build() {
 
   // if the window gets closed, the app will quit
   window.on('closed', () => {
+    debugLog('window', 'closed')
     win = null
   })
 
 	window.on('restore', () => {
+    debugLog('window', 'restored')
 		window.focus()
   })
 }
@@ -190,8 +225,10 @@ function build() {
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
   if(user.trakt.auth) {
+    debugLog('login', 'connecting existing user to trakt')
     tryLogin()
   } else {
+    debugLog('login', 'no user found')
     loadLogin()
   }
 }
@@ -231,7 +268,7 @@ function authenticate() {
 
     return global.trakt.poll_access(poll)
   }).then(auth => {
-    debugLog('trakt', 'user signed in')
+    debugLog('login', 'trakt user signed in')
     global.trakt.import_token(auth)
 
     user.trakt.auth = auth
@@ -246,13 +283,13 @@ function authenticate() {
   }).catch(err => {
     // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
     if(err) {
+      debugLog('error', 'login failed')
       user.trakt.auth = false
       user.trakt.status = false
       saveConfig()
 
       window.focus()
       loadLogin()
-      alert('Oh oops!\nAuthenticating failed for some reason.')
     }
   })
 }
@@ -438,5 +475,6 @@ app.on('ready', build)
 
 // this quits the whole app
 app.on('window-all-closed', () => {
+  debugLog('app', 'now closing')
 	app.quit()
 })

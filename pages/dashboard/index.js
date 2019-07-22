@@ -8,17 +8,18 @@ const updateApp = remote.getGlobal('updateApp')
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
   updateApp()
-  // createPosters()
+  // generatePosterSection()
 }
 
+// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
 ipcRenderer.on('modify-root', (event, data) => {
   let variables = document.styleSheets[0]
     .cssRules[0].style.cssText.split(';')
 
   let result = {}
-  for (let i in variables) {
+  for(let i in variables) {
     let a = variables[i].split(':')
-    if (a[0] !== '') {
+    if(a[0] !== '') {
       result[a[0].trim()] = a[1].trim()
     }
   }
@@ -28,38 +29,62 @@ ipcRenderer.on('modify-root', (event, data) => {
 })
 
 
+// Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
+document.onkeydown = function() {
+  if(event.metaKey && event.keyCode === 83) { // meta + S
+    debugLog('shortcut', 'Meta + S')
+    show(document.getElementById('search_button_side'))
+    triggerSidePanel('search')
+    return false
+  } else if(event.metaKey && event.keyCode === 188) { // meta + ,
+    debugLog('shortcut', 'Meta + ,')
+    show(document.getElementById('settings_button_side'))
+    triggerSidePanel('settings')
+    return false
+  } else if(event.keyCode === 27) { // ESC
+    debugLog('shortcut', 'ESC')
+    // close the currently open panel
+    try {
+      triggerSidePanel(sideBar.status)
+    } catch (err) {
+      debugLog('error', 'no side panel available to close')
+    }
+  }
+}
+
+
 // This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
     if (element.children[0] == x) {
-      x.classList.add('selected');
+      x.classList.add('selected')
     } else {
-      element.children[0].classList.remove('selected');
+      element.children[0].classList.remove('selected')
     }
-  });
+  })
 }
 
 
-function syncWatched() {
+function getWatchedShows() {
   return trakt.sync.watched({
     type: 'shows'
   }).then(res => res)
 }
 
-function hiddenItems() {
+function getHiddenItems() {
   return trakt.users.hidden.get({
     section: 'progress_watched',
     limit: 100
   }).then(res => res)
 }
 
-function resolveAll() {
-  return Promise.all([syncWatched(), hiddenItems()])
+function getWatchedAndHiddenShows() {
+  return Promise.all([getWatchedShows(), getHiddenItems()])
 }
 
-function createPosters() {
-  resolveAll().then(([res, res2]) => {
+function generatePosterSection() {
+  getWatchedAndHiddenShows().then(([res, res2]) => {
     let arr = Array.from(res);
     let arr2 = Array.from(res2);
 
@@ -98,11 +123,11 @@ function createPosters() {
   }).catch(err => debugLog('error', err))
 }
 
-function createPoster(x) {
+function createPoster(itemToAdd) {
   let li = document.createElement('li')
   li.classList = 'poster poster-dashboard shadow_h'
-  li.setAttribute('data_title', x.title)
-  li.setAttribute('data_subtitle', x.subtitle)
+  li.setAttribute('data_title', itemToAdd.title)
+  li.setAttribute('data_subtitle', itemToAdd.subtitle)
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
 
@@ -116,7 +141,7 @@ function createPoster(x) {
   heart.src = '../../assets/icons/app/heart.svg'
 
   let rate = document.createElement('span')
-  rate.innerText = `${Math.round(x.rating * 10)}%`
+  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
 
   poster_content_left.appendChild(heart)
   poster_content_left.appendChild(rate)
@@ -130,7 +155,7 @@ function createPoster(x) {
 
   let img = document.createElement('img')
 
-  fanart.shows.get(x.id).then(res => {
+  fanart.shows.get(itemToAdd.id).then(res => {
     if (res) {
       if (res.seasonposter) {
         img.src = res.seasonposter[0].url
@@ -149,7 +174,7 @@ function createPoster(x) {
   posters.appendChild(li);
 }
 
-function createTitle(x) {
+function createTitle(itemToAdd) {
   let title = document.getElementById('poster_title')
 
   let h3 = document.createElement('h3')
@@ -158,29 +183,29 @@ function createTitle(x) {
 
   let h1 = document.createElement('h1')
   h1.classList = 'h1 white_t tu'
-  h1.innerText = x.title
+  h1.innerText = itemToAdd.title
 
   let h1_2 = document.createElement('h1')
   h1_2.classList = 'h1 white_d_t'
-  h1_2.innerText = x.subtitle
+  h1_2.innerText = itemToAdd.subtitle
 
   title.appendChild(h3)
   title.appendChild(h1)
   title.appendChild(h1_2)
 }
 
-function animateText(x, onenter) {
+function animateText(textBox, onenter) {
   let container = document.getElementById('poster_title')
   let container_title = container.children[1]
   let container_subtitle = container.children[2]
 
-  let title = x.getAttribute('data_title')
-  let subtitle = x.getAttribute('data_subtitle')
+  let title = textBox.getAttribute('data_title')
+  let subtitle = textBox.getAttribute('data_subtitle')
 
   if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
     if(onenter) {
-      animationToggle(container_title, 'animation_slide_up', title)
-      animationToggle(container_subtitle, 'animation_slide_up', subtitle)
+      toggleAnimation(container_title, 'animation_slide_up', title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
     }
   }
 
@@ -190,39 +215,20 @@ function animateText(x, onenter) {
 
   if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
     if(!onenter) {
-      animationToggle(container_title, 'animation_slide_up', poster_title)
-      animationToggle(container_subtitle, 'animation_slide_up', poster_subtitle)
+      toggleAnimation(container_title, 'animation_slide_up', poster_title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
     }
   }
 }
 
-function animationToggle(x, y, z) {
+
+function toggleAnimation(x, y, z) {
   x.classList.remove(y)
   void x.offsetWidth
   x.innerText = z
   x.classList.add(y)
 }
 
-
-// Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
-document.onkeydown = function() {
-  if (event.metaKey && event.keyCode === 83) { // meta + S
-    show(document.getElementById('search_button_side'))
-    triggerSidePanel('search')
-    return false
-  } else if (event.metaKey && event.keyCode === 188) { // meta + ,
-    show(document.getElementById('settings_button_side'))
-    triggerSidePanel('settings')
-    return false
-  } else if (event.keyCode === 27) { // ESC
-    // close the currently open panel
-    try {
-      triggerSidePanel(sideBar.status)
-    } catch (err) {
-      debugLog('error', err)
-    }
-  }
-}
 
 // This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
@@ -337,6 +343,8 @@ let sideBar = {
   }
 }.init()
 
+
+// Opens and closes the given panel
 function triggerSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
   if (!sideBar.panels.includes(panelName)) {
@@ -419,6 +427,7 @@ function closeSidePanel() {
   }
 }
 
+
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
   let panel = document.getElementById('search_results')
@@ -462,6 +471,8 @@ function addSearchResult(result) {
   panel.appendChild(result_box)
 }
 
+
+// Removes all elements from the search panel in the sidebar
 function removeSearchResults() {
   let panel = document.getElementById('search_results')
   boxes = panel.getElementsByClassName('search_result_box')
@@ -470,6 +481,8 @@ function removeSearchResults() {
   }
 }
 
+
+// This gets fired when the user searches something from the sidebar
 async function search(text) {
   let requestTime = Date.now()
   removeSearchResults()
@@ -508,6 +521,8 @@ async function search(text) {
   debugLog('time taken', (Date.now() - requestTime)+'ms')
 }
 
+
+// This adds a setting box to the sidepanel
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
   setting_area.classList.add('col_2')
