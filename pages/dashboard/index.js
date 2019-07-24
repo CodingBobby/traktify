@@ -261,7 +261,7 @@ let sideBar = {
       panel.appendChild(gradient)
 
       let results = document.createElement('div')
-      results.classList = 'results'
+      results.classList = 'side_panel_list'
       results.id = 'results'
       panel.appendChild(results)
 
@@ -426,7 +426,7 @@ function closeSidePanel() {
   <div class="panel_box_container">
     <h3 class="fs18">Title</h3>
     <p class="fs14">Description</p>
-    <div class="poster-content search">
+    <div class="poster-content">
       <div class="poster-content-left">
         <img src="heart_url">
         <span class="fs16">N%</span>
@@ -439,44 +439,54 @@ function closeSidePanel() {
 
 function addSearchResult(result) {
   let panel = document.getElementById('results')
-  let result_box = document.createElement('div')
-  result_box.classList.add('search_result_box')
+  let panel_box = document.createElement('div')
+  panel_box.classList = 'panel_box search'
 
-  let result_img_box = document.createElement('div')
-  result_img_box.classList.add('vertical_align')
+  let poster_img = document.createElement('img')
+  poster_img.classList = 'poster'
+  poster_img.src = result.img
 
-  let result_img = document.createElement('img')
-  if (result.img) {
-    result_img.src = result.img
-  } else {
-    result_img.style.width = '105px'
-    result_img.style.opacity = '0'
-  }
+  let panel_box_container = document.createElement('div')
+  panel_box_container.classList = 'panel_box_container'
 
-  let result_text = document.createElement('div')
-  result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${(result.overview?result.overview:'N/A')}</p>`
+  let h3 = document.createElement('h3')
+  h3.classList = 'fs18'
+  h3.innerText = result.title
 
-  let result_rating = document.createElement('div')
-  result_rating.classList.add('search_result_rating')
-  css(result_rating, {
-    float: 'left',
-    height: '15px'
-  })
-  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height:15px;vertical-align:middle;"><span>${result.rating}%</span>`
+  let p = document.createElement('p')
+  p.innerText = result.overview
 
-  let result_type = document.createElement('div')
-  result_type.classList.add('search_result_type')
-  css(result_type, {
-    float: 'right'
-  })
-  result_type.innerHTML = `${result.type}`
+  let poster_content = document.createElement('div')
+  poster_content.classList = 'poster-content'
 
-  result_text.append(result_rating, result_type)
-  result_img_box.append(result_img)
-  result_box.append(result_img_box, result_text)
+  let poster_content_left = document.createElement('div')
+  poster_content_left.classList = 'poster-content-left'
 
-  panel.appendChild(result_box)
+  let heart = document.createElement('img')
+  heart.src = '../../assets/icons/app/heart.svg'
+
+  let span = document.createElement('span')
+  span.classList = 'fs16'
+  span.innerText = result.rating
+
+  let poster_content_right = document.createElement('div')
+  poster_content_right.classList = 'poster-content-right fs16 tu'
+  poster_content_right.innerText = result.type
+
+  poster_content_left.appendChild(heart)
+  poster_content_left.appendChild(span)
+
+  poster_content.appendChild(poster_content_left)
+  poster_content.appendChild(poster_content_right)
+
+  panel_box_container.appendChild(h3)
+  panel_box_container.appendChild(p)
+  panel_box_container.appendChild(poster_content)
+
+  panel_box.appendChild(poster_img)
+  panel_box.appendChild(panel_box_container)
+
+  panel.appendChild(panel_box)
 }
 
 function removeSearchResults() {
@@ -553,7 +563,7 @@ function search(text) {
           type: query.type,
           id: r1[query.type].ids,
           overview: r1[query.type].overview,
-          rating: Math.round(r1[query.type].rating * 10)
+          rating: Math.round(r1[query.type].rating * 10)+'%'
         }
         arr1.push(obj1)
       })
