@@ -1,14 +1,22 @@
 const trakt = remote.getGlobal('trakt')
 
-window.onload = async function() {
-   debugLog('loading', 'activities')
-   let activities = await newActivitiesAvailable()
+window.onload = function() {
+   ipcRenderer.send('loading-screen', 'loaded')
 
-   debugLog('loading', 'up next to watch')
-   let upNext = await getUpNextToWatch()
-   
-   debugLog('loading', 'done')
-   setTimeout(() => {
-      ipcRenderer.send('loading-screen', 'done')
-   }, 0.3e3) // giving some small extra timeout
+   ipcRenderer.on('loading-screen', async (event, data) => {
+      if(data === 'start') {
+         debugLog('loading', 'started')
+         
+         debugLog('loading', 'activities')
+         let activities = await newActivitiesAvailable()
+      
+         debugLog('loading', 'up next to watch')
+         let upNext = await getUpNextToWatch()
+         
+         debugLog('loading', 'done')
+         setTimeout(() => {
+            ipcRenderer.send('loading-screen', 'done')
+         }, 10) // giving some small extra timeout
+      }
+   })
 }

@@ -244,10 +244,16 @@ function tryLogin() {
       user.trakt.status = true
       saveConfig()
       debugLog('login', 'success')
-      
-      // After loadingHandler is finished with everything, the dashboard is opened
-      loadingHandler().then(() => {
-        loadDashboard()
+
+      // wait until loading screen is fully loaded
+      ipcMain.once('loading-screen', (event, data) => {
+        if(data === 'loaded') {
+          debugLog('loading', 'can start now')
+          // After loadingHandler is finished with everything, the dashboard is opened
+          loadingHandler().then(() => {
+            loadDashboard()
+          })
+        }
       })
     }).catch(err => {
       if(err) {
@@ -322,8 +328,12 @@ function loadLoadingScreen() {
 
 function loadingHandler() {
   let loadingTime = Date.now()
-  debugLog('loading', 'started')
+  
   return new Promise((resolve, reject) => {
+    // send a message, that the loading can begin
+    window.webContents.send('loading-screen', 'start')
+
+    // waiting for the loading to be done
     ipcMain.once('loading-screen', (event, data) => {
       if(data === 'done') {
         debugLog('loading time', Date.now()-loadingTime+'ms')
