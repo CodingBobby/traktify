@@ -22,7 +22,8 @@ const {
   Menu,
   shell,
   clipboard,
-  dialog
+  dialog,
+  ipcMain
 } = electron
 
 // file stuff
@@ -167,6 +168,7 @@ function build() {
     mainWindowState.manage(window)
   }
 
+  // These now try to connect to the APIs we are using
   try {
     debugLog('api', 'creating trakt instance')
     global.trakt = new Trakt(traktOptions)
@@ -235,26 +237,28 @@ function launchApp() {
 
 function tryLogin() {
   loadLoadingScreen()
-  // This timeout fakes a time consuming process. Currently only existing to demonstrate the fancy loading screen.
-  setTimeout(() => {
-    global.trakt.import_token(user.trakt.auth).then(() => {
-      global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
-        user.trakt.auth = newAuth
-        user.trakt.status = true
-        saveConfig()
-        debugLog('login', 'success')
+
+  global.trakt.import_token(user.trakt.auth).then(() => {
+    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+      user.trakt.auth = newAuth
+      user.trakt.status = true
+      saveConfig()
+      debugLog('login', 'success')
+      
+      // After loadingHandler is finished with everything, the dashboard is opened
+      loadingHandler().then(() => {
         loadDashboard()
-      }).catch(err => {
-        if(err) {
-          user.trakt.auth = false
-          user.trakt.status = false
-          saveConfig()
-          debugLog('login failed', err)
-          loadLogin()
-        }
       })
+    }).catch(err => {
+      if(err) {
+        user.trakt.auth = false
+        user.trakt.status = false
+        saveConfig()
+        debugLog('login failed', err)
+        loadLogin()
+      }
     })
-  }, 2000);
+  })
 }
 
 function authenticate() {
@@ -316,6 +320,18 @@ function loadLoadingScreen() {
   window.loadFile('pages/loading/index.html')
 }
 
+function loadingHandler() {
+  let loadingTime = Date.now()
+  debugLog('loading', 'started')
+  return new Promise((resolve, reject) => {
+    ipcMain.once('loading-screen', (event, data) => {
+      if(data === 'done') {
+        debugLog('loading time', Date.now()-loadingTime+'ms')
+        resolve()
+      }
+    })
+  })
+}
 
 // this function can be called to save changes in the config file
 function saveConfig() {
@@ -454,18 +470,31 @@ function inRange(value, range) {
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
 function debugLog(...args) {
   if(process.env.NODE_ENV !== 'production') {
+    let date = new Date()
+    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
+    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
+    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
+    let time = `${
+      date.getHours().toString().length === 1
+        ? '0'+date.getHours() : date.getHours()
+    }:${
+      date.getMinutes().toString().length === 1
+        ? '0'+date.getMinutes() : date.getMinutes()
+    }:${
+      date.getSeconds().toString().length === 1
+        ? '0'+date.getSeconds() : date.getSeconds()
+    }`
     if(args[0] == 'err' || args[0] == 'error') {
-      console.log(`\x1b[41m\x1b[37m> ${args[0]}:\x1b[0m`, args[1])
+      console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
       if(args[2]) {
         console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
       }
     } else {
-      console.log(`\x1b[47m\x1b[30m> ${args[0]}:\x1b[0m`, args[1])
+      console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
       if(args.length > 2) {
         console.log.apply(null, args.splice(2, args.length-2))
       }
     }
-    // console.log('\n') // for an extra empty line
   }
 }
 global.debugLog = debugLog

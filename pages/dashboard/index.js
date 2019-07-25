@@ -8,7 +8,7 @@ const updateApp = remote.getGlobal('updateApp')
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
   updateApp()
-  // generatePosterSection()
+  generatePosterSection()
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -66,169 +66,7 @@ function show(x) {
 }
 
 
-function getWatchedShows() {
-  return trakt.sync.watched({
-    type: 'shows'
-  }).then(res => res)
-}
-
-function getHiddenItems() {
-  return trakt.users.hidden.get({
-    section: 'progress_watched',
-    limit: 100
-  }).then(res => res)
-}
-
-function getWatchedAndHiddenShows() {
-  return Promise.all([getWatchedShows(), getHiddenItems()])
-}
-
-function generatePosterSection() {
-  getWatchedAndHiddenShows().then(([res, res2]) => {
-    let arr = Array.from(res);
-    let arr2 = Array.from(res2);
-
-    // filters hidden items
-    let array2Ids = arr2.map(item => item.show.ids.trakt);
-    arr = arr.filter((item) => !array2Ids.includes(item.show.ids.trakt));
-
-    // filters completed shows and creates first title
-    let first = true;
-    arr.forEach(item => {
-      trakt.shows.progress.watched({
-        id: item.show.ids.trakt,
-        extended: 'full'
-      }).then(res4 => {
-        if (res4.aired > res4.completed) {
-          let ep = res4.next_episode
-          let title = item.show.title
-          let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
-
-          if (first) {
-            createTitle({
-              title: title,
-              subtitle: subtitle
-            })
-            first = false
-          }
-          createPoster({
-            title: title,
-            subtitle: subtitle,
-            rating: ep.rating,
-            id: item.show.ids.tvdb
-          })
-        }
-      }).catch(err => debugLog('error', err))
-    })
-  }).catch(err => debugLog('error', err))
-}
-
-function createPoster(itemToAdd) {
-  let li = document.createElement('li')
-  li.classList = 'poster poster-dashboard shadow_h'
-  li.setAttribute('data_title', itemToAdd.title)
-  li.setAttribute('data_subtitle', itemToAdd.subtitle)
-  li.setAttribute('onmouseover', 'animateText(this, true)')
-  li.setAttribute('onmouseleave', 'animateText(this, false)')
-
-  let poster_content = document.createElement('div')
-  poster_content.classList = 'poster-content'
-
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
-
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let rate = document.createElement('span')
-  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(rate)
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList = 'poster-content-right fs14 white_t fw700 t_'
-  poster_content_right.innerText = 'Add to History'
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  let img = document.createElement('img')
-
-  fanart.shows.get(itemToAdd.id).then(res => {
-    if (res) {
-      if (res.seasonposter) {
-        img.src = res.seasonposter[0].url
-      } else if (res.tvposter) {
-        img.src = res.tvposter[0].url
-      } else {
-        img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-      }
-    }
-  }).catch(img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg')
-
-  li.appendChild(poster_content)
-  li.appendChild(img)
-
-  let posters = document.getElementById('posters')
-  posters.appendChild(li);
-}
-
-function createTitle(itemToAdd) {
-  let title = document.getElementById('poster_title')
-
-  let h3 = document.createElement('h3')
-  h3.classList = 'h3 red_t tu'
-  h3.innerText = 'up next to watch'
-
-  let h1 = document.createElement('h1')
-  h1.classList = 'h1 white_t tu'
-  h1.innerText = itemToAdd.title
-
-  let h1_2 = document.createElement('h1')
-  h1_2.classList = 'h1 white_d_t'
-  h1_2.innerText = itemToAdd.subtitle
-
-  title.appendChild(h3)
-  title.appendChild(h1)
-  title.appendChild(h1_2)
-}
-
-function animateText(textBox, onenter) {
-  let container = document.getElementById('poster_title')
-  let container_title = container.children[1]
-  let container_subtitle = container.children[2]
-
-  let title = textBox.getAttribute('data_title')
-  let subtitle = textBox.getAttribute('data_subtitle')
-
-  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
-    }
-  }
-
-  let poster = document.getElementById('posters').firstChild
-  let poster_title = poster.getAttribute('data_title')
-  let poster_subtitle = poster.getAttribute('data_subtitle')
-
-  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(!onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', poster_title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
-    }
-  }
-}
-
-
-function toggleAnimation(x, y, z) {
-  x.classList.remove(y)
-  void x.offsetWidth
-  x.innerText = z
-  x.classList.add(y)
-}
-
+//:::: SIDEBAR ::::\\
 
 // This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
@@ -405,7 +243,6 @@ function triggerSidePanel(panelName) {
   }
 }
 
-
 // These functions are called by onclicks in the HTML
 function openSearch() {
   triggerSidePanel('search')
@@ -428,99 +265,7 @@ function closeSidePanel() {
 }
 
 
-// This function generates a html element for one search result and adds it to the sidebar.
-function addSearchResult(result) {
-  let panel = document.getElementById('search_results')
-  let result_box = document.createElement('div')
-  result_box.classList.add('search_result_box')
-
-  let result_img_box = document.createElement('div')
-  result_img_box.classList.add('vertical_align')
-
-  let result_img = document.createElement('img')
-  if (result.img) {
-    result_img.src = result.img
-  } else {
-    result_img.style.width = '105px'
-    result_img.style.opacity = '0'
-  }
-
-  let result_text = document.createElement('div')
-  result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
-
-  let result_rating = document.createElement('div')
-  result_rating.classList.add('search_result_rating')
-  css(result_rating, {
-    float: 'left',
-    height: '15px'
-  })
-  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
-
-  let result_type = document.createElement('div')
-  result_type.classList.add('search_result_type')
-  css(result_type, {
-    float: 'right'
-  })
-  result_type.innerHTML = `${result.type}`
-
-  result_text.append(result_rating, result_type)
-  result_img_box.append(result_img)
-  result_box.append(result_img_box, result_text)
-
-  panel.appendChild(result_box)
-}
-
-
-// Removes all elements from the search panel in the sidebar
-function removeSearchResults() {
-  let panel = document.getElementById('search_results')
-  boxes = panel.getElementsByClassName('search_result_box')
-  while (boxes[0]) {
-    boxes[0].parentNode.removeChild(boxes[0])
-  }
-}
-
-
-// This gets fired when the user searches something from the sidebar
-async function search(text) {
-  let requestTime = Date.now()
-  removeSearchResults()
-
-  if(text == '') {
-    // empty search submitted
-    return false
-  }
-
-  let data = await searchRequestHelper(text).then(res => res)
-  debugLog('request finished', data.date)
-
-  data.result.forEach(item => {
-    debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
-    // fallback for unavailable images
-    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-
-    if(item.fanart !== undefined) {
-      if(item.fanart.hasOwnProperty('tvposter')) {
-        img = item.fanart.tvposter[0].url
-      } else if(item.fanart.hasOwnProperty('movieposter')) {
-        img = item.fanart.movieposter[0].url
-      }
-    }
-
-    // render search result
-    addSearchResult({
-      title: item.trakt[item.trakt.type].title,
-      type: item.trakt.type,
-      rating: Math.round(item.trakt[item.trakt.type].rating * 10),
-      img: img,
-      description: item.trakt[item.trakt.type].tagline
-    })
-  })
-
-  debugLog('time taken', (Date.now() - requestTime)+'ms')
-}
-
+//:::: SETTINGS PANEL ::::\\
 
 // This adds a setting box to the sidepanel
 function addSetting(setting, name) {
@@ -656,4 +401,239 @@ function addSetting(setting, name) {
   box.appendChild(setting_title)
   box.appendChild(setting_area)
   return box
+}
+
+
+//:::: SEARCH PANEL ::::\\
+
+// This gets fired when the user searches something from the sidebar
+async function search(text) {
+  let requestTime = Date.now()
+  removeSearchResults()
+
+  if(text == '') {
+    // empty search submitted
+    return false
+  }
+
+  let data = await searchRequestHelper(text).then(res => res)
+  debugLog('request finished', data.date)
+
+  data.result.forEach(item => {
+    debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
+    // fallback for unavailable images
+    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+
+    if(item.fanart !== undefined) {
+      if(item.fanart.hasOwnProperty('tvposter')) {
+        img = item.fanart.tvposter[0].url
+      } else if(item.fanart.hasOwnProperty('movieposter')) {
+        img = item.fanart.movieposter[0].url
+      }
+    }
+
+    // render search result
+    addSearchResult({
+      title: item.trakt[item.trakt.type].title,
+      type: item.trakt.type,
+      rating: Math.round(item.trakt[item.trakt.type].rating * 10),
+      img: img,
+      description: item.trakt[item.trakt.type].tagline
+    })
+  })
+
+  debugLog('time taken', Date.now()-requestTime+'ms')
+}
+
+
+// This function generates a html element for one search result and adds it to the sidebar.
+function addSearchResult(result) {
+  let panel = document.getElementById('search_results')
+  let result_box = document.createElement('div')
+  result_box.classList.add('search_result_box')
+
+  let result_img_box = document.createElement('div')
+  result_img_box.classList.add('vertical_align')
+
+  let result_img = document.createElement('img')
+  if(result.img) {
+    result_img.src = result.img
+  } else {
+    result_img.style.width = '105px'
+    result_img.style.opacity = '0'
+  }
+
+  let result_text = document.createElement('div')
+  result_text.classList.add('search_result_text')
+  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
+
+  let result_rating = document.createElement('div')
+  result_rating.classList.add('search_result_rating')
+  css(result_rating, {
+    float: 'left',
+    height: '15px'
+  })
+  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
+
+  let result_type = document.createElement('div')
+  result_type.classList.add('search_result_type')
+  css(result_type, {
+    float: 'right'
+  })
+  result_type.innerHTML = `${result.type}`
+
+  result_text.append(result_rating, result_type)
+  result_img_box.append(result_img)
+  result_box.append(result_img_box, result_text)
+
+  panel.appendChild(result_box)
+}
+
+
+// Removes all elements from the search panel in the sidebar
+function removeSearchResults() {
+  let panel = document.getElementById('search_results')
+  boxes = panel.getElementsByClassName('search_result_box')
+  while (boxes[0]) {
+    boxes[0].parentNode.removeChild(boxes[0])
+  }
+}
+
+
+//:::: UP NEXT DASHBOARD ::::\\
+
+// This gets fired when the dashboard is loaded
+async function generatePosterSection() {
+  let requestTime = Date.now()
+
+  let data = await getUpNextToWatch()
+
+  data.forEach((item, index) => {
+    if(item.aired > item.completed) {
+      let ep = item.next_episode
+      let title = item.show.title
+      let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
+
+      if(index === 0) {
+        createTitle({
+          title: title,
+          subtitle: subtitle
+        })
+      }
+      createPoster({
+        title: title,
+        subtitle: subtitle,
+        rating: ep.rating,
+        id: item.show.ids.tvdb
+      })
+    }
+  })
+
+  debugLog('time taken',  Date.now()-requestTime+'ms')
+}
+
+
+function createPoster(itemToAdd) {
+  let li = document.createElement('li')
+  li.classList = 'poster poster-dashboard shadow_h'
+  li.setAttribute('data_title', itemToAdd.title)
+  li.setAttribute('data_subtitle', itemToAdd.subtitle)
+  li.setAttribute('onmouseover', 'animateText(this, true)')
+  li.setAttribute('onmouseleave', 'animateText(this, false)')
+
+  let poster_content = document.createElement('div')
+  poster_content.classList = 'poster-content'
+
+  let poster_content_left = document.createElement('div')
+  poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
+
+  let heart = document.createElement('img')
+  heart.src = '../../assets/icons/app/heart.svg'
+
+  let rate = document.createElement('span')
+  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
+
+  poster_content_left.appendChild(heart)
+  poster_content_left.appendChild(rate)
+
+  let poster_content_right = document.createElement('div')
+  poster_content_right.classList = 'poster-content-right fs14 white_t fw700 t_'
+  poster_content_right.innerText = 'Add to History'
+
+  poster_content.appendChild(poster_content_left)
+  poster_content.appendChild(poster_content_right)
+
+  let img = document.createElement('img')
+
+  fanart.shows.get(itemToAdd.id).then(res => {
+    if (res) {
+      if (res.seasonposter) {
+        img.src = res.seasonposter[0].url
+      } else if (res.tvposter) {
+        img.src = res.tvposter[0].url
+      } else {
+        img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+      }
+    }
+  }).catch(img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg')
+
+  li.appendChild(poster_content)
+  li.appendChild(img)
+
+  let posters = document.getElementById('posters')
+  posters.appendChild(li);
+}
+
+function createTitle(itemToAdd) {
+  let title = document.getElementById('poster_title')
+
+  let h3 = document.createElement('h3')
+  h3.classList = 'h3 red_t tu'
+  h3.innerText = 'up next to watch'
+
+  let h1 = document.createElement('h1')
+  h1.classList = 'h1 white_t tu'
+  h1.innerText = itemToAdd.title
+
+  let h1_2 = document.createElement('h1')
+  h1_2.classList = 'h1 white_d_t'
+  h1_2.innerText = itemToAdd.subtitle
+
+  title.appendChild(h3)
+  title.appendChild(h1)
+  title.appendChild(h1_2)
+}
+
+function animateText(textBox, onenter) {
+  let container = document.getElementById('poster_title')
+  let container_title = container.children[1]
+  let container_subtitle = container.children[2]
+
+  let title = textBox.getAttribute('data_title')
+  let subtitle = textBox.getAttribute('data_subtitle')
+
+  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(onenter) {
+      toggleAnimation(container_title, 'animation_slide_up', title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+    }
+  }
+
+  let poster = document.getElementById('posters').firstChild
+  let poster_title = poster.getAttribute('data_title')
+  let poster_subtitle = poster.getAttribute('data_subtitle')
+
+  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(!onenter) {
+      toggleAnimation(container_title, 'animation_slide_up', poster_title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+    }
+  }
+}
+
+function toggleAnimation(x, y, z) {
+  x.classList.remove(y)
+  void x.offsetWidth
+  x.innerText = z
+  x.classList.add(y)
 }

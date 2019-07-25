@@ -3,12 +3,15 @@
 */
 
 const flatCache = require('flat-cache')
+const path = require('path')
+const { remote } = require('electron')
+const config = remote.getGlobal('config')
 
 module.exports = class Cache {
-   constructor(name, path, cacheTime = 0) {
+   constructor(name, cacheTime=0) {
       this.name = name
-      this.path = path
-      this.cache = flatCache.load(name, path)
+      this.path = path.join(__dirname, config.client.cache.path)
+      this.cache = flatCache.load(name, this.path)
       this.expire = cacheTime === 0 ? false : cacheTime * 1000 * 60
    }
    getKey(key) {
