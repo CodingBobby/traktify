@@ -514,7 +514,7 @@ async function generatePosterSection() {
 
       let next = item.nextEp
       let title = item.show.title
-      let subtitle = `${next.season} x ${next.episode}${next.count?` (${next.count})`:''} ${next.title}`
+      let subtitle = `${next.season} x ${next.episode+(next.count?' ('+next.count +')':'')} ${next.title}`
 
       if(index === 0) {
         createTitle({
@@ -526,7 +526,8 @@ async function generatePosterSection() {
         title: title,
         subtitle: subtitle,
         rating: next.rating,
-        id: item.show.ids.tvdb
+        id: item.show.ids.tvdb,
+        img: item.img
       })
     }
   })
@@ -535,7 +536,7 @@ async function generatePosterSection() {
 }
 
 
-function createPoster(itemToAdd) {
+async function createPoster(itemToAdd) {
   let li = document.createElement('li')
   li.classList = 'poster poster-dashboard shadow_h'
   li.setAttribute('data_title', itemToAdd.title)
@@ -567,17 +568,7 @@ function createPoster(itemToAdd) {
 
   let img = document.createElement('img')
 
-  fanart.shows.get(itemToAdd.id).then(res => {
-    if (res) {
-      if (res.seasonposter) {
-        img.src = res.seasonposter[0].url
-      } else if (res.tvposter) {
-        img.src = res.tvposter[0].url
-      } else {
-        img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-      }
-    }
-  }).catch(img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg')
+  img.src = await itemToAdd.img
 
   li.appendChild(poster_content)
   li.appendChild(img)

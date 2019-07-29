@@ -1,3 +1,5 @@
+let fanart = remote.getGlobal('fanart')
+
 module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
    getUpNextToWatch: getUpNextToWatch,
@@ -215,7 +217,6 @@ async function getUpNextToWatch() {
    } else {
       // In this case, everything that was cached is uptodate
       debugLog('cache available', 'up next to watch')
-      // debugLog('data', cacheContent)
       return cacheContent
    }
 }
@@ -228,7 +229,7 @@ async function requestUpNextToWatch() {
       let upNextPromises = []
 
       data.forEach((item, index) => {
-         if(index < 10) {
+         if(index < 6) {
             upNextPromises.push(
                new Promise((resolve, reject) => {
                   debugLog('api request', 'trakt')
@@ -237,7 +238,7 @@ async function requestUpNextToWatch() {
                      trakt.shows.progress.watched({
                         id: item.show.ids.trakt,
                         extended: 'full'
-                     }).then(res => {
+                     }).then(async res => {
                         debugLog('requesting time', Date.now()-requestTime)
                         // this creates us a more compact version of the next up item
                         return {
@@ -255,7 +256,55 @@ async function requestUpNextToWatch() {
                               rating: res.next_episode.rating,
                               aired: res.next_episode.first_aired,
                               runtime: res.next_episode.runtime
-                           } : undefined
+                           } : undefined,
+                           img: await fanart.shows.get(data[index].show.ids.tvdb)
+                              .then(async resFan => {
+                                 function currentSeasonPoster() {
+                                    let index = -1
+                                    let first = true
+                                    let preindex = -1
+                                    for(let i in resFan.seasonposter) {
+                                       let poster = resFan.seasonposter[i]
+                                       if(poster.season == res.next_episode.season) {
+                                          if(poster.lang == 'en') {
+                                             debugLog('poster', 'found fitting')
+                                             return i
+                                          }
+                                          if(first) {
+                                             preindex = i
+                                             first = false
+                                          }
+                                       }
+                                    }
+                                    if(preindex > -1) {
+                                       debugLog('poster', 'only found different language')
+                                       return preindex
+                                    } else {
+                                       debugLog('poster', 'did not found correct season')
+                                       return index
+                                    }
+                                 }
+
+                                 let url = ''
+                                 if(resFan.seasonposter === undefined && resFan.tvposter === undefined) {
+                                    url = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                                 } else if(resFan.seasonposter === undefined && resFan.tvposter !== undefined) {
+                                    debugLog('poster', 'placing tv poster as fallback')
+                                    url = resFan.tvposter[0].url
+                                 } else {
+                                    let index = await currentSeasonPoster()
+                                    if(index > -1) {
+                                       url = resFan.seasonposter[index].url
+                                    } else {
+                                       debugLog('poster', 'placing tv poster as fallback')
+                                       url = resFan.tvposter[0].url
+                                    }
+                                 }
+                                 return url
+                              })
+                              .catch(() => {
+                                 return 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                              })
                         }
                      })
                   )
