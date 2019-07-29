@@ -6,6 +6,17 @@
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
    <title>Loading...</title>
    <link rel="stylesheet" href="style.css">
+   <script>
+      const {
+         remote,
+         ipcRenderer
+      } = require('electron');
+      const Cache = require('../../modules/cache.js');
+      const {
+         newActivitiesAvailable,
+         getUpNextToWatch
+      } = require('../../modules/request.js');
+   </script>
 </head>
 <body>
    <div id="dragger"></div>
@@ -15,5 +26,7 @@
          <div class="loader"></div>
       </div>
    </div>
+   <script src="../main.js"></script>
+   <script src="./index.js"></script>
 </body>
 </html>

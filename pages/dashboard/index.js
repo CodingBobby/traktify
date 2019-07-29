@@ -8,24 +8,49 @@ const updateApp = remote.getGlobal('updateApp')
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
   updateApp()
-  createPosters()
+  generatePosterSection()
 }
 
+// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
 ipcRenderer.on('modify-root', (event, data) => {
   let variables = document.styleSheets[0]
     .cssRules[0].style.cssText.split(';')
 
   let result = {}
-  for (let i in variables) {
+  for(let i in variables) {
     let a = variables[i].split(':')
-    if (a[0] !== '') {
+    if(a[0] !== '') {
       result[a[0].trim()] = a[1].trim()
     }
   }
 
   let keys = Object.keys(result)
   document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
-});
+})
+
+
+// Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
+document.onkeydown = function() {
+  if(event.metaKey && event.keyCode === 83) { // meta + S
+    debugLog('shortcut', 'Meta + S')
+    show(document.getElementById('search_button_side'))
+    triggerSidePanel('search')
+    return false
+  } else if(event.metaKey && event.keyCode === 188) { // meta + ,
+    debugLog('shortcut', 'Meta + ,')
+    show(document.getElementById('settings_button_side'))
+    triggerSidePanel('settings')
+    return false
+  } else if(event.keyCode === 27) { // ESC
+    debugLog('shortcut', 'ESC')
+    // close the currently open panel
+    try {
+      triggerSidePanel(sideBar.status)
+    } catch (err) {
+      debugLog('error', 'no side panel available to close')
+    }
+  }
+}
 
 
 // This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
@@ -33,195 +58,15 @@ function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
     if (element.children[0] == x) {
-      x.classList.add('selected');
+      x.classList.add('selected')
     } else {
-      element.children[0].classList.remove('selected');
+      element.children[0].classList.remove('selected')
     }
-  });
+  })
 }
 
 
-function syncWatched() {
-  return trakt.sync.watched({
-    type: 'shows'
-  }).then(res => res)
-}
-
-function hiddenItems() {
-  return trakt.users.hidden.get({
-    section: 'progress_watched',
-    limit: 100
-  }).then(res => res)
-}
-
-function resolveAll() {
-  return Promise.all([syncWatched(), hiddenItems()])
-}
-
-function createPosters() {
-  resolveAll().then(([res, res2]) => {
-    let arr = Array.from(res);
-    let arr2 = Array.from(res2);
-
-    // filters hidden items
-    let array2Ids = arr2.map(item => item.show.ids.trakt);
-    arr = arr.filter((item) => !array2Ids.includes(item.show.ids.trakt));
-
-    // filters completed shows and creates first title
-    let first = true;
-    arr.forEach(item => {
-      trakt.shows.progress.watched({
-        id: item.show.ids.trakt,
-        extended: 'full'
-      }).then(res4 => {
-        if (res4.aired > res4.completed) {
-          let ep = res4.next_episode
-          let title = item.show.title
-          let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
-
-          if (first) {
-            createTitle({
-              title: title,
-              subtitle: subtitle
-            })
-            first = false
-          }
-          createPoster({
-            title: title,
-            subtitle: subtitle,
-            rating: ep.rating,
-            id: item.show.ids.tvdb
-          })
-        }
-      }).catch(err => console.log(err))
-    })
-  }).catch(err => console.log(err))
-}
-
-function createPoster(x) {
-  let li = document.createElement('li')
-  li.classList = 'poster poster-dashboard shadow_h'
-  li.setAttribute('data_title', x.title)
-  li.setAttribute('data_subtitle', x.subtitle)
-  li.setAttribute('onmouseover', 'animateText(this, true)')
-  li.setAttribute('onmouseleave', 'animateText(this, false)')
-
-  let poster_content = document.createElement('div')
-  poster_content.classList = 'poster-content'
-
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
-
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let rate = document.createElement('span')
-  rate.innerText = `${Math.round(x.rating * 10)}%`
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(rate)
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList = 'poster-content-right fs14 white_t fw700 t_'
-  poster_content_right.innerText = 'Add to History'
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  let img = document.createElement('img')
-
-  fanart.shows.get(x.id).then(res => {
-    if (res) {
-      if (res.seasonposter) {
-        img.src = res.seasonposter[0].url
-      } else if (res.tvposter) {
-        img.src = res.tvposter[0].url
-      } else {
-        img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-      }
-    }
-  }).catch(img.src = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg')
-
-  li.appendChild(poster_content)
-  li.appendChild(img)
-
-  let posters = document.getElementById('posters')
-  posters.appendChild(li);
-}
-
-function createTitle(x) {
-  let title = document.getElementById('poster_title')
-
-  let h3 = document.createElement('h3')
-  h3.classList = 'h3 red_t tu'
-  h3.innerText = 'up next to watch'
-
-  let h1 = document.createElement('h1')
-  h1.classList = 'h1 white_t tu'
-  h1.innerText = x.title
-
-  let h1_2 = document.createElement('h1')
-  h1_2.classList = 'h1 white_d_t'
-  h1_2.innerText = x.subtitle
-
-  title.appendChild(h3)
-  title.appendChild(h1)
-  title.appendChild(h1_2)
-}
-
-function animateText(x, onenter) {
-  let container = document.getElementById('poster_title')
-  let container_title = container.children[1]
-  let container_subtitle = container.children[2]
-
-  let title = x.getAttribute('data_title')
-  let subtitle = x.getAttribute('data_subtitle')
-
-  if (title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if (onenter) {
-      animationToggle(container_title, 'animation_slide_up', title)
-      animationToggle(container_subtitle, 'animation_slide_up', subtitle)
-    }
-  }
-
-  let poster = document.getElementById('posters').firstChild
-  let poster_title = poster.getAttribute('data_title')
-  let poster_subtitle = poster.getAttribute('data_subtitle')
-
-  if (poster_title.toLowerCase() != container_title.innerText.toLowerCase()) {
-    if (!onenter) {
-      animationToggle(container_title, 'animation_slide_up', poster_title)
-      animationToggle(container_subtitle, 'animation_slide_up', poster_subtitle)
-    }
-  }
-}
-
-function animationToggle(x, y, z) {
-  x.classList.remove(y)
-  void x.offsetWidth
-  x.innerText = z
-  x.classList.add(y)
-}
-
-// Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
-document.onkeydown = function () {
-  if (event.metaKey && event.keyCode == 83) { // meta + S
-    show(document.getElementById('search_button_side'))
-    triggerSidePanel('search')
-    return false
-  } else if (event.metaKey && event.keyCode == 188) { // meta + ,
-    show(document.getElementById('settings_button_side'))
-    triggerSidePanel('settings')
-    return false
-  } else if (event.keyCode == 27) { // ESC
-    // close the currently open panel
-    try {
-      triggerSidePanel(sideBar.status)
-    } catch (err) {
-      console.log(err)
-    }
-  }
-}
+//:::: SIDEBAR ::::\\
 
 // This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
@@ -336,6 +181,8 @@ let sideBar = {
   }
 }.init()
 
+
+// Opens and closes the given panel
 function triggerSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
   if (!sideBar.panels.includes(panelName)) {
@@ -396,7 +243,6 @@ function triggerSidePanel(panelName) {
   }
 }
 
-
 // These functions are called by onclicks in the HTML
 function openSearch() {
   triggerSidePanel('search')
@@ -413,189 +259,15 @@ function openLogout() {
 function closeSidePanel() {
   try {
     triggerSidePanel(sideBar.status)
-  } catch (err) {
-    console.log(err)
+  } catch(err) {
+    debugLog('error', err)
   }
 }
 
-// This function generates a html element for one search result and adds it to the sidebar.
-function addSearchResult(result) {
-  let panel = document.getElementById('search_results')
-  let result_box = document.createElement('div')
-  result_box.classList.add('search_result_box')
 
-  let result_img_box = document.createElement('div')
-  result_img_box.classList.add('vertical_align')
+//:::: SETTINGS PANEL ::::\\
 
-  let result_img = document.createElement('img')
-  if (result.img) {
-    result_img.src = result.img
-  } else {
-    result_img.style.width = '105px'
-    result_img.style.opacity = '0'
-  }
-
-  let result_text = document.createElement('div')
-  result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
-
-  let result_rating = document.createElement('div')
-  result_rating.classList.add('search_result_rating')
-  css(result_rating, {
-    float: 'left',
-    height: '15px'
-  })
-  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
-
-  let result_type = document.createElement('div')
-  result_type.classList.add('search_result_type')
-  css(result_type, {
-    float: 'right'
-  })
-  result_type.innerHTML = `${result.type}`
-
-  result_text.append(result_rating, result_type)
-  result_img_box.append(result_img)
-  result_box.append(result_img_box, result_text)
-
-  panel.appendChild(result_box)
-}
-
-function removeSearchResults() {
-  let panel = document.getElementById('search_results')
-  boxes = panel.getElementsByClassName('search_result_box')
-  while (boxes[0]) {
-    boxes[0].parentNode.removeChild(boxes[0])
-  }
-}
-
-let searchSubmitted = false
-
-function search(text) {
-  if (text == '') {
-    // empty search submitted
-    return
-  }
-
-  if (!searchSubmitted) {
-    searchSubmitted = true
-  } else {
-    removeSearchResults()
-    searchSubmitted = false
-  }
-
-  let searchOptions = [
-    'show', 'shows', 'tv', 'movie', 'person', 'episode', 'ep', 's', 'm', 'p', 'e'
-  ].map(o => o + ':')
-
-  let query = startsWithFilter(text, searchOptions, ':')
-
-  // This converts the simplified search type into a request-friendly one
-  switch (query.found) {
-    case 's':
-    case 'show':
-    case 'shows':
-    case 'tv': {
-      query.type = 'show'
-      break
-    }
-    case 'm':
-    case 'movie': {
-      query.type = 'movie'
-      break
-    }
-    case 'e':
-    case 'ep':
-    case 'episode': {
-      query.type = 'episode'
-      break
-    }
-    case 'p':
-    case 'person': {
-      query.type = 'person'
-      break
-    }
-    default: {
-      break
-    }
-  }
-
-  console.log(query.type + ':', query.filtered)
-
-  trakt.search.text({
-    type: query.type,
-    query: query.filtered
-  }).then(result1 => {
-    new Promise((resolve1, reject1) => {
-      let arr1 = []
-      result1.forEach(r1 => {
-        let obj1 = {
-          title: r1[query.type].title,
-          type: query.type,
-          id: r1[query.type].ids
-        }
-        arr1.push(obj1)
-      })
-      resolve1(arr1)
-    }).then(result2 => {
-      new Promise((resolve2, reject2) => {
-        result2.forEach(r2 => {
-          new Promise(async (resolve3, reject3) => {
-            if (r2.type != 'person') {
-              await trakt[r2.type + 's'].ratings({
-                id: r2.id.trakt
-              }).then(result2a => {
-                r2.rating = Math.round(result2a.rating * 10)
-              }).catch(err => console.log(err))
-            }
-            resolve3(r2)
-          }).then(result3 => {
-            new Promise(async (resolve4, reject4) => {
-              if (result3.type != 'person') {
-                let mv = result3.type == 'movie' ? 'm' : 'v'
-                await fanart[result3.type + 's'].get(result3.id['t' + mv + 'db'])
-                  .then(result3a => {
-                    if (result3a.tvposter) {
-                      result3.img = result3a.tvposter[0].url
-                    } else if (result3a.movieposter) {
-                      result3.img = result3a.movieposter[0].url
-                    } else {
-                      throw 'no poster' // couldn't find a poster
-                    }
-                  }).catch(err => {
-                    console.log((err == 'no poster') ? err : '' || 'not in fanart')
-                    // put a placeholder for the unavailable image
-                    result3.img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
-                  })
-              }
-              resolve4(result3)
-            }).then(result4 => {
-              addSearchResult(result4)
-            }).catch(err => console.log(err))
-          })
-        })
-        resolve2()
-      }).catch(err => console.log(err))
-    }).catch(err => console.log(err))
-  }).catch(err => console.log(err))
-}
-
-function startsWithFilter(string, options, removeFromFilter) {
-  string = string.toString()
-  for (let opt in options) {
-    if (string.startsWith(options[opt])) {
-      return {
-        found: options[opt].split(removeFromFilter || '').join(''),
-        filtered: string.split(options[opt])[1]
-      }
-    }
-  }
-  return {
-    found: null,
-    filtered: string
-  }
-}
-
+// This adds a setting box to the sidepanel
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
   setting_area.classList.add('col_2')
@@ -729,4 +401,232 @@ function addSetting(setting, name) {
   box.appendChild(setting_title)
   box.appendChild(setting_area)
   return box
+}
+
+
+//:::: SEARCH PANEL ::::\\
+
+// This gets fired when the user searches something from the sidebar
+async function search(text) {
+  let requestTime = Date.now()
+  removeSearchResults()
+
+  if(text == '') {
+    // empty search submitted
+    return false
+  }
+
+  let data = await searchRequestHelper(text).then(res => res)
+  debugLog('request finished', data.date)
+
+  data.result.forEach(item => {
+    debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
+    // fallback for unavailable images
+    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+
+    if(item.fanart !== undefined) {
+      if(item.fanart.hasOwnProperty('tvposter')) {
+        img = item.fanart.tvposter[0].url
+      } else if(item.fanart.hasOwnProperty('movieposter')) {
+        img = item.fanart.movieposter[0].url
+      }
+    }
+
+    // render search result
+    addSearchResult({
+      title: item.trakt[item.trakt.type].title,
+      type: item.trakt.type,
+      rating: Math.round(item.trakt[item.trakt.type].rating * 10),
+      img: img,
+      description: item.trakt[item.trakt.type].tagline
+    })
+  })
+
+  debugLog('time taken', Date.now()-requestTime+'ms')
+}
+
+
+// This function generates a html element for one search result and adds it to the sidebar.
+function addSearchResult(result) {
+  let panel = document.getElementById('search_results')
+  let result_box = document.createElement('div')
+  result_box.classList.add('search_result_box')
+
+  let result_img_box = document.createElement('div')
+  result_img_box.classList.add('vertical_align')
+
+  let result_img = document.createElement('img')
+  if(result.img) {
+    result_img.src = result.img
+  } else {
+    result_img.style.width = '105px'
+    result_img.style.opacity = '0'
+  }
+
+  let result_text = document.createElement('div')
+  result_text.classList.add('search_result_text')
+  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
+
+  let result_rating = document.createElement('div')
+  result_rating.classList.add('search_result_rating')
+  css(result_rating, {
+    float: 'left',
+    height: '15px'
+  })
+  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
+
+  let result_type = document.createElement('div')
+  result_type.classList.add('search_result_type')
+  css(result_type, {
+    float: 'right'
+  })
+  result_type.innerHTML = `${result.type}`
+
+  result_text.append(result_rating, result_type)
+  result_img_box.append(result_img)
+  result_box.append(result_img_box, result_text)
+
+  panel.appendChild(result_box)
+}
+
+
+// Removes all elements from the search panel in the sidebar
+function removeSearchResults() {
+  let panel = document.getElementById('search_results')
+  boxes = panel.getElementsByClassName('search_result_box')
+  while (boxes[0]) {
+    boxes[0].parentNode.removeChild(boxes[0])
+  }
+}
+
+
+//:::: UP NEXT DASHBOARD ::::\\
+
+// This gets fired when the dashboard is loaded
+async function generatePosterSection() {
+  let requestTime = Date.now()
+
+  let data = await getUpNextToWatch()
+
+  data.forEach((item, index) => {
+    if(!item.completed) {
+      debugLog('item to add', item.show.title)
+
+      let next = item.nextEp
+      let title = item.show.title
+      let subtitle = `${next.season} x ${next.episode+(next.count?' ('+next.count +')':'')} ${next.title}`
+
+      if(index === 0) {
+        createTitle({
+          title: title,
+          subtitle: subtitle
+        })
+      }
+      createPoster({
+        title: title,
+        subtitle: subtitle,
+        rating: next.rating,
+        id: item.show.ids.tvdb,
+        img: item.img
+      })
+    }
+  })
+
+  debugLog('time taken',  Date.now()-requestTime+'ms')
+}
+
+
+async function createPoster(itemToAdd) {
+  let li = document.createElement('li')
+  li.classList = 'poster poster-dashboard shadow_h'
+  li.setAttribute('data_title', itemToAdd.title)
+  li.setAttribute('data_subtitle', itemToAdd.subtitle)
+  li.setAttribute('onmouseover', 'animateText(this, true)')
+  li.setAttribute('onmouseleave', 'animateText(this, false)')
+
+  let poster_content = document.createElement('div')
+  poster_content.classList = 'poster-content'
+
+  let poster_content_left = document.createElement('div')
+  poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
+
+  let heart = document.createElement('img')
+  heart.src = '../../assets/icons/app/heart.svg'
+
+  let rate = document.createElement('span')
+  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
+
+  poster_content_left.appendChild(heart)
+  poster_content_left.appendChild(rate)
+
+  let poster_content_right = document.createElement('div')
+  poster_content_right.classList = 'poster-content-right fs14 white_t fw700 t_'
+  poster_content_right.innerText = 'Add to History'
+
+  poster_content.appendChild(poster_content_left)
+  poster_content.appendChild(poster_content_right)
+
+  let img = document.createElement('img')
+
+  img.src = await itemToAdd.img
+
+  li.appendChild(poster_content)
+  li.appendChild(img)
+
+  let posters = document.getElementById('posters')
+  posters.appendChild(li);
+}
+
+function createTitle(itemToAdd) {
+  let title = document.getElementById('poster_title')
+
+  let h3 = document.createElement('h3')
+  h3.classList = 'h3 red_t tu'
+  h3.innerText = 'up next to watch'
+
+  let h1 = document.createElement('h1')
+  h1.classList = 'h1 white_t tu'
+  h1.innerText = itemToAdd.title
+
+  let h1_2 = document.createElement('h1')
+  h1_2.classList = 'h1 white_d_t'
+  h1_2.innerText = itemToAdd.subtitle
+
+  title.appendChild(h3)
+  title.appendChild(h1)
+  title.appendChild(h1_2)
+}
+
+function animateText(textBox, onenter) {
+  let container = document.getElementById('poster_title')
+  let container_title = container.children[1]
+  let container_subtitle = container.children[2]
+
+  let title = textBox.getAttribute('data_title')
+  let subtitle = textBox.getAttribute('data_subtitle')
+
+  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(onenter) {
+      toggleAnimation(container_title, 'animation_slide_up', title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+    }
+  }
+
+  let poster = document.getElementById('posters').firstChild
+  let poster_title = poster.getAttribute('data_title')
+  let poster_subtitle = poster.getAttribute('data_subtitle')
+
+  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+    if(!onenter) {
+      toggleAnimation(container_title, 'animation_slide_up', poster_title)
+      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+    }
+  }
+}
+
+function toggleAnimation(x, y, z) {
+  x.classList.remove(y)
+  void x.offsetWidth
+  x.innerText = z
+  x.classList.add(y)
 }

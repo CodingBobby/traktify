@@ -64,6 +64,10 @@
                     "needsReload": true
                 }
             }
+        },
+        "cache": {
+            "path": "../.cache/",
+            "expires": 0
         }
     },
     "user": {

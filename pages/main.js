@@ -1,4 +1,4 @@
-if (!remote.getGlobal('darwin')) {
+if(!remote.getGlobal('darwin')) {
   document.getElementById('dragger').remove()
 }
 
@@ -22,4 +22,8 @@ function css(element, styles) {
   for (let property in styles) {
     element.style[property] = styles[property]
   }
+}
+
+function debugLog(...args) {
+  remote.getGlobal('debugLog').apply(null, args)
 }

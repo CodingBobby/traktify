@@ -3,11 +3,12 @@
   --black_d: #191919;
   --white: #FFF;
   --white_d: #CECECE;
-  --accent_color: #ED1C24;
   --accent_color_d: #C61017;
   --gray: #696969;
   --side_dist: 30px;
-  --background_image: url('./furniture.png');
+  /* the following variables will be set by the renderer when the window loads, these settings prevent short flashing and double file loading */
+  --accent_color: transparent;
+  --background_image: none;
   --background_opacity : 1;
 }
 
