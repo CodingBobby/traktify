@@ -509,10 +509,12 @@ async function generatePosterSection() {
   let data = await getUpNextToWatch()
 
   data.forEach((item, index) => {
-    if(item.aired > item.completed) {
-      let ep = item.next_episode
+    if(!item.completed) {
+      debugLog('item to add', item.show.title)
+
+      let next = item.nextEp
       let title = item.show.title
-      let subtitle = `${ep.season} x ${ep.number}${ep.number_abs?` (${ep.number_abs})`:''} ${ep.title}`
+      let subtitle = `${next.season} x ${next.episode}${next.count?` (${next.count})`:''} ${next.title}`
 
       if(index === 0) {
         createTitle({
@@ -523,7 +525,7 @@ async function generatePosterSection() {
       createPoster({
         title: title,
         subtitle: subtitle,
-        rating: ep.rating,
+        rating: next.rating,
         id: item.show.ids.tvdb
       })
     }

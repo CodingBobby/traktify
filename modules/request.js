@@ -205,10 +205,11 @@ async function getUpNextToWatch() {
    let cacheContent = posterCache.getKey('upNextToWatch')
    if(cacheContent === undefined || unseenShowActivity) {
       return requestUpNextToWatch().then(upNextToWatch => {
+         debugLog('caching', 'up next to watch')
+         let cachingTime = Date.now()
          posterCache.setKey('upNextToWatch', upNextToWatch)
          posterCache.save()
-         debugLog('cached', 'up next to watch')
-         // debugLog('data', upNextToWatch)
+         debugLog('caching time', Date.now()-cachingTime)
          return upNextToWatch
       })
    } else {
@@ -221,30 +222,50 @@ async function getUpNextToWatch() {
 
 async function requestUpNextToWatch() {
    let data = await getUsersShows().then(res => res)
-   debugLog('users shows', data)
+   debugLog('users shows', data.length)
 
    return new Promise((resolve, reject) => {
       let upNextPromises = []
 
       data.forEach((item, index) => {
-         upNextPromises.push(
-            new Promise((resolve, reject) => {
-               debugLog('api request', 'trakt')
-               resolve(
-                  trakt.shows.progress.watched({
-                     id: item.show.ids.trakt,
-                     extended: 'full'
-                  }).then(res => res)
-               )
-            })
-         )
+         if(index < 10) {
+            upNextPromises.push(
+               new Promise((resolve, reject) => {
+                  debugLog('api request', 'trakt')
+                  let requestTime = Date.now()
+                  resolve(
+                     trakt.shows.progress.watched({
+                        id: item.show.ids.trakt,
+                        extended: 'full'
+                     }).then(res => {
+                        debugLog('requesting time', Date.now()-requestTime)
+                        // this creates us a more compact version of the next up item
+                        return {
+                           completed: res.aired === res.completed,
+                           show: data[index].show,
+                           updated: res.last_watched_at,
+                           progress: res.seasons,
+                           nextEp: res.next_episode ? {
+                              season: res.next_episode.season,
+                              episode: res.next_episode.number,
+                              count: res.next_episode.number_abs,
+                              title: res.next_episode.title,
+                              ids: res.next_episode.ids,
+                              info: res.next_episode.overview,
+                              rating: res.next_episode.rating,
+                              aired: res.next_episode.first_aired,
+                              runtime: res.next_episode.runtime
+                           } : undefined
+                        }
+                     })
+                  )
+               })
+            )  
+         }
       })
 
       resolve(
-         Promise.all(upNextPromises).then(upNextToWatchArray => {
-            debugLog('up next', upNextToWatchArray)
-            return upNextToWatchArray
-         })
+         Promise.all(upNextPromises).then(res => res)
       )
    })
 }
@@ -256,9 +277,12 @@ async function getUsersShows() {
    if(cacheContent === undefined) {
       // request everything
       let usersShows = await requestUsersShows()
+
+      debugLog('caching', 'users shows')
+      let cachingTime = Date.now()
       posterCache.setKey('usersShows', usersShows)
       posterCache.save()
-      debugLog('cached', 'users shows')
+      debugLog('caching time', Date.now()-cachingTime)
 
       return usersShows
    } else {
@@ -269,9 +293,12 @@ async function getUsersShows() {
       if(unseenShowActivity) {
          // this request everything until we found a good filter system
          let usersShows = await requestUsersShows()
+         
+         debugLog('caching', 'users shows')
+         let cachingTime = Date.now()
          posterCache.setKey('usersShows', usersShows)
          posterCache.save()
-         debugLog('cached', 'users shows')
+         debugLog('caching time', Date.now()-cachingTime)
 
          return usersShows
       } else {
@@ -300,17 +327,25 @@ function requestUsersShows() {
 
 function getWatchedShows() {
    debugLog('api request', 'trakt')
+   let requestTime = Date.now()
    return trakt.sync.watched({
       type: 'shows'
-   }).then(res => res)
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
 }
 
 function getHiddenItems() {
    debugLog('api request', 'trakt')
+   let requestTime = Date.now()
    return trakt.users.hidden.get({
       section: 'progress_watched',
       limit: 100
-   }).then(res => res)
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
 }
 
 function getWatchedAndHiddenShows() {
