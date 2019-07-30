@@ -4,7 +4,8 @@
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "clearCache": "rm -f -r ./.cache/"
   },
   "repository": {
     "type": "git",
