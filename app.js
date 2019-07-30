@@ -153,12 +153,18 @@ function build() {
     defaultHeight: 750
   })
 
-  if(getSettings('app')['keep window state'].status) {
+  let settings = getSettings('app')
+
+  if(settings['keep window state'].status) {
     debugLog('app', 'keeping window state changes')
     windowOptions.x = mainWindowState.x
     windowOptions.y = mainWindowState.y
     windowOptions.width = mainWindowState.width
     windowOptions.height = mainWindowState.height
+  }
+
+  if(settings['discord rpc'].status) {
+    debugLog('app', 'discord rpc enabled')
   }
 
   window = new BrowserWindow(windowOptions)

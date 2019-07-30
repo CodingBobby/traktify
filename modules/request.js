@@ -4,7 +4,8 @@ let config = remote.getGlobal('config')
 module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
    getUpNextToWatch: getUpNextToWatch,
-   searchRequestHelper: searchRequestHelper
+   searchRequestHelper: searchRequestHelper,
+   getUserStats: getUserStats
 }
 
 //:::: SYNCING ::::\\
@@ -405,4 +406,41 @@ function getWatchedAndHiddenShows() {
       getWatchedShows(),
       getHiddenItems()
    ])
+}
+
+
+//:::: STATS ::::\\
+async function getUserStats() {
+   let userStats = await requestUserStats()
+   return userStats
+}
+
+function requestUserStats() {
+   debugLog('api request', 'user stats')
+   let requestTime = Date.now()
+   return new Promise(async (resolve, reject) => {
+      let userSettings = await getUserSettings()
+      resolve(
+         trakt.users.stats({
+            username: userSettings.user.username
+         }).then(res => {
+            debugLog('request finished', Date.now()-requestTime)
+            return res
+         })
+      )
+   })
+}
+
+async function getUserSettings() {
+   let userSettings = await requestUserSettings()
+   return userSettings
+}
+
+function requestUserSettings() {
+   debugLog('api request', 'user information')
+   let requestTime = Date.now()
+   return trakt.users.settings().then(res => {
+      debugLog('request finished', Date.now()-requestTime)
+      return res
+   })
 }
