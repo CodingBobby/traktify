@@ -253,7 +253,7 @@ body::after {
 .poster {
   position: relative;
   width: 140px;
-  height: 190px;
+  height: 205px;
   margin-right: 20px;
   display: inline-block;
   transition: all 400ms ease;

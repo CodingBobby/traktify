@@ -4,17 +4,19 @@
 }
 
 .wrapper.dashboard {
-  min-height: calc(100vh - 168px)
+  height: 100%;
 }
 
 .dashboard {
   margin: auto;
+  min-width: 716px;
 }
 
 .titles {
-  margin: 10px 20px;
-  transform: translateX(236px) translateY(131px);
+  margin-left: 20px;
+  transform: translateX(236px) translateY(10px);
   width: min-content;
+  height: 0;
   overflow: visible;
 }
 
@@ -37,7 +39,7 @@
 }
 .poster-dashboard:first-child {
   width: 236px;
-  height: 324px;
+  height: 337px;
 }
 .poster-dashboard:last-child {
   margin-right: 0;
@@ -568,6 +570,9 @@
   :root {
     --side_panel_width: 320px;
     --search_result_height: 150px;
+  }
+  .titles {
+    transform: translateX(236px) translateY(25px);
   }
   .titles h1,
   .titles h3 {
