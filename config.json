@@ -4,7 +4,7 @@
             "app": {
                 "accent color": {
                     "type": "select",
-                    "status": "red",
+                    "status": "green",
                     "default": "red",
                     "options": {
                         "red": {
@@ -59,7 +59,7 @@
                 },
                 "keep window state": {
                     "type": "toggle",
-                    "status": false,
+                    "status": true,
                     "default": false,
                     "needsReload": true
                 }
@@ -68,6 +68,10 @@
         "cache": {
             "path": "../.cache/",
             "expires": 0
+        },
+        "placeholder": {
+            "poster": "placeholder.png",
+            "search": "placeholder_nobg.png"
         }
     },
     "user": {

@@ -4,9 +4,11 @@ const getSettings = remote.getGlobal('getSettings')
 const setSetting = remote.getGlobal('setSetting')
 const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
+let config = remote.getGlobal('config')
 
 // Here we update the app with saved settings after the window is created
 window.onload = function () {
+  debugLog('window', 'dashboard loading')
   updateApp()
   generatePosterSection()
 }
@@ -422,7 +424,7 @@ async function search(text) {
   data.result.forEach(item => {
     debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
     // fallback for unavailable images
-    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+    let img = url = '../../assets/'+config.client.placeholder.search
 
     if(item.fanart !== undefined) {
       if(item.fanart.hasOwnProperty('tvposter')) {

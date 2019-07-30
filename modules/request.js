@@ -1,4 +1,5 @@
 let fanart = remote.getGlobal('fanart')
+let config = remote.getGlobal('config')
 
 module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
@@ -63,6 +64,7 @@ let searchQueryCache = new Cache('searchQuery')
 
 function searchRequestHelper(text) {
    let cacheContent = searchQueryCache.getKey(text)
+   // check if text was searched already, send earlier results if so
    if(cacheContent !== undefined) {
       debugLog('cache content', cacheContent)
       return Promise.resolve(cacheContent)
@@ -287,7 +289,8 @@ async function requestUpNextToWatch() {
 
                                  let url = ''
                                  if(resFan.seasonposter === undefined && resFan.tvposter === undefined) {
-                                    url = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                                    debugLog('poster', 'replacing unavailable poster')
+                                    url = '../../assets/'+config.client.placeholder.poster
                                  } else if(resFan.seasonposter === undefined && resFan.tvposter !== undefined) {
                                     debugLog('poster', 'placing tv poster as fallback')
                                     url = resFan.tvposter[0].url
@@ -303,7 +306,7 @@ async function requestUpNextToWatch() {
                                  return url
                               })
                               .catch(() => {
-                                 return 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+                                 return url = '../../assets/'+config.client.placeholder.poster
                               })
                         }
                      })
