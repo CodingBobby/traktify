@@ -26,6 +26,7 @@
     "electron": "^4.2.8"
   },
   "dependencies": {
+    "discord-rpc": "^3.0.2",
     "electron-window-state": "^5.0.3",
     "fanart.tv": "^2.1.0",
     "flat-cache": "^2.0.1",

@@ -4,11 +4,22 @@ const getSettings = remote.getGlobal('getSettings')
 const setSetting = remote.getGlobal('setSetting')
 const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
+let config = remote.getGlobal('config')
 
 // Here we update the app with saved settings after the window is created
-window.onload = function () {
+window.onload = async function() {
+  debugLog('window', 'dashboard loading')
   updateApp()
   generatePosterSection()
+
+  let settings = await createRpcContent()
+  let stateArray = config.client.rpc.states
+  settings.state = pick(stateArray)
+  rpc.update(settings)
+  setInterval(() => {
+    settings.state = pick(stateArray)
+    rpc.update(settings)
+  }, 60e3)
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -46,7 +57,7 @@ document.onkeydown = function() {
     // close the currently open panel
     try {
       triggerSidePanel(sideBar.status)
-    } catch (err) {
+    } catch(err) {
       debugLog('error', 'no side panel available to close')
     }
   }
@@ -57,7 +68,7 @@ document.onkeydown = function() {
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
-    if (element.children[0] == x) {
+    if(element.children[0] == x) {
       x.classList.add('selected')
     } else {
       element.children[0].classList.remove('selected')
@@ -78,7 +89,7 @@ let sideBar = {
   panels: ['search', 'settings', 'logout'],
   // Now these are the panel creators
   search: {
-    create: function () {
+    create: function() {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'search_panel'
@@ -86,8 +97,8 @@ let sideBar = {
       let search_field = document.createElement('input')
       search_field.id = 'search_field'
       search_field.type = 'text'
-      search_field.onkeydown = function () {
-        if (event.keyCode == 13) {
+      search_field.onkeydown = function() {
+        if(event.keyCode == 13) {
           search(search_field.value)
           return false
         }
@@ -112,12 +123,12 @@ let sideBar = {
 
       return panel
     },
-    open: function () {
+    open: function() {
       this.parent.appendChild(this.create())
     }
   },
   settings: {
-    create: function () {
+    create: function() {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'settings_panel'
@@ -127,7 +138,7 @@ let sideBar = {
       setting_list.id = 'setting_list'
 
       let settings = getSettings('app')
-      for (let s in settings) {
+      for(let s in settings) {
         let settingBox = addSetting(settings[s], s)
         setting_list.appendChild(settingBox)
       }
@@ -135,12 +146,12 @@ let sideBar = {
       panel.appendChild(setting_list)
       return panel
     },
-    open: function () {
+    open: function() {
       this.parent.appendChild(this.create())
     }
   },
   logout: {
-    create: function () {
+    create: function() {
       let panel = document.createElement('div')
       panel.classList.add('panel', 'vertical_align')
       panel.id = 'logout_panel'
@@ -148,7 +159,7 @@ let sideBar = {
       let logout_button = document.createElement('button')
       logout_button.id = 'logout_button'
       logout_button.innerText = 'Logout'
-      logout_button.onclick = function () {
+      logout_button.onclick = function() {
         signout()
         return false
       }
@@ -160,19 +171,19 @@ let sideBar = {
       panel.appendChild(logout_text)
       return panel
     },
-    open: function () {
+    open: function() {
       this.parent.appendChild(this.create())
     }
   },
   // Removes the panel contents from the sidebar
-  removeAll: function () {
+  removeAll: function() {
     let panels = this.element.getElementsByClassName('panel')
-    while (panels[0]) {
+    while(panels[0]) {
       panels[0].parentNode.removeChild(panels[0])
     }
   },
   // This helper initializes the available panels by providing the sidebar element as a parent. The method is called right after the creation of this object.
-  init: function () {
+  init: function() {
     this.panels.forEach(panel => {
       this[panel].parent = this.element
     })
@@ -185,7 +196,7 @@ let sideBar = {
 // Opens and closes the given panel
 function triggerSidePanel(panelName) {
   // Checking if panel is available. This will not be accessible by the user directly, so we could live without the check but for possible future changes it's safer to have and not wonder about weird errors
-  if (!sideBar.panels.includes(panelName)) {
+  if(!sideBar.panels.includes(panelName)) {
     throw 'panel not available'
   }
 
@@ -194,7 +205,7 @@ function triggerSidePanel(panelName) {
   let side_buttons = document.getElementById('side_buttons')
   let side_panel = document.getElementById('side_panel')
 
-  if (sideBar.status == 'none') {
+  if(sideBar.status == 'none') {
     sideBar.status = panelName
 
     // fading out the background
@@ -210,8 +221,8 @@ function triggerSidePanel(panelName) {
   }
 
   // When the panel-button of the currently opened panel was clicked, the whole sidebar will close
-  else if (sideBar.status == panelName) {
-    if (sideBar.status == 'search') {
+  else if(sideBar.status == panelName) {
+    if(sideBar.status == 'search') {
       removeSearchResults()
     }
     sideBar.status = 'none'
@@ -274,11 +285,11 @@ function addSetting(setting, name) {
   let setting_title = document.createElement('h3')
   setting_title.innerText = name
 
-  switch (setting.type) {
+  switch(setting.type) {
     case 'select': {
       classname = 'setting_select'
 
-      for (let o in setting.options) {
+      for(let o in setting.options) {
         let opt = setting.options[o]
 
         let preview = document.createElement('div')
@@ -287,19 +298,19 @@ function addSetting(setting, name) {
         let def = document.createElement('div')
         def.classList.add('setting_def', 'white_d_t')
 
-        if (setting.default == o) {
+        if(setting.default == o) {
           def.innerText = 'default'
         }
 
-        if (setting.status == o) {
+        if(setting.status == o) {
           preview.classList.add('selected')
         }
 
-        preview.onclick = function () {
-          if (!preview.classList.contains('selected')) {
+        preview.onclick = function() {
+          if(!preview.classList.contains('selected')) {
             let par = preview.parentElement;
             [...par.children].forEach(element => {
-              if (element == preview) {
+              if(element == preview) {
                 preview.classList.add('selected')
                 setSetting('app', name, o)
                 updateApp()
@@ -310,7 +321,7 @@ function addSetting(setting, name) {
           }
         }
 
-        if (opt.preview) {
+        if(opt.preview) {
           preview.classList.add('preview_img')
           preview.style.backgroundImage = `url('../../assets/previews/${opt.value}')`
         } else {
@@ -327,29 +338,31 @@ function addSetting(setting, name) {
       classname = 'setting_toggle'
       let check_no = ''
       let check_yes = ''
-      if (setting.status) {
+      if(setting.status) {
         check_yes = 'checked'
       } else {
         check_no = 'checked'
       }
 
+      let idname = name.split(' ').join('_')
+
       let toggle_switch = document.createElement('div')
       toggle_switch.innerHTML = `
-      <p class="btn-switch" id="setting_${name}">
-        <input ${check_no} type="radio" id="no" name="switch" class="btn-switch__radio btn-switch__radio_no"/>
-        <input ${check_yes} type="radio" id="yes" name="switch" class="btn-switch__radio btn-switch__radio_yes"/>
-        <label for="yes" class="btn-switch__label btn-switch__label_yes">
+      <p class="btn-switch" id="setting_${idname}">
+        <input ${check_no} type="radio" id="no_${idname}" name="switch_${idname}" class="btn-switch__radio btn-switch__radio_no"/>
+        <input ${check_yes} type="radio" id="yes_${idname}" name="switch_${idname}" class="btn-switch__radio btn-switch__radio_yes"/>
+        <label for="no_${idname}" class="btn-switch__label btn-switch__label_no">
           <span class="btn-switch__txt"></span>
         </label>
-        <label for="no" class="btn-switch__label btn-switch__label_no">
+        <label for="yes_${idname}" class="btn-switch__label btn-switch__label_yes">
           <span class="btn-switch__txt"></span>
         </label>
       </p>
       `
 
-      toggle_switch.onclick = function () {
-        let radio = document.getElementById(`setting_${name}`).children[0]
-        setSetting('app', name, !radio.checked)
+      toggle_switch.onclick = function() {
+        let radio = document.getElementById(`yes_${idname}`)
+        setSetting('app', name, radio.checked)
         updateApp()
       }
 
@@ -357,7 +370,7 @@ function addSetting(setting, name) {
       def.classList.add('setting_def', 'white_d_t')
 
       def.innerText = 'default: '
-      if (setting.default) {
+      if(setting.default) {
         def.innerText += 'on'
       } else {
         def.innerText += 'off'
@@ -377,7 +390,7 @@ function addSetting(setting, name) {
       slider.value = setting.status / setting.accuracy
       slider.classList.add('slider')
 
-      slider.oninput = function () {
+      slider.oninput = function() {
         let value = slider.value * setting.accuracy
         setSetting('app', name, value)
         updateApp()
@@ -405,6 +418,7 @@ function addSetting(setting, name) {
 
 
 //:::: SEARCH PANEL ::::\\
+let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
 async function search(text) {
@@ -416,13 +430,18 @@ async function search(text) {
     return false
   }
 
+  let cacheContent = searchHistoryCache.getKey(text)
+  if(cacheContent !== undefined) {
+    // add cached search results
+  }
+
   let data = await searchRequestHelper(text).then(res => res)
   debugLog('request finished', data.date)
 
   data.result.forEach(item => {
     debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
     // fallback for unavailable images
-    let img = 'https://png.pngtree.com/svg/20160504/39ce50858b.svg'
+    let img = url = '../../assets/'+config.client.placeholder.search
 
     if(item.fanart !== undefined) {
       if(item.fanart.hasOwnProperty('tvposter')) {
@@ -494,7 +513,7 @@ function addSearchResult(result) {
 function removeSearchResults() {
   let panel = document.getElementById('search_results')
   boxes = panel.getElementsByClassName('search_result_box')
-  while (boxes[0]) {
+  while(boxes[0]) {
     boxes[0].parentNode.removeChild(boxes[0])
   }
 }
@@ -629,4 +648,21 @@ function toggleAnimation(x, y, z) {
   void x.offsetWidth
   x.innerText = z
   x.classList.add(y)
+}
+
+
+//:::: RPC ::::\\
+
+async function createRpcContent() {
+  let stats = await getUserStats()
+  return {
+    time: {
+      movies: stats.movies.minutes,
+      shows: stats.episodes.minutes
+    }
+  }
+}
+
+function pick(array) {
+  return array[Math.floor(Math.random() * array.length)]
 }
