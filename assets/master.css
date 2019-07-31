@@ -3,11 +3,12 @@
   --black_d: #191919;
   --white: #FFF;
   --white_d: #CECECE;
-  --accent_color: #ED1C24;
   --accent_color_d: #C61017;
   --gray: #696969;
   --side_dist: 30px;
-  --background_image: url('./furniture.png');
+  /* the following variables will be set by the renderer when the window loads, these settings prevent short flashing and double file loading */
+  --accent_color: transparent;
+  --background_image: none;
   --background_opacity : 1;
 }
 
@@ -69,7 +70,7 @@
 }
 
 .fs14 {
-  font-size: 14px;
+  font-size: 14.5px;
 }
 .fs12 {
   font-size: 12px;
@@ -77,6 +78,9 @@
 
 .tu {
   text-transform: uppercase;
+}
+.t_ {
+  text-decoration: underline;
 }
 /*---positioning---*/
 .top,
@@ -138,7 +142,7 @@
 }
 /*---shadows---*/
 .shadow_h {
-  box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.16);
+  box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.3);
 }
 .shadow_b {
   box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
@@ -182,7 +186,11 @@ body::after {
 }
 
 .overlay {
-  background-color: rgba(0, 0, 0, 0.67);
+  background-color: rgba(0, 0, 0, 0.7);
+  position: fixed;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
 }
 
 .btns {
@@ -245,21 +253,10 @@ body::after {
 .poster {
   position: relative;
   width: 140px;
-  height: 190px;
+  height: 205px;
   margin-right: 20px;
   display: inline-block;
   transition: all 400ms ease;
-  cursor: pointer;
-}
-.poster:hover {
-  filter: grayscale(50%);
-}
-.poster:last-child {
-  margin-right: 0;
-}
-.poster.big {
-  width: 236px;
-  height: 324px;
 }
 
 .poster img {
@@ -270,7 +267,25 @@ body::after {
 
 .poster, 
 .poster img {
-  border-radius: 10px;
+  border-radius: 5px;
+}
+/*---animations---*/
+.animation_slide_up {
+  animation: slide_up 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+@keyframes slide_up {
+  0% {opacity:0;transform: translateY(50px)}
+  50% {opacity:0;transform: translateY(25px)}
+  100% {opacity:1;transform: translateY(0)}
+}
+
+.animation_slide_down {
+  animation: slide_down 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+@keyframes slide_down {
+  0% {opacity:0;transform: translateY(0)}
+  50% {opacity:0;transform: translateY(25px)}
+  100% {opacity:1;transform: translateY(50px)}
 }
 
 .above_all {
@@ -308,12 +323,5 @@ body::after {
   .wrapper.flex {
     min-height: calc(100vh - 40px);
     min-width: calc(100vw - 40px);
-  }
-
-  .poster:nth-child(4) {
-    margin-right: 0;
-  }
-  .poster:last-child {
-    display: none;
   }
 }

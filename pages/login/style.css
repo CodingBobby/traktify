@@ -1,3 +1,9 @@
+:root {
+  --accent_color: #ED1C24;
+  --background_image: url('../assets/furniture.png');
+  --background_opacity : 1;
+}
+
 .wrapper.login {
   padding: 0;
   min-height: 100vh;

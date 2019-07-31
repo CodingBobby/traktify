@@ -9,28 +9,33 @@
 \*/
 
 // Uncomment this line for publishing!
-//process.env.NODE_ENV = 'production'
+// process.env.NODE_ENV = 'production'
 
-if(process.env.NODE_ENV !== 'production') {
-  console.time('init')
-}
+let initTime = Date.now()
 
+// electron stuff
 const electron = require('electron')
-const fs = require('fs')
-const path = require('path')
-const Trakt = require('trakt.tv')
-const Fanart = require('fanart.tv')
 const windowStateKeeper = require('electron-window-state')
-
-// the electron items we need
 const {
   app,
   BrowserWindow,
   Menu,
   shell,
   clipboard,
-  dialog
+  dialog,
+  ipcMain
 } = electron
+
+// file stuff
+const fs = require('fs')
+const path = require('path')
+
+// api stuff
+const Trakt = require('trakt.tv')
+const Fanart = require('fanart.tv')
+const TvDB = require('node-tvdb')
+const TmDB = require('moviedb-promise')
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -46,15 +51,21 @@ global.darwin = process.platform == 'darwin'
 global.loadDashboard = loadDashboard
 global.loadLogin = loadLogin
 
+// these are the api globals
 global.trakt
 global.fanart
+global.tvdb
+global.tmdb
 
 let window = null
 
 const traktOptions = {
   client_id: process.env.trakt_id,
-  client_secret: process.env.trakt_secret,
-  debug: true
+  client_secret: process.env.trakt_secret
+}
+
+if(process.env.NODE_ENV !== 'production') {
+  traktOptions.debug = true
 }
 
 // here we set some options we need later
@@ -136,17 +147,24 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
 // This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  debugLog('app', 'now building')
   let mainWindowState = windowStateKeeper({
     defaultWidth: 900,
     defaultHeight: 750
   })
 
-  if(getSettings('app')['keep window state'].status) {
-    debugLog('keeping window state changes')
+  let settings = getSettings('app')
+
+  if(settings['keep window state'].status) {
+    debugLog('app', 'keeping window state changes')
     windowOptions.x = mainWindowState.x
     windowOptions.y = mainWindowState.y
     windowOptions.width = mainWindowState.width
     windowOptions.height = mainWindowState.height
+  }
+
+  if(settings['discord rpc'].status) {
+    debugLog('app', 'discord rpc enabled')
   }
 
   window = new BrowserWindow(windowOptions)
@@ -156,23 +174,43 @@ function build() {
     mainWindowState.manage(window)
   }
 
+  // These now try to connect to the APIs we are using
   try {
+    debugLog('api', 'creating trakt instance')
     global.trakt = new Trakt(traktOptions)
+  } catch(err) {
+    debugLog('error', 'trakt authentication', new Error().stack)
+  }
+
+  try {
+    debugLog('api', 'creating fanart instance')
     global.fanart = new Fanart(process.env.fanart_key)
   } catch(err) {
-    console.error(err)
+    debugLog('error', 'fanart authentication', new Error().stack)
   }
+
+  try {
+    debugLog('api', 'creating tvdb instance')
+    global.tvdb = new TvDB(process.env.tvdb_key)
+  } catch(err) {
+    debugLog('error', 'tvdb authentication', new Error().stack)
+  }
+
+  try {
+    debugLog('api', 'creating tmdb instance')
+    global.tmdb = new TmDB(process.env.tmdb_key)
+  } catch(err) {
+    debugLog('error', 'tmdb authentication', new Error().stack)
+  }
+
 
   // show the window when the page is built
   window.once('ready-to-show', () => {
+    debugLog('window', 'ready')
     window.show()
   })
 
-  // we have initialized everything important and log how long
-  // it took, remember to remove it in release version
-  if(process.env.NODE_ENV !== 'production') {
-    console.timeEnd('init')
-  }
+  debugLog('init time', (Date.now() - initTime)+'ms')
   
   // Now we launch the app renderer
   launchApp()
@@ -182,10 +220,12 @@ function build() {
 
   // if the window gets closed, the app will quit
   window.on('closed', () => {
+    debugLog('window', 'closed')
     win = null
   })
 
 	window.on('restore', () => {
+    debugLog('window', 'restored')
 		window.focus()
   })
 }
@@ -193,34 +233,44 @@ function build() {
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
   if(user.trakt.auth) {
+    debugLog('login', 'connecting existing user to trakt')
     tryLogin()
   } else {
+    debugLog('login', 'no user found')
     loadLogin()
   }
 }
 
 function tryLogin() {
   loadLoadingScreen()
-  // This timeout fakes a time consuming process. Currently only existing to demonstrate the fancy loading screen.
-  setTimeout(() => {
-    global.trakt.import_token(user.trakt.auth).then(() => {
-      global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
-        user.trakt.auth = newAuth
-        user.trakt.status = true
-        saveConfig()
-        debugLog('success')
-        loadDashboard()
-      }).catch(err => {
-        if(err) {
-          user.trakt.auth = false
-          user.trakt.status = false
-          saveConfig()
-          console.error('failed: ', err)
-          loadLogin()
+
+  global.trakt.import_token(user.trakt.auth).then(() => {
+    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+      user.trakt.auth = newAuth
+      user.trakt.status = true
+      saveConfig()
+      debugLog('login', 'success')
+
+      // wait until loading screen is fully loaded
+      ipcMain.once('loading-screen', (event, data) => {
+        if(data === 'loaded') {
+          debugLog('loading', 'can start now')
+          // After loadingHandler is finished with everything, the dashboard is opened
+          loadingHandler().then(() => {
+            loadDashboard()
+          })
         }
       })
+    }).catch(err => {
+      if(err) {
+        user.trakt.auth = false
+        user.trakt.status = false
+        saveConfig()
+        debugLog('login failed', err)
+        loadLogin()
+      }
     })
-  }, 2000);
+  })
 }
 
 function authenticate() {
@@ -234,7 +284,7 @@ function authenticate() {
 
     return global.trakt.poll_access(poll)
   }).then(auth => {
-    debugLog('user signed in')
+    debugLog('login', 'trakt user signed in')
     global.trakt.import_token(auth)
 
     user.trakt.auth = auth
@@ -249,13 +299,13 @@ function authenticate() {
   }).catch(err => {
     // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
     if(err) {
+      debugLog('error', 'login failed')
       user.trakt.auth = false
       user.trakt.status = false
       saveConfig()
 
       window.focus()
       loadLogin()
-      alert('Oh oops!\nAuthenticating failed for some reason.')
     }
   })
 }
@@ -282,6 +332,22 @@ function loadLoadingScreen() {
   window.loadFile('pages/loading/index.html')
 }
 
+function loadingHandler() {
+  let loadingTime = Date.now()
+  
+  return new Promise((resolve, reject) => {
+    // send a message, that the loading can begin
+    window.webContents.send('loading-screen', 'start')
+
+    // waiting for the loading to be done
+    ipcMain.once('loading-screen', (event, data) => {
+      if(data === 'done') {
+        debugLog('loading time', Date.now()-loadingTime+'ms')
+        resolve()
+      }
+    })
+  })
+}
 
 // this function can be called to save changes in the config file
 function saveConfig() {
@@ -377,7 +443,7 @@ global.defaultAll = defaultAll
 function updateApp() {
   let settings = getSettings('app')
   for(let s in settings) {
-    debugLog('updating setting:', s)
+    debugLog('updating setting', s)
     let setting = settings[s]
     switch(s) {
       case 'accent color': {
@@ -420,7 +486,31 @@ function inRange(value, range) {
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
 function debugLog(...args) {
   if(process.env.NODE_ENV !== 'production') {
-    console.log.apply(null, args)
+    let date = new Date()
+    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
+    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
+    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
+    let time = `${
+      date.getHours().toString().length === 1
+        ? '0'+date.getHours() : date.getHours()
+    }:${
+      date.getMinutes().toString().length === 1
+        ? '0'+date.getMinutes() : date.getMinutes()
+    }:${
+      date.getSeconds().toString().length === 1
+        ? '0'+date.getSeconds() : date.getSeconds()
+    }`
+    if(args[0] == 'err' || args[0] == 'error') {
+      console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
+      if(args[2]) {
+        console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
+      }
+    } else {
+      console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
+      if(args.length > 2) {
+        console.log.apply(null, args.splice(2, args.length-2))
+      }
+    }
   }
 }
 global.debugLog = debugLog
@@ -430,5 +520,6 @@ app.on('ready', build)
 
 // this quits the whole app
 app.on('window-all-closed', () => {
+  debugLog('app', 'now closing')
 	app.quit()
 })
