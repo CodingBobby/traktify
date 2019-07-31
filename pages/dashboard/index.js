@@ -4,22 +4,16 @@ const getSettings = remote.getGlobal('getSettings')
 const setSetting = remote.getGlobal('setSetting')
 const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
+const relaunchApp = remote.getGlobal('relaunchApp')
+
 let config = remote.getGlobal('config')
 
 // Here we update the app with saved settings after the window is created
-window.onload = async function() {
+window.onload = function() {
   debugLog('window', 'dashboard loading')
   updateApp()
   generatePosterSection()
-
-  let settings = await createRpcContent()
-  let stateArray = config.client.rpc.states
-  settings.state = pick(stateArray)
-  rpc.update(settings)
-  setInterval(() => {
-    settings.state = pick(stateArray)
-    rpc.update(settings)
-  }, 60e3)
+  updateRpc()
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -98,7 +92,7 @@ let sideBar = {
       search_field.id = 'search_field'
       search_field.type = 'text'
       search_field.onkeydown = function() {
-        if(event.keyCode == 13) {
+        if(event.keyCode === 13) { // ENTER
           search(search_field.value)
           return false
         }
@@ -132,18 +126,47 @@ let sideBar = {
       let panel = document.createElement('div')
       panel.classList.add('panel')
       panel.id = 'settings_panel'
-      panel.innerHTML = '<h2>Settings</h2>'
+
+      let heading = document.createElement('h2')
+      heading.innerText = 'Settings'
+      heading.classList.add('top')
+
+      let gradient = document.createElement('div')
+      gradient.classList.add('gradient_cover')
+      gradient.style.top = '64px'
 
       let setting_list = document.createElement('div')
       setting_list.id = 'setting_list'
 
       let settings = getSettings('app')
-      for(let s in settings) {
+
+      let settingsArray = objectToArray(settings)
+
+      delayFunction((index, arr) => {
+        let s = arr[index].name
         let settingBox = addSetting(settings[s], s)
         setting_list.appendChild(settingBox)
+      }, 150, getObjectLength(settings), settingsArray, 2)
+
+      let relaunch_box = document.createElement('div')
+      relaunch_box.id = 'relaunch_box'
+      relaunch_box.innerHTML = `Some settings require a ` // rest is added below
+      relaunch_box.classList.add('boxed_cover', 'bottom', 'boxed_cover_animate_out')
+      relaunch_box.style.display = 'none'
+
+      let relaunch_button = document.createElement('div')
+      relaunch_button.innerText = 'relaunch'
+      relaunch_button.classList.add('btn', 'red_d_b', 'white_t')
+      relaunch_button.onclick = function() {
+        relaunchApp()
       }
 
+      relaunch_box.appendChild(relaunch_button)
+
+      panel.appendChild(heading)
+      panel.appendChild(gradient)
       panel.appendChild(setting_list)
+      panel.appendChild(relaunch_box)
       return panel
     },
     open: function() {
@@ -278,12 +301,43 @@ function closeSidePanel() {
 
 //:::: SETTINGS PANEL ::::\\
 
+let wantsRelaunch = []
+
 // This adds a setting box to the sidepanel
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
   setting_area.classList.add('col_2')
   let setting_title = document.createElement('h3')
   setting_title.innerText = name
+
+  let settingOld = setting.status
+
+  function alertRequiredReload(settingNew) {
+    let relaunch_box = document.getElementById('relaunch_box')
+    let setting_list = document.getElementById('setting_list')
+    let settings_panel = document.getElementById('settings_panel')
+
+    if(settingNew !== settingOld) {
+      wantsRelaunch.push(name)
+      relaunch_box.style.display = 'block'
+      relaunch_box.classList.remove('boxed_cover_animate_out')
+      relaunch_box.classList.add('boxed_cover_animate_in')
+      setting_list.style.marginBottom = '100px'
+      let pos = settings_panel.scrollTop
+      settings_panel.scrollTop = pos+100
+    } else {
+      wantsRelaunch = wantsRelaunch.filter(item => item !== name)
+      if(wantsRelaunch.length === 0) {
+        relaunch_box.classList.remove('boxed_cover_animate_in')
+        relaunch_box.classList.add('boxed_cover_animate_out')
+        setting_list.style.marginBottom = '0px'
+        let pos = settings_panel.scrollTop
+        settings_panel.scrollTop = pos-100
+      }
+    }
+
+    debugLog('relaunch required', wantsRelaunch)
+  }
 
   switch(setting.type) {
     case 'select': {
@@ -362,6 +416,7 @@ function addSetting(setting, name) {
 
       toggle_switch.onclick = function() {
         let radio = document.getElementById(`yes_${idname}`)
+        alertRequiredReload(radio.checked)
         setSetting('app', name, radio.checked)
         updateApp()
       }
@@ -418,6 +473,7 @@ function addSetting(setting, name) {
 
 
 //:::: SEARCH PANEL ::::\\
+
 let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
@@ -653,6 +709,19 @@ function toggleAnimation(x, y, z) {
 
 //:::: RPC ::::\\
 
+async function updateRpc() {
+  if(config.client.settings.app['discord rpc'].status) {
+    let settings = await createRpcContent()
+    let stateArray = config.client.rpc.states
+    settings.state = pick(stateArray)
+    rpc.update(settings)
+    setInterval(() => {
+      settings.state = pick(stateArray)
+      rpc.update(settings)
+    }, 60e3)
+  }
+}
+
 async function createRpcContent() {
   let stats = await getUserStats()
   return {
@@ -661,8 +730,4 @@ async function createRpcContent() {
       shows: stats.episodes.minutes
     }
   }
-}
-
-function pick(array) {
-  return array[Math.floor(Math.random() * array.length)]
 }

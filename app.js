@@ -230,6 +230,16 @@ function build() {
   })
 }
 
+// here we finally build the app
+app.on('ready', build)
+
+// this quits the whole app
+app.on('window-all-closed', () => {
+  debugLog('app', 'now closing')
+	app.quit()
+})
+
+
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
   if(user.trakt.auth) {
@@ -321,7 +331,7 @@ function disconnect() {
 global.disconnect = disconnect
 
 
-// These two functions do nothing but load a render page
+// These functions do nothing but load a render page
 function loadLogin() {
   window.loadFile('pages/login/index.html')
 }
@@ -445,6 +455,7 @@ function updateApp() {
   for(let s in settings) {
     debugLog('updating setting', s)
     let setting = settings[s]
+    // these are only the settings that can be changed in realtime
     switch(s) {
       case 'accent color': {
         let value = setting.options[setting.status].value
@@ -476,6 +487,15 @@ function updateApp() {
 }
 global.updateApp = updateApp
 
+
+function relaunchApp() {
+  app.relaunch()
+  app.quit(0)
+}
+global.relaunchApp = relaunchApp
+
+
+//:::: HELPERS ::::\\
 
 // Range must be an array of two numeric values
 function inRange(value, range) {
@@ -514,12 +534,3 @@ function debugLog(...args) {
   }
 }
 global.debugLog = debugLog
-
-// here we finally build the app
-app.on('ready', build)
-
-// this quits the whole app
-app.on('window-all-closed', () => {
-  debugLog('app', 'now closing')
-	app.quit()
-})
