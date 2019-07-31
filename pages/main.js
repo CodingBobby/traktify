@@ -1,4 +1,4 @@
-if (!remote.getGlobal('darwin')) {
+if(!remote.getGlobal('darwin')) {
   document.getElementById('dragger').remove()
 }
 
@@ -19,7 +19,14 @@ function insertBefore(element, reference) {
 }
 
 function css(element, styles) {
-  for (let property in styles) {
-    element.style[property] = styles[property]
+  for(let property in styles) {
+    // just a security check
+    if({}.hasOwnProperty.call(styles, property)) {
+      element.style[property] = styles[property]
+    }
   }
+}
+
+function debugLog(...args) {
+  remote.getGlobal('debugLog').apply(null, args)
 }
