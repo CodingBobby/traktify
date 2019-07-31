@@ -516,8 +516,8 @@ function addSearchResult(result) {
 
 // Removes all elements from the search panel in the sidebar
 function removeSearchResults() {
-  let panel = document.getElementById('search_results')
-  boxes = panel.getElementsByClassName('search_result_box')
+  let panel = document.getElementById('results')
+  boxes = panel.getElementsByClassName('panel_box search')
   while(boxes[0]) {
     boxes[0].parentNode.removeChild(boxes[0])
   }

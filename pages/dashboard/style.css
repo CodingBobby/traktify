@@ -222,8 +222,9 @@
 }
 
 .panel_box.search .panel_box_container {
+  width: 100%;
   max-width: 206px;
-  height: calc(190px - 24px);
+  height: calc(205px - 24px);
 }
 
 .panel_box_container p {
