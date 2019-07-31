@@ -64,7 +64,7 @@ const traktOptions = {
   client_secret: process.env.trakt_secret
 }
 
-if (process.env.NODE_ENV !== 'production') {
+if(process.env.NODE_ENV !== 'production') {
   traktOptions.debug = true
 }
 
@@ -115,7 +115,7 @@ let menuTemplate = [{
         defaultId: 1,
         normalizeAccessKeys: false
       }, button => {
-        if (button == 0) {
+        if(button == 0) {
           resetTraktify(true)
         }
       })
@@ -124,14 +124,14 @@ let menuTemplate = [{
 }]
 
 // if the app is in development mode, these menu items will be pushed to the menu template
-if (process.env.NODE_ENV !== 'production') {
+if(process.env.NODE_ENV !== 'production') {
   menuTemplate.push({
     label: 'Dev Tools',
     submenu: [{
       label: 'Toggle Dev Tools',
       accelerator: global.darwin ? 'Command+I'
         : 'Ctrl+I',
-      click(item, focusedWindow) {
+      click(item, focusedWindow){
         focusedWindow.toggleDevTools()
       }
     }, {
@@ -155,7 +155,7 @@ function build() {
 
   let settings = getSettings('app')
 
-  if (settings['keep window state'].status) {
+  if(settings['keep window state'].status) {
     debugLog('app', 'keeping window state changes')
     windowOptions.x = mainWindowState.x
     windowOptions.y = mainWindowState.y
@@ -163,14 +163,14 @@ function build() {
     windowOptions.height = mainWindowState.height
   }
 
-  if (settings['discord rpc'].status) {
+  if(settings['discord rpc'].status) {
     debugLog('app', 'discord rpc enabled')
   }
 
   window = new BrowserWindow(windowOptions)
   Menu.setApplicationMenu(mainMenu)
 
-  if (getSettings('app')['keep window state'].status) {
+  if(getSettings('app')['keep window state'].status) {
     mainWindowState.manage(window)
   }
 
@@ -178,28 +178,28 @@ function build() {
   try {
     debugLog('api', 'creating trakt instance')
     global.trakt = new Trakt(traktOptions)
-  } catch (err) {
+  } catch(err) {
     debugLog('error', 'trakt authentication', new Error().stack)
   }
 
   try {
     debugLog('api', 'creating fanart instance')
     global.fanart = new Fanart(process.env.fanart_key)
-  } catch (err) {
+  } catch(err) {
     debugLog('error', 'fanart authentication', new Error().stack)
   }
 
   try {
     debugLog('api', 'creating tvdb instance')
     global.tvdb = new TvDB(process.env.tvdb_key)
-  } catch (err) {
+  } catch(err) {
     debugLog('error', 'tvdb authentication', new Error().stack)
   }
 
   try {
     debugLog('api', 'creating tmdb instance')
     global.tmdb = new TmDB(process.env.tmdb_key)
-  } catch (err) {
+  } catch(err) {
     debugLog('error', 'tmdb authentication', new Error().stack)
   }
 
@@ -210,8 +210,8 @@ function build() {
     window.show()
   })
 
-  debugLog('init time', (Date.now() - initTime) + 'ms')
-
+  debugLog('init time', (Date.now() - initTime)+'ms')
+  
   // Now we launch the app renderer
   launchApp()
 
@@ -224,15 +224,15 @@ function build() {
     win = null
   })
 
-  window.on('restore', () => {
+	window.on('restore', () => {
     debugLog('window', 'restored')
-    window.focus()
+		window.focus()
   })
 }
 
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
-  if (user.trakt.auth) {
+  if(user.trakt.auth) {
     debugLog('login', 'connecting existing user to trakt')
     tryLogin()
   } else {
@@ -253,7 +253,7 @@ function tryLogin() {
 
       // wait until loading screen is fully loaded
       ipcMain.once('loading-screen', (event, data) => {
-        if (data === 'loaded') {
+        if(data === 'loaded') {
           debugLog('loading', 'can start now')
           // After loadingHandler is finished with everything, the dashboard is opened
           loadingHandler().then(() => {
@@ -262,7 +262,7 @@ function tryLogin() {
         }
       })
     }).catch(err => {
-      if (err) {
+      if(err) {
         user.trakt.auth = false
         user.trakt.status = false
         saveConfig()
@@ -298,7 +298,7 @@ function authenticate() {
     return true
   }).catch(err => {
     // The failing login probably won't happen because the trakt login page would already throw the error. This exist just as a fallback.
-    if (err) {
+    if(err) {
       debugLog('error', 'login failed')
       user.trakt.auth = false
       user.trakt.status = false
@@ -334,15 +334,15 @@ function loadLoadingScreen() {
 
 function loadingHandler() {
   let loadingTime = Date.now()
-
+  
   return new Promise((resolve, reject) => {
     // send a message, that the loading can begin
     window.webContents.send('loading-screen', 'start')
 
     // waiting for the loading to be done
     ipcMain.once('loading-screen', (event, data) => {
-      if (data === 'done') {
-        debugLog('loading time', Date.now() - loadingTime + 'ms')
+      if(data === 'done') {
+        debugLog('loading time', Date.now()-loadingTime+'ms')
         resolve()
       }
     })
@@ -352,34 +352,34 @@ function loadingHandler() {
 // this function can be called to save changes in the config file
 function saveConfig() {
   fs.writeFile("./config.json", JSON.stringify(global.config), err => {
-    if (err) console.error(err)
+    if(err) console.error(err)
   })
 }
 
 function resetTraktify(removeLogin) {
   let userTemp = false
-  if (removeLogin) {
+  if(removeLogin) {
     disconnect()
   } else {
     userTemp = clone(user)
   }
   global.config = JSON.parse(fs.readFileSync("./def_config.json", "utf8"))
-  if (userTemp) {
+  if(userTemp) {
     global.config.user = userTemp
   }
   saveConfig()
 }
 
 function clone(object) {
-  if (null == object || "object" != typeof object) return object
+  if(null == object || "object" != typeof object) return object
   // create new blank object of same type
   let copy = object.constructor()
 
   // copy all attributes into it
-  for (let attr in object) {
-    if (object.hasOwnProperty(attr)) {
-      copy[attr] = object[attr]
-    }
+  for(let attr in object) {
+     if(object.hasOwnProperty(attr)) {
+        copy[attr] = object[attr]
+     }
   }
   return copy
 }
@@ -387,7 +387,7 @@ function clone(object) {
 
 function getSettings(scope) {
   let settings = global.config.client.settings
-  if (settings.hasOwnProperty(scope)) {
+  if(settings.hasOwnProperty(scope)) {
     return settings[scope]
   } else {
     console.error('Invalid scope at getSetting()')
@@ -400,24 +400,24 @@ function setSetting(scope, settingOption, newStatus) {
   let settings = global.config.client.settings[scope]
   let setting = settings[settingOption]
 
-  if (newStatus == 'default') {
+  if(newStatus == 'default') {
     setting.status = setting.default
   } else {
-    switch (setting.type) {
+    switch(setting.type) {
       case 'select': {
-        if (setting.options.hasOwnProperty(newStatus)) {
+        if(setting.options.hasOwnProperty(newStatus)) {
           setting.status = newStatus
         }
         break
       }
       case 'range': {
-        if (inRange(newStatus, setting.range)) {
+        if(inRange(newStatus, setting.range)) {
           setting.status = newStatus
         }
         break
       }
       case 'toggle': {
-        if (typeof newStatus == 'boolean') {
+        if(typeof newStatus == 'boolean') {
           setting.status = newStatus
         }
         break
@@ -433,7 +433,7 @@ global.setSetting = setSetting
 
 function defaultAll(scope) {
   let settings = getSettings(scope)
-  for (let s in settings) {
+  for(let s in settings) {
     setSetting(scope, s, 'default')
   }
 }
@@ -442,10 +442,10 @@ global.defaultAll = defaultAll
 
 function updateApp() {
   let settings = getSettings('app')
-  for (let s in settings) {
+  for(let s in settings) {
     debugLog('updating setting', s)
     let setting = settings[s]
-    switch (s) {
+    switch(s) {
       case 'accent color': {
         let value = setting.options[setting.status].value
         window.webContents.send('modify-root', {
@@ -466,7 +466,7 @@ function updateApp() {
         let value = setting.status
         window.webContents.send('modify-root', {
           name: '--background_opacity',
-          value: value / 100
+          value: value/100
         })
         break
       }
@@ -485,30 +485,30 @@ function inRange(value, range) {
 
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
 function debugLog(...args) {
-  if (process.env.NODE_ENV !== 'production') {
+  if(process.env.NODE_ENV !== 'production') {
     let date = new Date()
-    let hr = date.getHours().toString().length === 1 ? '0' + date.getHours() : date.getHours()
-    let mi = date.getMinutes().toString().length === 1 ? '0' + date.getMinutes() : date.getMinutes()
-    let se = date.getSeconds().toString().length === 1 ? '0' + date.getSeconds() : date.getSeconds()
+    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
+    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
+    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
     let time = `${
       date.getHours().toString().length === 1
-        ? '0' + date.getHours() : date.getHours()
-      }:${
+        ? '0'+date.getHours() : date.getHours()
+    }:${
       date.getMinutes().toString().length === 1
-        ? '0' + date.getMinutes() : date.getMinutes()
-      }:${
+        ? '0'+date.getMinutes() : date.getMinutes()
+    }:${
       date.getSeconds().toString().length === 1
-        ? '0' + date.getSeconds() : date.getSeconds()
-      }`
-    if (args[0] == 'err' || args[0] == 'error') {
+        ? '0'+date.getSeconds() : date.getSeconds()
+    }`
+    if(args[0] == 'err' || args[0] == 'error') {
       console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if (args[2]) {
+      if(args[2]) {
         console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
       }
     } else {
       console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if (args.length > 2) {
-        console.log.apply(null, args.splice(2, args.length - 2))
+      if(args.length > 2) {
+        console.log.apply(null, args.splice(2, args.length-2))
       }
     }
   }
@@ -521,5 +521,5 @@ app.on('ready', build)
 // this quits the whole app
 app.on('window-all-closed', () => {
   debugLog('app', 'now closing')
-  app.quit()
+	app.quit()
 })
