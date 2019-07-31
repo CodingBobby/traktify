@@ -169,6 +169,7 @@ body::after {
 
 #dragger {
   position: absolute;
+  z-index: 10;
   width: 100vw;
   height: 20px;
   -webkit-app-region: drag;
