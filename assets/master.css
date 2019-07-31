@@ -5,6 +5,8 @@
   --white_d: #CECECE;
   --accent_color_d: #C61017;
   --gray: #696969;
+
+
   --side_dist: 30px;
   /* the following variables will be set by the renderer when the window loads, these settings prevent short flashing and double file loading */
   --accent_color: transparent;
@@ -15,8 +17,7 @@
 *:focus {
   outline: none;
 }
-
-/*---fonts---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: FONTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 @font-face {
   font-family: 'manrope';
   font-weight: 200;
@@ -42,7 +43,7 @@
   font-weight: 700;
   src: url('./fonts/manrope-bold.woff2');
 }
-/*---typography---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: TYPOGRAPHY :::::::::::::::::::::::::::::::::::::::::::::::*/
 .h1 {
   font: 600 32px manrope;
 }
@@ -69,6 +70,15 @@
   font-weight: 700;
 }
 
+.fs23 {
+  font-size: 23px;
+}
+.fs18 {
+  font-size: 18px;
+}
+.fs16 {
+  font-size: 16px;
+}
 .fs14 {
   font-size: 14.5px;
 }
@@ -82,9 +92,11 @@
 .t_ {
   text-decoration: underline;
 }
-/*---positioning---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: POSITIONING :::::::::::::::::::::::::::::::::::::::::::::::*/
 .top,
+.top_p,
 .bottom,
+.bottom_p,
 .right,
 .left {
   position: fixed;
@@ -102,7 +114,27 @@
 .left {
   left: var(--side_dist);
 }
-/*---colors---*/
+
+.top_p {
+  top: var(--side_dist);
+}
+.bottom_p {
+  bottom: var(--side_dist);
+}
+
+.z1 {
+  z-index: 1;
+}
+.z2 {
+  z-index: 2;
+}
+.z3 {
+  z-index: 3;
+}
+.z4 {
+  z-index: 4;
+}
+/*::::::::::::::::::::::::::::::::::::::::::::::: COLORS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .black_t {
   color: var(--black);
 }
@@ -140,19 +172,20 @@
 .red_d_b {
   background-color: var(--accent_color_d);
 }
-/*---shadows---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: DROP-SHAWDOWS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .shadow_h {
   box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.3);
 }
 .shadow_b {
   box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
 }
-/*---components---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: COMPONENTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 body {
   margin: 0;
-  font-family: manrope;
+  font-family: manrope!important;
   overflow: hidden;
   background: var(--black_d);
+  user-select: none;
 }
 
 body::after {
@@ -185,17 +218,21 @@ body::after {
   margin: auto;
 }
 
-.overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-  position: fixed;
-  width: 100vw;
-  height: 100vh;
-  z-index: 0;
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 13px;
 }
-
+::-webkit-scrollbar-thumb {
+  background-color: var(--black_d);
+  background-clip: padding-box;
+  border: solid transparent 3px;
+  border-radius: 30px;
+}
+/*::::::::::::::::::::::::::::::::::::::::::::::: BUTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .btns {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 .btns .btn {
   margin-bottom: 8px;
@@ -244,6 +281,24 @@ body::after {
   height: 12px;
   vertical-align: middle;
 }
+/*::::::::::::::::::::::::::::::::::::::::::::::: OVERLAY :::::::::::::::::::::::::::::::::::::::::::::::*/
+.overlay {
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: none;
+
+  overflow: hidden;
+  background-color: var(--black_d);
+
+  opacity: 0.75;
+  animation: blend_out 150ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+.overlay.show {
+  display: block!important;
+  animation: blend_in 150ms cubic-bezier(.165,.84,.44,1) 1 forwards!important;
+}
+/*::::::::::::::::::::::::::::::::::::::::::::::: POSTERS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .posters {
   list-style: none;
   padding: 0;
@@ -269,39 +324,43 @@ body::after {
 .poster img {
   border-radius: 5px;
 }
-/*---animations---*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: ANIMATIONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .animation_slide_up {
   animation: slide_up 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
 @keyframes slide_up {
-  0% {opacity:0;transform: translateY(50px)}
-  50% {opacity:0;transform: translateY(25px)}
-  100% {opacity:1;transform: translateY(0)}
+  0% {opacity:0;transform:translateY(50px)}
+  50% {opacity:0;transform:translateY(25px)}
+  100% {opacity:1;transform:translateY(0)}
 }
 
-.animation_slide_down {
-  animation: slide_down 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+.animation_slide_right {
+  animation: slide_right 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
-@keyframes slide_down {
-  0% {opacity:0;transform: translateY(0)}
-  50% {opacity:0;transform: translateY(25px)}
-  100% {opacity:1;transform: translateY(50px)}
-}
-
-.above_all {
-  z-index: 5;
+@keyframes slide_right {
+  0% {opacity:0;transform:translateY(30px)}
+  50% {opacity:0;transform:translateY(15px)}
+  100% {opacity:1;transform:translateY(0)}
 }
 
-.vertical_align {
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
+.animation_blend_in {
+  animation: blend_in 150ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+}
+@keyframes blend_in {
+  0% {opacity:0;backdrop-filter:blur(0px)}
+  50% {opacity:0;backdrop-filter:blur(4px)}
+  100% {opacity:0.75;backdrop-filter:blur(8px)}
 }
 
-.vertical_align * {
-  grid-row: 2;
+.animation_blend_out {
+  animation: blend_out 150ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
-
-/*---responsive---*/
+@keyframes blend_out {
+  0% {opacity: 0.75;backdrop-filter: blur(8px)}
+  50% {opacity:0;backdrop-filter:blur(4px)}
+  100% {opacity:0;backdrop-filter: blur(0px)}
+}
+/*::::::::::::::::::::::::::::::::::::::::::::::: RESPONSIVE :::::::::::::::::::::::::::::::::::::::::::::::*/
 @media screen and (max-width: 952px) {
   :root {
     --side_dist: 20px;

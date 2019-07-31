@@ -39,7 +39,6 @@ ipcRenderer.on('modify-root', (event, data) => {
   document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
 })
 
-
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
 document.onkeydown = function() {
   if(event.metaKey && event.keyCode === 83) { // meta + S
@@ -92,10 +91,9 @@ let sideBar = {
     create: function() {
       let panel = document.createElement('div')
       panel.classList.add('panel')
-      panel.id = 'search_panel'
 
       let search_field = document.createElement('input')
-      search_field.id = 'search_field'
+      search_field.classList = 'panel_header search fs23 fw500 white_t black_d_b z4'
       search_field.type = 'text'
       search_field.onkeydown = function() {
         if(event.keyCode == 13) {
@@ -109,17 +107,18 @@ let sideBar = {
       }, 220)
       panel.appendChild(search_field)
 
-      let field_box = document.createElement('div')
-      field_box.id = 'field_box'
-      panel.appendChild(field_box)
+      let box = document.createElement('div')
+      box.classList = 'panel_header_box top z3'
+      panel.appendChild(box)
 
-      let field_gradient = document.createElement('div')
-      field_gradient.id = 'field_gradient'
-      panel.appendChild(field_gradient)
+      let gradient = document.createElement('div')
+      gradient.classList = 'panel_header_gradient top_p z3'
+      panel.appendChild(gradient)
 
-      let search_results = document.createElement('div')
-      search_results.id = 'search_results'
-      panel.appendChild(search_results)
+      let results = document.createElement('div')
+      results.classList = 'side_panel_list'
+      results.id = 'results'
+      panel.appendChild(results)
 
       return panel
     },
@@ -200,8 +199,7 @@ function triggerSidePanel(panelName) {
     throw 'panel not available'
   }
 
-  let overlay = document.getElementById('dash_overlay')
-  let dash = document.getElementById('dash')
+  let overlay = document.getElementById('overlay')
   let side_buttons = document.getElementById('side_buttons')
   let side_panel = document.getElementById('side_panel')
 
@@ -209,7 +207,7 @@ function triggerSidePanel(panelName) {
     sideBar.status = panelName
 
     // fading out the background
-    overlay.classList.add('dark_overlay')
+    overlay.classList.add('show')
 
     // now showing the settings panel
     side_panel.classList.remove('side_panel_animate_out')
@@ -235,7 +233,7 @@ function triggerSidePanel(panelName) {
 
     // fading in the background
     overlay.style.display = 'block'
-    overlay.classList.remove('dark_overlay')
+    overlay.classList.remove('show')
     // the timeout makes a fadeout animation possible
     setTimeout(() => {
       overlay.style.display = 'none'
@@ -274,9 +272,6 @@ function closeSidePanel() {
     debugLog('error', err)
   }
 }
-
-
-//:::: SETTINGS PANEL ::::\\
 
 // This adds a setting box to the sidepanel
 function addSetting(setting, name) {
@@ -467,45 +462,55 @@ async function search(text) {
 
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
-  let panel = document.getElementById('search_results')
-  let result_box = document.createElement('div')
-  result_box.classList.add('search_result_box')
+  let panel = document.getElementById('results')
+  let panel_box = document.createElement('div')
+  panel_box.classList = 'panel_box search'
 
-  let result_img_box = document.createElement('div')
-  result_img_box.classList.add('vertical_align')
+  let poster_img = document.createElement('img')
+  poster_img.classList = 'poster'
+  poster_img.src = result.img
 
-  let result_img = document.createElement('img')
-  if(result.img) {
-    result_img.src = result.img
-  } else {
-    result_img.style.width = '105px'
-    result_img.style.opacity = '0'
-  }
+  let panel_box_container = document.createElement('div')
+  panel_box_container.classList = 'panel_box_container'
 
-  let result_text = document.createElement('div')
-  result_text.classList.add('search_result_text')
-  result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
+  let h3 = document.createElement('h3')
+  h3.classList = 'fs18'
+  h3.innerText = result.title
 
-  let result_rating = document.createElement('div')
-  result_rating.classList.add('search_result_rating')
-  css(result_rating, {
-    float: 'left',
-    height: '15px'
-  })
-  result_rating.innerHTML = `<img src="../../assets/icons/app/heart.svg" style="height: 15px;"><span>${result.rating}%</span>`
+  let p = document.createElement('p')
+  p.innerText = result.overview
 
-  let result_type = document.createElement('div')
-  result_type.classList.add('search_result_type')
-  css(result_type, {
-    float: 'right'
-  })
-  result_type.innerHTML = `${result.type}`
+  let poster_content = document.createElement('div')
+  poster_content.classList = 'poster-content'
 
-  result_text.append(result_rating, result_type)
-  result_img_box.append(result_img)
-  result_box.append(result_img_box, result_text)
+  let poster_content_left = document.createElement('div')
+  poster_content_left.classList = 'poster-content-left'
 
-  panel.appendChild(result_box)
+  let heart = document.createElement('img')
+  heart.src = '../../assets/icons/app/heart.svg'
+
+  let span = document.createElement('span')
+  span.classList = 'fs16'
+  span.innerText = result.rating
+
+  let poster_content_right = document.createElement('div')
+  poster_content_right.classList = 'poster-content-right fs16 tu'
+  poster_content_right.innerText = result.type
+
+  poster_content_left.appendChild(heart)
+  poster_content_left.appendChild(span)
+
+  poster_content.appendChild(poster_content_left)
+  poster_content.appendChild(poster_content_right)
+
+  panel_box_container.appendChild(h3)
+  panel_box_container.appendChild(p)
+  panel_box_container.appendChild(poster_content)
+
+  panel_box.appendChild(poster_img)
+  panel_box.appendChild(panel_box_container)
+
+  panel.appendChild(panel_box)
 }
 
 
