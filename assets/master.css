@@ -169,6 +169,7 @@ body::after {
 
 #dragger {
   position: absolute;
+  z-index: 10;
   width: 100vw;
   height: 20px;
   -webkit-app-region: drag;
@@ -191,6 +192,20 @@ body::after {
   width: 100vw;
   height: 100vh;
   z-index: 0;
+}
+
+.gradient_cover {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  height: 16px;
+  background-image:
+    linear-gradient(
+      to bottom, 
+      var(--black), rgba(0,0,0,0)
+    );
 }
 
 .btns {
