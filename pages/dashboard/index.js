@@ -471,17 +471,6 @@ function addSearchResult(result) {
   let result_box = document.createElement('div')
   result_box.classList.add('search_result_box')
 
-  let result_img_box = document.createElement('div')
-  result_img_box.classList.add('vertical_align')
-
-  let result_img = document.createElement('img')
-  if(result.img) {
-    result_img.src = result.img
-  } else {
-    result_img.style.width = '105px'
-    result_img.style.opacity = '0'
-  }
-
   let result_text = document.createElement('div')
   result_text.classList.add('search_result_text')
   result_text.innerHTML = `<h3>${result.title}</h3><p>${result.description}</p>`
@@ -501,8 +490,13 @@ function addSearchResult(result) {
   })
   result_type.innerHTML = `${result.type}`
 
+  let result_img_box = document.createElement('div')
+  result_img_box.classList.add('vertical_align')
+
   result_text.append(result_rating, result_type)
-  result_img_box.append(result_img)
+
+  loadImage(result_img_box, result.img, 'loading_placeholder_nobg.gif')
+
   result_box.append(result_img_box, result_text)
 
   panel.appendChild(result_box)
@@ -585,12 +579,9 @@ async function createPoster(itemToAdd) {
   poster_content.appendChild(poster_content_left)
   poster_content.appendChild(poster_content_right)
 
-  let img = document.createElement('img')
-
-  img.src = await itemToAdd.img
-
   li.appendChild(poster_content)
-  li.appendChild(img)
+
+  loadImage(li, itemToAdd.img, 'loading_placeholder.gif')
 
   let posters = document.getElementById('posters')
   posters.appendChild(li);

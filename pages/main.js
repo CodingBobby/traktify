@@ -30,3 +30,20 @@ function css(element, styles) {
 function debugLog(...args) {
   remote.getGlobal('debugLog').apply(null, args)
 }
+
+function loadImage(parent, src, loadingSrc) {
+  let loading_img = document.createElement('img')
+  loading_img.src = '../../assets/'+loadingSrc
+
+  parent.appendChild(loading_img)
+
+  let img = document.createElement('img')
+  img.src = src
+
+  img.onload = function() {
+    setTimeout(() => {
+      parent.removeChild(loading_img)
+      parent.appendChild(img)
+    }, 7*33.3) // some extra animation and framerate buffer
+  }
+}
