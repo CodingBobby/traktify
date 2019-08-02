@@ -137,6 +137,7 @@ function searchRequestHelper(text) {
    })
 }
 
+// To sent API requests, we need a properly formed query. This formats the raw input text into a usable object.
 function formatSearch(text) {
    let searchOptions = [
       's', 'show', 'shows', 'tv',
@@ -410,9 +411,26 @@ function getWatchedAndHiddenShows() {
 
 
 //:::: STATS ::::\\
+
+// we're using the syncingCache from above here
 async function getUserStats() {
-   let userStats = await requestUserStats()
-   return userStats
+   let cacheContent = syncingCache.getKey('userStats')
+   if(cacheContent === undefined) {
+      return requestUserStats().then(userStats => {
+         debugLog('caching', 'user stats')
+         let cachingTime = Date.now()
+
+         syncingCache.setKey('userStats', userStats)
+         syncingCache.save()
+
+         debugLog('caching time', Date.now()-cachingTime)
+         return userStats
+      })
+   } else {
+      // In this case, everything that was cached is uptodate
+      debugLog('cache available', 'user stats')
+      return cacheContent
+   }
 }
 
 function requestUserStats() {

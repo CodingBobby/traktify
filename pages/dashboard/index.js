@@ -11,9 +11,9 @@ let config = remote.getGlobal('config')
 // Here we update the app with saved settings after the window is created
 window.onload = function() {
   debugLog('window', 'dashboard loading')
-  updateApp()
-  generatePosterSection()
-  updateRpc()
+  updateApp() // update settings
+  generatePosterSection() // show the up next to watch posters
+  updateRpc() // show rpc on discord
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -73,7 +73,7 @@ function show(x) {
 
 //:::: SIDEBAR ::::\\
 
-// This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
+// This object holds the DOM-elements and actions of the sidebar. We need this to generate the frame of the sidebar where content can be added dynamically later. Further comments explain the functioning.
 let sideBar = {
   element: document.getElementById('side_panel'),
   // This variable tells which sidebar is currently open. The possible values are:
@@ -714,7 +714,7 @@ async function updateRpc() {
 }
 
 async function createRpcContent() {
-  let stats = await getUserStats()
+  let stats = await getUserStats() // from request module
   return {
     time: {
       movies: stats.movies.minutes,
