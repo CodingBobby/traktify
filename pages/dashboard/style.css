@@ -4,12 +4,77 @@
 }
 
 .wrapper.dashboard {
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
 }
 
 .dashboard {
   margin: auto;
   min-width: 716px;
+}
+
+.infocard_overlay {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.infocard {
+  width: 70%;
+  height: 70%;
+  border-radius: 8px;
+  background-color: var(--black);
+}
+
+.cardcontent {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.infocard .banner {
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.infocard .banner img {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+}
+
+.infosection {
+  padding: 20px;
+  width: calc(100% - 40px);
+  z-index: 1;
+}
+
+.infocard .btns {
+  display: inline-flex;
+  position: absolute;
+  margin: 0;
+  right: calc(15% - 15px);
+  top: calc(15% - 15px);
+}
+
+.infocard .btns li {
+  padding: 5px;
+}
+
+.infocard .btns .btn {
+  margin: 0;
+}
+
+.infocard .btn.icon {
+  padding: 8px;
+}
+
+.infocard .btn.icon img {
+  width: 14px;
+  height: 14px;
 }
 
 .titles {
@@ -115,6 +180,24 @@
   position: absolute;
   overflow: hidden;
   z-index: 2;
+  background-color: rgb(20, 20, 20);
+
+  opacity: 0.75;
+  backdrop-filter: blur(8px);
+  animation: blend_out 0.15s;
+  animation-fill-mode: forwards;
+}
+
+#info_overlay {
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: none;
+
+  position: absolute;
+  overflow: hidden;
+  z-index: 6;
   background-color: rgb(20, 20, 20);
 
   opacity: 0.75;

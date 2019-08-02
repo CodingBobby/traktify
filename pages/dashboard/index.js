@@ -71,6 +71,56 @@ function show(x) {
 }
 
 
+//:::: INFOCARD ::::\\
+function triggerInfoCardStack() {
+  let infocard_stack = document.getElementById('infocard_stack')
+  if(infocard_stack.style.display === 'none') {
+    // open it
+    infocard_stack.style.display = 'flex'
+  } else {
+    // close it
+    infocard_stack.style.display = 'none'
+    infocard_stack.innerHTML = ''
+  }
+}
+
+
+function addInfoCard(itemToAdd) {
+  let infocard_stack = document.getElementById('infocard_stack')
+  infocard_stack.appendChild(generateInfoCard(itemToAdd))
+}
+
+exampleInfo = {
+  img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+  title: 'Bones',
+  description: 'Lorem ipsum dolor sit amet.'
+}
+
+function generateInfoCard(itemToAdd) {
+  let infocard = document.createElement('div')
+  infocard.classList.add('infocard', 'shadow_b')
+  infocard.innerHTML = `
+    <ul class="btns above_all">
+      <li>
+        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardStack()">
+          <img src="../../assets/icons/app/close.svg">
+        </div>
+      </li>
+    </ul>
+    <div class="cardcontent">
+      <div class="banner">
+        <img src="${itemToAdd.img}">
+      </div>
+      <div class="infosection white_t">
+        <h2>${itemToAdd.title}</h2>
+        <p class="white_t">${itemToAdd.description}</p>
+      </div>
+    </div>
+  `
+  return infocard
+}
+
+
 //:::: SIDEBAR ::::\\
 
 // This object holds the DOM-elements and actions of the sidebar. We need this to generate the frame of the sidebar where content can be added dynamically later. Further comments explain the functioning.
@@ -520,7 +570,6 @@ async function search(text) {
   debugLog('time taken', Date.now()-requestTime+'ms')
 }
 
-
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
   let panel = document.getElementById('search_results')
@@ -557,7 +606,6 @@ function addSearchResult(result) {
 
   panel.appendChild(result_box)
 }
-
 
 // Removes all elements from the search panel in the sidebar
 function removeSearchResults() {
