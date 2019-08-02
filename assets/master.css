@@ -16,6 +16,20 @@
   outline: none;
 }
 
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 6px;
+  /* display: none; */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--black_d);
+  background-clip: padding-box;
+  border: solid transparent;
+  border-width: 0 0 0 2px;
+  border-radius: 12px;
+}
+
 /*---fonts---*/
 @font-face {
   font-family: 'manrope';
@@ -177,7 +191,6 @@ body::after {
 
 .wrapper {
   position: relative;
-  padding: var(--side_dist);
 }
 .wrapper.flex {
   display: flex;
@@ -192,6 +205,10 @@ body::after {
   width: 100vw;
   height: 100vh;
   z-index: 0;
+}
+
+.blur_backdrop {
+  backdrop-filter: blur(8px);
 }
 
 .gradient_cover {
@@ -211,6 +228,8 @@ body::after {
 .btns {
   list-style: none;
   padding: 0;
+  width: min-content;
+  height: min-content;
 }
 .btns .btn {
   margin-bottom: 8px;
@@ -236,6 +255,7 @@ body::after {
 
 .btn.icon {
   border-radius: 50%;
+  width: min-content;
   padding: 12px;
   display: flex;
 }
