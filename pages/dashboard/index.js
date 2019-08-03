@@ -72,22 +72,99 @@ function show(x) {
 
 
 //:::: INFOCARD ::::\\
-function triggerInfoCardStack() {
-  let infocard_stack = document.getElementById('infocard_stack')
-  if(infocard_stack.style.display === 'none') {
+// moves in one direction through the stacks
+function moveCards(clickedButton, direction) {
+  let stacks = getCardStacks()
+  switch(direction) {
+    case 'right':
+      if(stacks.right.length !== 0) {
+        let midCard = stacks.middle[0]
+        midCard.classList.remove('middle_stack')
+        midCard.classList.add('left_stack')
+        // get the bottom right one
+        let rigCard = stacks.right[0]
+        rigCard.classList.remove('right_stack')
+        rigCard.classList.add('middle_stack')
+      } else {
+        clickedButton.style.display = 'none'
+      }
+      break
+    case 'left':
+      if(stacks.left.length !== 0) {
+        // move the middle one
+        let midCard = stacks.middle[0]
+        midCard.classList.remove('middle_stack')
+        midCard.classList.add('right_stack')
+        // get the top left one
+        let lefCard = stacks.left[stacks.left.length-1]
+        lefCard.classList.remove('left_stack')
+        lefCard.classList.add('middle_stack')
+      }
+      break
+  }
+  updateLeftRightButtons()
+}
+
+function getCardStacks() {
+  return {
+    left: document.getElementsByClassName('left_stack'),
+    middle: document.getElementsByClassName('middle_stack'),
+    right: document.getElementsByClassName('right_stack')
+  }
+}
+
+function updateLeftRightButtons() {
+  let stacks = getCardStacks()
+  let leftButton = document.getElementById('stack_left_button')
+  let rightButton = document.getElementById('stack_right_button')
+
+  // check the left stack
+  if(stacks.left.length === 0) {
+    leftButton.style.display = 'none'
+  } else {
+    leftButton.style.display = 'flex'
+  }
+
+  // and now the right one
+  if(stacks.right.length === 0) {
+    rightButton.style.display = 'none'
+  } else {
+    rightButton.style.display = 'flex'
+  }
+}
+
+// opens and closes the info card
+function triggerInfoCardOverlay() {
+  let infocard_overlay = document.getElementById('infocard_overlay')
+  let dark_overlay = document.getElementById('info_overlay')
+  if(infocard_overlay.style.display === 'none') {
     // open it
-    infocard_stack.style.display = 'flex'
+    infocard_overlay.style.display = 'flex'
+    dark_overlay.classList.add('dark_overlay')
+    updateLeftRightButtons()
   } else {
     // close it
-    infocard_stack.style.display = 'none'
-    infocard_stack.innerHTML = ''
+    infocard_overlay.style.display = 'none'
+    dark_overlay.classList.remove('dark_overlay')
   }
 }
 
 
-function addInfoCard(itemToAdd) {
+function addInfoCard(itemToAdd, position) {
+  let stack
+  switch(position) {
+    case 'left':
+      stack = 'left_stack'
+      break
+    case 'middle':
+      stack = 'middle_stack'
+      break
+    case 'right':
+      stack = 'right_stack'
+      break
+  }
   let infocard_stack = document.getElementById('infocard_stack')
-  infocard_stack.appendChild(generateInfoCard(itemToAdd))
+  infocard_stack.appendChild(generateInfoCard(itemToAdd, stack))
 }
 
 exampleInfo = {
@@ -96,13 +173,13 @@ exampleInfo = {
   description: 'Lorem ipsum dolor sit amet.'
 }
 
-function generateInfoCard(itemToAdd) {
+function generateInfoCard(itemToAdd, stack) {
   let infocard = document.createElement('div')
-  infocard.classList.add('infocard', 'shadow_b')
+  infocard.classList.add('infocard', 'shadow_b', stack)
   infocard.innerHTML = `
     <ul class="btns above_all">
       <li>
-        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardStack()">
+        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
           <img src="../../assets/icons/app/close.svg">
         </div>
       </li>

@@ -25,7 +25,25 @@
   <div id="dragger"></div>
   <div class="wrapper flex dashboard">
 
-    <div id="infocard_stack" style="display: none" class="infocard_overlay" id="info"></div>
+    <div id="infocard_overlay" style="display: none;" class="white_t">
+      <ul class="btns above_all">
+        <li>
+          <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards(this, 'left')">
+            <img src="../../assets/icons/app/left.svg">
+          </div>
+        </li>
+        <li>
+          <div id="stack_right_button" class="btn small icon red_b shadow_b right" onclick="moveCards(this, 'right')">
+            <img src="../../assets/icons/app/right.svg">
+          </div>
+        </li>
+      </ul>
+
+      <div id="infocard_stack">
+        <!-- Here, the info cards will go -->
+      </div>
+
+    </div>
     <div id="info_overlay"></div>
 
     <ul class="btns top right above_all" id="side_buttons">
