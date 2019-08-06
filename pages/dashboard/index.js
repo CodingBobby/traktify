@@ -67,7 +67,7 @@ document.onkeydown = function() {
 function show(x) {
   let par = x.parentElement.parentElement;
   [...par.children].forEach(element => {
-    if(element.children[0] == x) {
+    if(element.children[0] === x) {
       x.classList.add('selected')
     } else {
       element.children[0].classList.remove('selected')
@@ -76,7 +76,7 @@ function show(x) {
 }
 
 
-//:::: SIDEBAR ::::\\
+/*::::::::::::::::::::::::::::::::::::::::::::::: SIDEBAR :::::::::::::::::::::::::::::::::::::::::::::::*/
 
 // This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
@@ -93,7 +93,7 @@ let sideBar = {
       panel.classList.add('panel')
 
       let search_field = document.createElement('input')
-      search_field.classList = 'panel_header search fs23 fw500 white_t black_d_b z4'
+      search_field.classList.add('panel_header', 'search', 'fs23', 'fw500', 'white_t', 'black_d_b', 'z4')
       search_field.type = 'text'
       search_field.onkeydown = function() {
         if(event.keyCode == 13) {
@@ -108,15 +108,15 @@ let sideBar = {
       panel.appendChild(search_field)
 
       let box = document.createElement('div')
-      box.classList = 'panel_header_box top z3'
+      box.classList.add('panel_header_box', 'top', 'z3')
       panel.appendChild(box)
 
       let gradient = document.createElement('div')
-      gradient.classList = 'panel_header_gradient top_p z3'
+      gradient.classList.add('panel_header_gradient', 'top_p', 'z3')
       panel.appendChild(gradient)
 
       let results = document.createElement('div')
-      results.classList = 'side_panel_list'
+      results.classList.add('side_panel_list')
       results.id = 'results'
       panel.appendChild(results)
 
@@ -130,19 +130,30 @@ let sideBar = {
     create: function() {
       let panel = document.createElement('div')
       panel.classList.add('panel')
-      panel.id = 'settings_panel'
-      panel.innerHTML = '<h2>Settings</h2>'
+
+      let headText = document.createElement('h2')
+      headText.classList.add('panel_header', 'fs23', 'fw500', 'white_t', 'z4')
+      headText.innerText = 'Settings'
+      panel.appendChild(headText)
+
+      let box = document.createElement('div')
+      box.classList.add('panel_header_box', 'top', 'z3')
+      panel.appendChild(box)
+
+      let gradient = document.createElement('div')
+      gradient.classList.add('panel_header_gradient', 'top_p', 'z3')
+      panel.appendChild(gradient)
 
       let setting_list = document.createElement('div')
-      setting_list.id = 'setting_list'
+      setting_list.classList.add('side_panel_list')
 
       let settings = getSettings('app')
       for(let s in settings) {
         let settingBox = addSetting(settings[s], s)
         setting_list.appendChild(settingBox)
       }
-
       panel.appendChild(setting_list)
+
       return panel
     },
     open: function() {
@@ -152,11 +163,10 @@ let sideBar = {
   logout: {
     create: function() {
       let panel = document.createElement('div')
-      panel.classList.add('panel', 'vertical_align')
-      panel.id = 'logout_panel'
+      panel.classList.add('panel')
 
       let logout_button = document.createElement('button')
-      logout_button.id = 'logout_button'
+      logout_button.classList.add('logout_btn', 'fs18', 'white_t', 'black_d_b')
       logout_button.innerText = 'Logout'
       logout_button.onclick = function() {
         signout()
@@ -165,7 +175,7 @@ let sideBar = {
       panel.appendChild(logout_button)
 
       let logout_text = document.createElement('div')
-      logout_text.id = 'logout_text'
+      logout_text.style = 'text-align:center;'
       logout_text.innerHTML = '<p>Oh uh!<br>You really want to do this?</p>'
       panel.appendChild(logout_text)
       return panel
@@ -277,6 +287,7 @@ function closeSidePanel() {
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
   setting_area.classList.add('col_2')
+  
   let setting_title = document.createElement('h3')
   setting_title.innerText = name
 
@@ -404,7 +415,7 @@ function addSetting(setting, name) {
   }
 
   let box = document.createElement('div')
-  box.classList.add('setting_box')
+  box.classList.add('panel_box', 'panel_box_container')
 
   box.appendChild(setting_title)
   box.appendChild(setting_area)
@@ -412,7 +423,7 @@ function addSetting(setting, name) {
 }
 
 
-//:::: SEARCH PANEL ::::\\
+/*::::::::::::::::::::::::::::::::::::::::::::::: SEARCH-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
@@ -464,37 +475,37 @@ async function search(text) {
 function addSearchResult(result) {
   let panel = document.getElementById('results')
   let panel_box = document.createElement('div')
-  panel_box.classList = 'panel_box search'
+  panel_box.classList.add('panel_box', 'search')
 
   let poster_img = document.createElement('img')
-  poster_img.classList = 'poster'
+  poster_img.classList.add('poster')
   poster_img.src = result.img
 
   let panel_box_container = document.createElement('div')
-  panel_box_container.classList = 'panel_box_container'
+  panel_box_container.classList.add('panel_box_container')
 
   let h3 = document.createElement('h3')
-  h3.classList = 'fs18'
+  h3.classList.add('fs18')
   h3.innerText = result.title
 
   let p = document.createElement('p')
   p.innerText = result.overview
 
   let poster_content = document.createElement('div')
-  poster_content.classList = 'poster-content'
+  poster_content.classList.add('poster-content')
 
   let poster_content_left = document.createElement('div')
-  poster_content_left.classList = 'poster-content-left'
+  poster_content_left.classList.add('poster-content-left')
 
   let heart = document.createElement('img')
   heart.src = '../../assets/icons/app/heart.svg'
 
   let span = document.createElement('span')
-  span.classList = 'fs16'
-  span.innerText = result.rating
+  span.classList.add('fs16')
+  span.innerText = result.rating + "%"
 
   let poster_content_right = document.createElement('div')
-  poster_content_right.classList = 'poster-content-right fs16 tu'
+  poster_content_right.classList.add('poster-content-right', 'fs16', 'tu')
   poster_content_right.innerText = result.type
 
   poster_content_left.appendChild(heart)
@@ -524,8 +535,7 @@ function removeSearchResults() {
 }
 
 
-//:::: UP NEXT DASHBOARD ::::\\
-
+/*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 // This gets fired when the dashboard is loaded
 async function generatePosterSection() {
   let requestTime = Date.now()
@@ -562,17 +572,17 @@ async function generatePosterSection() {
 
 async function createPoster(itemToAdd) {
   let li = document.createElement('li')
-  li.classList = 'poster poster-dashboard shadow_h'
+  li.classList.add('poster', 'poster-dashboard', 'shadow_h')
   li.setAttribute('data_title', itemToAdd.title)
   li.setAttribute('data_subtitle', itemToAdd.subtitle)
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
 
   let poster_content = document.createElement('div')
-  poster_content.classList = 'poster-content'
+  poster_content.classList.add('poster-content')
 
   let poster_content_left = document.createElement('div')
-  poster_content_left.classList = 'poster-content-left fs14 white_t fw700'
+  poster_content_left.classList.add('poster-content-left', 'fs14', 'white_t', 'fw700')
 
   let heart = document.createElement('img')
   heart.src = '../../assets/icons/app/heart.svg'
@@ -584,7 +594,7 @@ async function createPoster(itemToAdd) {
   poster_content_left.appendChild(rate)
 
   let poster_content_right = document.createElement('div')
-  poster_content_right.classList = 'poster-content-right fs14 white_t fw700 t_'
+  poster_content_right.classList.add('poster-content-right', 'fs14', 'white_t', 'fw700', 't_')
   poster_content_right.innerText = 'Add to History'
 
   poster_content.appendChild(poster_content_left)
@@ -605,15 +615,15 @@ function createTitle(itemToAdd) {
   let title = document.getElementById('poster_title')
 
   let h3 = document.createElement('h3')
-  h3.classList = 'h3 red_t tu'
+  h3.classList.add('h3', 'red_t', 'tu')
   h3.innerText = 'up next to watch'
 
   let h1 = document.createElement('h1')
-  h1.classList = 'h1 white_t tu'
+  h1.classList.add('h1', 'white_t', 'tu')
   h1.innerText = itemToAdd.title
 
   let h1_2 = document.createElement('h1')
-  h1_2.classList = 'h1 white_d_t'
+  h1_2.classList.add('h1', 'white_d_t')
   h1_2.innerText = itemToAdd.subtitle
 
   title.appendChild(h3)
@@ -654,10 +664,7 @@ function toggleAnimation(x, y, z) {
   x.innerText = z
   x.classList.add(y)
 }
-
-
-//:::: RPC ::::\\
-
+/*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/
 async function createRpcContent() {
   let stats = await getUserStats()
   return {
