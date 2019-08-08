@@ -12,6 +12,10 @@
   --background_opacity : 1;
 }
 
+* {
+  user-select: none;
+}
+
 *:focus {
   outline: none;
 }
@@ -19,7 +23,7 @@
 ::-webkit-scrollbar {
   background-color: transparent;
   width: 6px;
-  /* display: none; */
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {

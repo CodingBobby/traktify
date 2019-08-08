@@ -5,7 +5,8 @@ module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
    getUpNextToWatch: getUpNextToWatch,
    searchRequestHelper: searchRequestHelper,
-   getUserStats: getUserStats
+   getUserStats: getUserStats,
+   getSeasonPoster: getSeasonPoster
 }
 
 //:::: SYNCING ::::\\
@@ -59,6 +60,69 @@ function getLatestActivities() {
    return trakt.sync.last_activities().then(res => res)
 }
 
+
+//:::: IMAGE REQUESTING ::::\\
+async function getSeasonPoster(showId, season) {
+   return requestSeasonPoster(showId, season)
+}
+
+function requestSeasonPoster(showId, season) {
+   return fanart.shows.get(showId).then(async result => {
+      function currentSeasonPoster() {
+         let index = -1
+         let first = true
+         let preindex = -1
+         for(let i in result.seasonposter) {
+            let poster = result.seasonposter[i]
+            if(poster.season == season) {
+               if(poster.lang == 'en') {
+                  debugLog('poster', 'found fitting')
+                  return i
+               }
+               if(first) {
+                  preindex = i
+                  first = false
+               }
+            }
+         }
+         if(preindex > -1) {
+            debugLog('poster', 'only found different language')
+            return preindex
+         } else {
+            debugLog('poster', 'did not found correct season')
+            return index
+         }
+      }
+
+      let url = ''
+
+      function fallback() {
+         if(Object.keys(result).includes('tvposter')) {
+            debugLog('poster', 'placing tv poster as fallback')
+            url = result.tvposter[0].url
+         } else {
+            debugLog('poster', 'replacing unavailable poster')
+            url = '../../assets/'+config.client.placeholder.poster
+         }
+      }
+      
+      if(Object.keys(result).includes('seasonposter')) {
+         let index = await currentSeasonPoster()
+         if(index > -1) {
+            url = result.seasonposter[index].url
+         } else {
+            fallback()
+         }
+      } else {
+         fallback()
+      }
+
+      return url
+   }).catch(() => {
+      debugLog('error', 'fanart not found', new Error().stack)
+      return '../../assets/'+config.client.placeholder.poster
+   })
+}
 
 //:::: SEARCH ::::\\
 let searchQueryCache = new Cache('searchQuery')
@@ -227,13 +291,14 @@ async function getUpNextToWatch() {
 
 async function requestUpNextToWatch() {
    let data = await getUsersShows().then(res => res)
-   debugLog('users shows', data.length)
+   // debugLog('users shows', data.length)
 
    return new Promise((resolve, reject) => {
       let upNextPromises = []
+      let limiter = 6
 
       data.forEach((item, index) => {
-         if(index < 6) {
+         if(index < limiter) {
             upNextPromises.push(
                new Promise((resolve, reject) => {
                   debugLog('api request', 'trakt')
@@ -243,7 +308,13 @@ async function requestUpNextToWatch() {
                         id: item.show.ids.trakt,
                         extended: 'full'
                      }).then(async res => {
+                        console.log(res)
                         debugLog('requesting time', Date.now()-requestTime)
+                        if(res.completed === res.aired) {
+                           // no next episode available, because all are watched
+                           limiter++
+                        }
+
                         // this creates us a more compact version of the next up item
                         return {
                            completed: res.aired === res.completed,
@@ -260,56 +331,7 @@ async function requestUpNextToWatch() {
                               rating: res.next_episode.rating,
                               aired: res.next_episode.first_aired,
                               runtime: res.next_episode.runtime
-                           } : undefined,
-                           img: await fanart.shows.get(data[index].show.ids.tvdb)
-                              .then(async resFan => {
-                                 function currentSeasonPoster() {
-                                    let index = -1
-                                    let first = true
-                                    let preindex = -1
-                                    for(let i in resFan.seasonposter) {
-                                       let poster = resFan.seasonposter[i]
-                                       if(poster.season == res.next_episode.season) {
-                                          if(poster.lang == 'en') {
-                                             debugLog('poster', 'found fitting')
-                                             return i
-                                          }
-                                          if(first) {
-                                             preindex = i
-                                             first = false
-                                          }
-                                       }
-                                    }
-                                    if(preindex > -1) {
-                                       debugLog('poster', 'only found different language')
-                                       return preindex
-                                    } else {
-                                       debugLog('poster', 'did not found correct season')
-                                       return index
-                                    }
-                                 }
-
-                                 let url = ''
-                                 if(resFan.seasonposter === undefined && resFan.tvposter === undefined) {
-                                    debugLog('poster', 'replacing unavailable poster')
-                                    url = '../../assets/'+config.client.placeholder.poster
-                                 } else if(resFan.seasonposter === undefined && resFan.tvposter !== undefined) {
-                                    debugLog('poster', 'placing tv poster as fallback')
-                                    url = resFan.tvposter[0].url
-                                 } else {
-                                    let index = await currentSeasonPoster()
-                                    if(index > -1) {
-                                       url = resFan.seasonposter[index].url
-                                    } else {
-                                       debugLog('poster', 'placing tv poster as fallback')
-                                       url = resFan.tvposter[0].url
-                                    }
-                                 }
-                                 return url
-                              })
-                              .catch(() => {
-                                 return url = '../../assets/'+config.client.placeholder.poster
-                              })
+                           } : undefined
                         }
                      })
                   )
@@ -364,17 +386,18 @@ async function getUsersShows() {
 }
 
 function requestUsersShows() {
-   return getWatchedAndHiddenShows().then(([res, res2]) => {
-      let arr = Array.from(res)
+   return getWatchedAndHiddenShows().then(([watched, hidden]) => {
+      watched = Array.from(watched)
       debugLog('request finished', 'trakt')
-      let arr2 = Array.from(res2)
+      hidden = Array.from(hidden)
       debugLog('request finished', 'trakt')
 
       // filters hidden items
-      let array2Ids = arr2.map(item => item.show.ids.trakt)
-      arr = arr.filter((item) => !array2Ids.includes(item.show.ids.trakt))
+      let hiddenIds = hidden.map(item => item.show.ids.trakt)
+      watched = watched.filter(item => !hiddenIds.includes(item.show.ids.trakt))
 
-      return arr
+      // At this point the completed seasons cannot be filtered out because we didn't obtain information about how much the user watched of the show. Unfortunately this can only be done with another request, which we are doing later in the requestUpNextToWatch function.
+      return watched
    })
 }
 

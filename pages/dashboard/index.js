@@ -596,7 +596,7 @@ async function generatePosterSection() {
         subtitle: subtitle,
         rating: next.rating,
         id: item.show.ids.tvdb,
-        img: item.img
+        season: next.season
       })
     }
   })
@@ -636,8 +636,14 @@ async function createPoster(itemToAdd) {
   poster_content.appendChild(poster_content_right)
 
   li.appendChild(poster_content)
-
-  loadImage(li, itemToAdd.img, 'loading_placeholder.gif')
+  
+  requestAndLoadImage({
+    parent: li,
+    use: 'poster',
+    type: 'season',
+    itemId: itemToAdd.id,
+    reference: itemToAdd.season
+  })
 
   let posters = document.getElementById('posters')
   posters.appendChild(li);

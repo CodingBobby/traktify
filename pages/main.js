@@ -105,3 +105,40 @@ function loadImage(parent, src, loadingSrc) {
     }, 7*33.3) // some extra animation and framerate buffer
   }
 }
+
+/**
+ * @param {object} options 
+ * @param options.parent dom element the image should be appended to
+ * @param {'poster'} options.use in what type of element the image will be used
+ * @param {'season'} options.type type the item belongs to
+ * @param {number} options.itemId tvdb id of the item
+ * @param {any} options.reference some reference we can use
+ */
+
+async function requestAndLoadImage(options) {
+  let loading_img = document.createElement('img')
+  // the actual image, the placeholder gets updated to
+  let img = document.createElement('img')
+
+  switch(options.use) {
+    case 'poster': {
+      loading_img.src = '../../assets/loading_placeholder.gif'
+      options.parent.appendChild(loading_img)
+
+      switch(options.type) {
+        case 'season': {
+          img.src = await getSeasonPoster(options.itemId, options.reference)
+  
+          img.onload = function() {
+            setTimeout(() => {
+              options.parent.removeChild(loading_img)
+              options.parent.appendChild(img)
+            }, 7*33.3) // some extra animation and framerate buffer
+          }
+          break
+        }
+      }
+      break
+    }
+  }
+}
