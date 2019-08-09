@@ -133,7 +133,7 @@ async function requestAndLoadImage(options) {
             setTimeout(() => {
               options.parent.removeChild(loading_img)
               options.parent.appendChild(img)
-            }, 7*33.3) // some extra animation and framerate buffer
+            }, 3*33.3) // some extra animation and framerate buffer
           }
           break
         }

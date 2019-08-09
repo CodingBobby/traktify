@@ -62,8 +62,27 @@ function getLatestActivities() {
 
 
 //:::: IMAGE REQUESTING ::::\\
+let imageCache = new Cache('images')
+
 async function getSeasonPoster(showId, season) {
-   return requestSeasonPoster(showId, season)
+   let cacheKey = showId+'_'+season
+   let cacheContent = imageCache.getKey(cacheKey)
+
+   if(cacheContent === undefined) {
+      let data = await requestSeasonPoster(showId, season)
+
+      debugLog('caching', cacheKey)
+      let cachingTime = Date.now()
+
+      imageCache.setKey(cacheKey, data)
+      imageCache.save()
+      
+      debugLog('caching time', Date.now()-cachingTime)
+      return data
+   } else {
+      debugLog('cache available', cacheKey)
+      return cacheContent
+   }
 }
 
 function requestSeasonPoster(showId, season) {
