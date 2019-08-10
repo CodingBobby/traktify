@@ -145,7 +145,7 @@ let sideBar = {
       panel.appendChild(gradient)
 
       let setting_list = document.createElement('div')
-      setting_list.classList.add('side_panel_list')
+      setting_list.classList.add('side_panel_list', 'animation_slide_right')
 
       let settings = getSettings('app')
       for(let s in settings) {
@@ -286,9 +286,10 @@ function closeSidePanel() {
 // This adds a setting box to the sidepanel
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
-  setting_area.classList.add('col_2')
+  setting_area.classList.add('setting_holder')
   
   let setting_title = document.createElement('h3')
+  setting_title.classList.add('fs18', 'fw500', 'tu', 'tOverflow')
   setting_title.innerText = name
 
   switch(setting.type) {
@@ -298,11 +299,14 @@ function addSetting(setting, name) {
       for(let o in setting.options) {
         let opt = setting.options[o]
 
+        let setting_contain = document.createElement('div')
+        setting_contain.classList.add('setting_container')
+
         let preview = document.createElement('div')
-        preview.classList.add('setting_preview')
+        preview.classList.add('setting_box')
 
         let def = document.createElement('div')
-        def.classList.add('setting_def', 'white_d_t')
+        def.classList.add('setting_def', 'fs14' , 'white_d_t', 'tu', 'tOverflow')
 
         if(setting.default == o) {
           def.innerText = 'default'
@@ -314,29 +318,31 @@ function addSetting(setting, name) {
 
         preview.onclick = function() {
           if(!preview.classList.contains('selected')) {
-            let par = preview.parentElement;
+            let par = preview.parentElement.parentElement;
             [...par.children].forEach(element => {
-              if(element == preview) {
+              if(element.children[0] == preview) {
                 preview.classList.add('selected')
                 setSetting('app', name, o)
                 updateApp()
               } else {
-                element.classList.remove('selected')
+                element.children[0].classList.remove('selected')
               }
             })
           }
         }
 
         if(opt.preview) {
-          preview.classList.add('preview_img')
+          def.classList.add('top')
+          setting_contain.classList.add('wide')
           preview.style.backgroundImage = `url('../../assets/previews/${opt.value}')`
         } else {
-          preview.classList.add('preview_color')
+          setting_area.style = 'display:flex;justify-content:space-between;'
           preview.style.backgroundColor = opt.value
         }
 
-        setting_area.appendChild(preview)
-        setting_area.appendChild(def)
+        setting_contain.appendChild(preview)
+        setting_contain.appendChild(def)
+        setting_area.appendChild(setting_contain)
       }
       break
     }
@@ -373,7 +379,7 @@ function addSetting(setting, name) {
       }
 
       let def = document.createElement('div')
-      def.classList.add('setting_def', 'white_d_t')
+      def.classList.add('setting_def', 'fs14' , 'white_d_t', 'tu')
 
       def.innerText = 'default: '
       if(setting.default) {
@@ -382,6 +388,7 @@ function addSetting(setting, name) {
         def.innerText += 'off'
       }
 
+      setting_area.style = 'display:flex;justify-content:space-between;align-items:center;'
       setting_area.appendChild(toggle_switch)
       setting_area.appendChild(def)
       break
@@ -394,16 +401,18 @@ function addSetting(setting, name) {
       slider.min = setting.range[0] / setting.accuracy
       slider.max = setting.range[1] / setting.accuracy
       slider.value = setting.status / setting.accuracy
+      slider.style.background = `linear-gradient(to right, var(--accent_color) 0%, var(--accent_color) ${setting.status}%, var(--white_d) ${setting.status}%, var(--white_d) 100%)`;
       slider.classList.add('slider')
 
       slider.oninput = function() {
         let value = slider.value * setting.accuracy
+        slider.style.background = 'linear-gradient(to right, var(--accent_color) 0%, var(--accent_color) '+value +'%, var(--white_d) ' + value + '%, var(--white_d) 100%)'
         setSetting('app', name, value)
         updateApp()
       }
 
       let def = document.createElement('div')
-      def.classList.add('setting_def', 'white_d_t')
+      def.classList.add('setting_def', 'fs14' , 'white_d_t', 'tu')
 
       def.innerText = 'default: ' + setting.default
 
@@ -415,14 +424,12 @@ function addSetting(setting, name) {
   }
 
   let box = document.createElement('div')
-  box.classList.add('panel_box', 'panel_box_container')
+  box.classList.add('panel_box', 'panel_box_container', 'setting')
 
   box.appendChild(setting_title)
   box.appendChild(setting_area)
   return box
 }
-
-
 /*::::::::::::::::::::::::::::::::::::::::::::::: SEARCH-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 let searchHistoryCache = new Cache('searchHistory')
 
@@ -475,7 +482,7 @@ async function search(text) {
 function addSearchResult(result) {
   let panel = document.getElementById('results')
   let panel_box = document.createElement('div')
-  panel_box.classList.add('panel_box', 'search')
+  panel_box.classList.add('panel_box', 'search', 'animation_slide_right')
 
   let poster_img = document.createElement('img')
   poster_img.classList.add('poster')
@@ -485,10 +492,10 @@ function addSearchResult(result) {
   panel_box_container.classList.add('panel_box_container')
 
   let h3 = document.createElement('h3')
-  h3.classList.add('fs18')
+  h3.classList.add('fs18', 'tOverflow')
   h3.innerText = result.title
 
-  let p = document.createElement('p')
+  let p = document.createElement('p', 'tOverflow-normal')
   p.innerText = result.overview
 
   let poster_content = document.createElement('div')
@@ -619,11 +626,11 @@ function createTitle(itemToAdd) {
   h3.innerText = 'up next to watch'
 
   let h1 = document.createElement('h1')
-  h1.classList.add('h1', 'white_t', 'tu')
+  h1.classList.add('h1', 'white_t', 'tu', 'tOverflow')
   h1.innerText = itemToAdd.title
 
   let h1_2 = document.createElement('h1')
-  h1_2.classList.add('h1', 'white_d_t')
+  h1_2.classList.add('h1', 'white_d_t', 'tOverflow')
   h1_2.innerText = itemToAdd.subtitle
 
   title.appendChild(h3)
