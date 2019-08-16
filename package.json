@@ -34,6 +34,7 @@
     "moviedb-promise": "^1.4.1",
     "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
+    "request": "^2.88.0",
     "trakt.tv": "^7.2.0"
   }
 }

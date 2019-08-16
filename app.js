@@ -36,6 +36,9 @@ const Fanart = require('fanart.tv')
 const TvDB = require('node-tvdb')
 const TmDB = require('moviedb-promise')
 
+// request stuff
+const request = require('request')
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -255,11 +258,19 @@ function tryLogin() {
   loadLoadingScreen()
 
   global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+    global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
       user.trakt.auth = newAuth
       user.trakt.status = true
       saveConfig()
       debugLog('login', 'success')
+
+      // track user stats for traktify analytics
+      let userSettings = await trakt.users.settings().then(res => res)
+      request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+        json: true
+      }, (err, res, body) => {
+        debugLog('user authentications', body.data.requests)
+      })
 
       // wait until loading screen is fully loaded
       ipcMain.once('loading-screen', (event, data) => {
