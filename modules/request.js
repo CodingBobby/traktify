@@ -9,6 +9,12 @@ module.exports = {
    getSeasonPoster: getSeasonPoster
 }
 
+
+// Job stuff
+const Queue = require('./jobQueue.js')
+const jobQueue = new Queue()
+
+
 //:::: SYNCING ::::\\
 let syncingCache = new Cache('syncing')
 
@@ -72,12 +78,8 @@ async function getSeasonPoster(showId, season) {
       let data = await requestSeasonPoster(showId, season)
 
       debugLog('caching', cacheKey)
-      let cachingTime = Date.now()
-
       imageCache.setKey(cacheKey, data)
-      imageCache.save()
-      
-      debugLog('caching time', Date.now()-cachingTime)
+      jobQueue.push(() => { imageCache.save() })
       return data
    } else {
       debugLog('cache available', cacheKey)
@@ -205,10 +207,10 @@ function searchRequestHelper(text) {
                result: requestArray
             }
    
+            debugLog('caching', text)
             searchQueryCache.setKey(text, data)
-            searchQueryCache.save()
+            jobQueue.push(() => { searchQueryCache.save() })
    
-            debugLog('cached', text, data)
             return data
          })
          .catch(err => {
@@ -295,10 +297,8 @@ async function getUpNextToWatch() {
    if(cacheContent === undefined || unseenShowActivity) {
       return requestUpNextToWatch().then(upNextToWatch => {
          debugLog('caching', 'up next to watch')
-         let cachingTime = Date.now()
          posterCache.setKey('upNextToWatch', upNextToWatch)
-         posterCache.save()
-         debugLog('caching time', Date.now()-cachingTime)
+         jobQueue.push(() => { posterCache.save() })
          return upNextToWatch
       })
    } else {
@@ -327,7 +327,6 @@ async function requestUpNextToWatch() {
                         id: item.show.ids.trakt,
                         extended: 'full'
                      }).then(async res => {
-                        console.log(res)
                         debugLog('requesting time', Date.now()-requestTime)
                         if(res.completed === res.aired) {
                            // no next episode available, because all are watched
@@ -374,10 +373,8 @@ async function getUsersShows() {
       let usersShows = await requestUsersShows()
 
       debugLog('caching', 'users shows')
-      let cachingTime = Date.now()
       posterCache.setKey('usersShows', usersShows)
-      posterCache.save()
-      debugLog('caching time', Date.now()-cachingTime)
+      jobQueue.push(() => { posterCache.save() })
 
       return usersShows
    } else {
@@ -390,10 +387,8 @@ async function getUsersShows() {
          let usersShows = await requestUsersShows()
          
          debugLog('caching', 'users shows')
-         let cachingTime = Date.now()
          posterCache.setKey('usersShows', usersShows)
-         posterCache.save()
-         debugLog('caching time', Date.now()-cachingTime)
+         jobQueue.push(() => { posterCache.save() })
 
          return usersShows
       } else {
@@ -460,12 +455,9 @@ async function getUserStats() {
    if(cacheContent === undefined) {
       return requestUserStats().then(userStats => {
          debugLog('caching', 'user stats')
-         let cachingTime = Date.now()
-
          syncingCache.setKey('userStats', userStats)
-         syncingCache.save()
+         jobQueue.push(() => { syncingCache.save() })
 
-         debugLog('caching time', Date.now()-cachingTime)
          return userStats
       })
    } else {

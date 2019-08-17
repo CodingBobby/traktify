@@ -6,6 +6,7 @@ const flatCache = require('flat-cache')
 const path = require('path')
 const { remote } = require('electron')
 const config = remote.getGlobal('config')
+const debugLog = remote.getGlobal('debugLog')
 
 module.exports = class Cache {
    constructor(name, cacheTime=0) {
@@ -34,7 +35,10 @@ module.exports = class Cache {
       this.cache.removeKey(key)
    }
    save() {
+      let timer = Date.now()
+      debugLog('cache', 'saving...')
       this.cache.save(true)
+      debugLog('cache', `saved in ${Date.now() - timer}ms`)
    }
    remove() {
       flatCache.clearCacheById(this.name, this.path)
