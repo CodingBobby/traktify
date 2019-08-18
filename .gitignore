@@ -14,6 +14,7 @@
 /bin
 /out
 /target
+/release-builds
 
 # node stuff
 /node_modules

@@ -1,11 +1,16 @@
 {
   "name": "traktify",
-  "version": "0.1.0",
+  "version": "0.1.6",
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
     "start": "electron .",
-    "clearCache": "rm -f -r ./.cache/"
+    "clearCache": "rm -f -r ./.cache/",
+    "package-mac": "electron-packager . --overwrite --asar --platform=darwin --arch=x64 --icon=assets/icons/trakt/trakt.icns --prune=true --out=release-builds/packages",
+    "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=assets/icons/trakt/trakt.ico --prune=true --out=release-builds/packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Traktify\"",
+    "package-linux": "electron-packager . --overwrite --asar --platform=linux --arch=x64 --icon=assets/icons/trakt/512x512.png --prune=true --out=release-builds/packages",
+    "installer-mac": "electron-installer-dmg ./release-builds/packages/traktify-darwin-x64/traktify.app Setup --out=release-builds/installers/darwin --overwrite --icon=assets/icons/trakt/trakt.icns",
+    "installer-win": "node installers/windowsInstaller.js"
   },
   "repository": {
     "type": "git",
@@ -23,7 +28,10 @@
   },
   "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
-    "electron": "^4.2.8"
+    "electron": "^4.2.8",
+    "electron-installer-dmg": "^3.0.0",
+    "electron-packager": "^14.0.4",
+    "electron-winstaller": "^4.0.0"
   },
   "dependencies": {
     "background": "^0.3.3",
