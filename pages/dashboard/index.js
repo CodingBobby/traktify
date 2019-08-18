@@ -76,7 +76,7 @@ function show(x) {
 }
 
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: SIDEBAR :::::::::::::::::::::::::::::::::::::::::::::::*/
+/**:::: SIDEBAR ::::**/
 
 // This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
 let sideBar = {
@@ -430,7 +430,7 @@ function addSetting(setting, name) {
   box.appendChild(setting_area)
   return box
 }
-/*::::::::::::::::::::::::::::::::::::::::::::::: SEARCH-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
+/**:::: SEARCH-PANEL ::::*/
 let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
@@ -542,7 +542,7 @@ function removeSearchResults() {
 }
 
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
+/**:::: UP-NEXT-TO-WATCH ::::**/
 // This gets fired when the dashboard is loaded
 async function generatePosterSection() {
   let requestTime = Date.now()
@@ -671,7 +671,7 @@ function toggleAnimation(x, y, z) {
   x.innerText = z
   x.classList.add(y)
 }
-/*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/
+/**:::: RPC ::::**/
 async function createRpcContent() {
   let stats = await getUserStats()
   return {

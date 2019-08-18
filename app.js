@@ -439,7 +439,7 @@ function defaultAll(scope) {
 }
 global.defaultAll = defaultAll
 
-
+// This applies the saved settings to the master css file. The currently loaded HTML must handle the incoming message via the proper IPC helpers.
 function updateApp() {
   let settings = getSettings('app')
   for(let s in settings) {
@@ -452,6 +452,13 @@ function updateApp() {
           name: '--accent_color',
           value: value
         })
+
+        let value_dark = shadeHexColor(value, -20)
+        window.webContents.send('modify-root', {
+          name: '--accent_color_d',
+          value: value_dark
+        })
+
         break
       }
       case 'background image': {
@@ -514,6 +521,33 @@ function debugLog(...args) {
   }
 }
 global.debugLog = debugLog
+
+// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
+// function mainly used to generate dark version of the accent colors
+function shadeHexColor(hex, percent) {
+  // convert hex to decimal
+  let R = parseInt(hex.substring(1,3), 16)
+  let G = parseInt(hex.substring(3,5), 16)
+  let B = parseInt(hex.substring(5,7), 16)
+
+  // change by given percentage
+  B = parseInt(B*(100 + percent)/100)
+  R = parseInt(R*(100 + percent)/100)
+  G = parseInt(G*(100 + percent)/100)
+
+  // clip colors to max value
+  R = R<255 ? R : 255 
+  G = G<255 ? G : 255 
+  B = B<255 ? B : 255 
+
+  // zero-ize single-digit values
+  let RR = R.toString(16).length==1 ? '0'+R.toString(16) : R.toString(16)
+  let GG = G.toString(16).length==1 ? '0'+G.toString(16) : G.toString(16)
+  let BB = B.toString(16).length==1 ? '0'+B.toString(16) : B.toString(16)
+
+  return '#'+RR+GG+BB
+}
+
 
 // here we finally build the app
 app.on('ready', build)

@@ -3,13 +3,13 @@
   --black_d: #191919;
   --white: #FFF;
   --white_d: #CECECE;
-  --accent_color_d: #C61017;
   --gray: #696969;
 
 
   --side_dist: 30px;
   /* the following variables will be set by the renderer when the window loads, these settings prevent short flashing and double file loading */
   --accent_color: transparent;
+  --accent_color_d: transparent;
   --background_image: none;
   --background_opacity : 1;
 }
