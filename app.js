@@ -36,6 +36,9 @@ const Fanart = require('fanart.tv')
 const TvDB = require('node-tvdb')
 const TmDB = require('moviedb-promise')
 
+// request stuff
+const request = require('request')
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -230,6 +233,16 @@ function build() {
   })
 }
 
+// here we finally build the app
+app.on('ready', build)
+
+// this quits the whole app
+app.on('window-all-closed', () => {
+  debugLog('app', 'now closing')
+	app.quit()
+})
+
+
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
   if(user.trakt.auth) {
@@ -245,11 +258,19 @@ function tryLogin() {
   loadLoadingScreen()
 
   global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+    global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
       user.trakt.auth = newAuth
       user.trakt.status = true
       saveConfig()
       debugLog('login', 'success')
+
+      // track user stats for traktify analytics
+      let userSettings = await trakt.users.settings().then(res => res)
+      request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+        json: true
+      }, (err, res, body) => {
+        debugLog('user authentications', body.data.requests)
+      })
 
       // wait until loading screen is fully loaded
       ipcMain.once('loading-screen', (event, data) => {
@@ -321,7 +342,7 @@ function disconnect() {
 global.disconnect = disconnect
 
 
-// These two functions do nothing but load a render page
+// These functions do nothing but load a render page
 function loadLogin() {
   window.loadFile('pages/login/index.html')
 }
@@ -440,17 +461,25 @@ function defaultAll(scope) {
 global.defaultAll = defaultAll
 
 
+// This applies the saved settings to the master css file. The currently loaded HTML must handle the incoming message via the proper IPC helpers.
 function updateApp() {
   let settings = getSettings('app')
   for(let s in settings) {
     debugLog('updating setting', s)
     let setting = settings[s]
+    // these are only the settings that can be changed in realtime
     switch(s) {
       case 'accent color': {
         let value = setting.options[setting.status].value
         window.webContents.send('modify-root', {
           name: '--accent_color',
           value: value
+        })
+
+        let value_dark = shadeHexColor(value, -20)
+        window.webContents.send('modify-root', {
+          name: '--accent_color_d',
+          value: value_dark
         })
         break
       }
@@ -477,10 +506,45 @@ function updateApp() {
 global.updateApp = updateApp
 
 
+function relaunchApp() {
+  app.relaunch()
+  app.quit(0)
+}
+global.relaunchApp = relaunchApp
+
+
+//:::: HELPERS ::::\\
+
 // Range must be an array of two numeric values
 function inRange(value, range) {
   let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
   return value >= min && value <= max
+}
+
+// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
+// function mainly used to generate dark version of the accent colors
+function shadeHexColor(hex, percent) {
+  // convert hex to decimal
+  let R = parseInt(hex.substring(1,3), 16)
+  let G = parseInt(hex.substring(3,5), 16)
+  let B = parseInt(hex.substring(5,7), 16)
+
+  // change by given percentage
+  B = parseInt(B*(100 + percent)/100)
+  R = parseInt(R*(100 + percent)/100)
+  G = parseInt(G*(100 + percent)/100)
+
+  // clip colors to max value
+  R = R<255 ? R : 255 
+  G = G<255 ? G : 255 
+  B = B<255 ? B : 255 
+
+  // zero-ize single-digit values
+  let RR = R.toString(16).length==1 ? '0'+R.toString(16) : R.toString(16)
+  let GG = G.toString(16).length==1 ? '0'+G.toString(16) : G.toString(16)
+  let BB = B.toString(16).length==1 ? '0'+B.toString(16) : B.toString(16)
+
+  return '#'+RR+GG+BB
 }
 
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
@@ -514,12 +578,3 @@ function debugLog(...args) {
   }
 }
 global.debugLog = debugLog
-
-// here we finally build the app
-app.on('ready', build)
-
-// this quits the whole app
-app.on('window-all-closed', () => {
-  debugLog('app', 'now closing')
-	app.quit()
-})

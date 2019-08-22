@@ -12,8 +12,26 @@
   --background_opacity : 1;
 }
 
+* {
+  user-select: none;
+}
+
 *:focus {
   outline: none;
+}
+
+::-webkit-scrollbar {
+  background-color: transparent;
+  width: 6px;
+  display: none;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--black_d);
+  background-clip: padding-box;
+  border: solid transparent;
+  border-width: 0 0 0 2px;
+  border-radius: 12px;
 }
 
 /*---fonts---*/
@@ -169,6 +187,7 @@ body::after {
 
 #dragger {
   position: absolute;
+  z-index: 10;
   width: 100vw;
   height: 20px;
   -webkit-app-region: drag;
@@ -176,7 +195,6 @@ body::after {
 
 .wrapper {
   position: relative;
-  padding: var(--side_dist);
 }
 .wrapper.flex {
   display: flex;
@@ -193,9 +211,29 @@ body::after {
   z-index: 0;
 }
 
+.blur_backdrop {
+  backdrop-filter: blur(8px);
+}
+
+.gradient_cover {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 3;
+  width: 100%;
+  height: 16px;
+  background-image:
+    linear-gradient(
+      to bottom, 
+      var(--black), rgba(0,0,0,0)
+    );
+}
+
 .btns {
   list-style: none;
   padding: 0;
+  width: min-content;
+  height: min-content;
 }
 .btns .btn {
   margin-bottom: 8px;
@@ -221,6 +259,7 @@ body::after {
 
 .btn.icon {
   border-radius: 50%;
+  width: min-content;
   padding: 12px;
   display: flex;
 }
@@ -263,6 +302,15 @@ body::after {
   object-fit: cover;
   width: 100%;
   height: 100%;
+  animation: fade_in 0.1s;
+}
+@keyframes fade_in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .poster, 
