@@ -36,6 +36,9 @@ const Fanart = require('fanart.tv')
 const TvDB = require('node-tvdb')
 const TmDB = require('moviedb-promise')
 
+// request stuff
+const request = require('request')
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -230,6 +233,16 @@ function build() {
   })
 }
 
+// here we finally build the app
+app.on('ready', build)
+
+// this quits the whole app
+app.on('window-all-closed', () => {
+  debugLog('app', 'now closing')
+	app.quit()
+})
+
+
 // This launcher checks if the user is possibly logged in already. If so, we try to login with the existing credentials. If not, we go directly to the login screen.
 function launchApp() {
   if(user.trakt.auth) {
@@ -245,11 +258,19 @@ function tryLogin() {
   loadLoadingScreen()
 
   global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
+    global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
       user.trakt.auth = newAuth
       user.trakt.status = true
       saveConfig()
       debugLog('login', 'success')
+
+      // track user stats for traktify analytics
+      let userSettings = await trakt.users.settings().then(res => res)
+      request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+        json: true
+      }, (err, res, body) => {
+        debugLog('user authentications', body.data.requests)
+      })
 
       // wait until loading screen is fully loaded
       ipcMain.once('loading-screen', (event, data) => {
@@ -321,7 +342,7 @@ function disconnect() {
 global.disconnect = disconnect
 
 
-// These two functions do nothing but load a render page
+// These functions do nothing but load a render page
 function loadLogin() {
   window.loadFile('pages/login/index.html')
 }
@@ -445,6 +466,7 @@ function updateApp() {
   for(let s in settings) {
     debugLog('updating setting', s)
     let setting = settings[s]
+    // these are only the settings that can be changed in realtime
     switch(s) {
       case 'accent color': {
         let value = setting.options[setting.status].value
@@ -483,6 +505,15 @@ function updateApp() {
 }
 global.updateApp = updateApp
 
+
+function relaunchApp() {
+  app.relaunch()
+  app.quit(0)
+}
+global.relaunchApp = relaunchApp
+
+
+//:::: HELPERS ::::\\
 
 // Range must be an array of two numeric values
 function inRange(value, range) {
@@ -557,3 +588,4 @@ app.on('window-all-closed', () => {
   debugLog('app', 'now closing')
 	app.quit()
 })
+

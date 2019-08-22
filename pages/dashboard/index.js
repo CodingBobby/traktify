@@ -4,22 +4,16 @@ const getSettings = remote.getGlobal('getSettings')
 const setSetting = remote.getGlobal('setSetting')
 const defaultAll = remote.getGlobal('defaultAll')
 const updateApp = remote.getGlobal('updateApp')
+const relaunchApp = remote.getGlobal('relaunchApp')
+
 let config = remote.getGlobal('config')
 
 // Here we update the app with saved settings after the window is created
-window.onload = async function() {
+window.onload = function() {
   debugLog('window', 'dashboard loading')
-  updateApp()
-  generatePosterSection()
-
-  let settings = await createRpcContent()
-  let stateArray = config.client.rpc.states
-  settings.state = pick(stateArray)
-  rpc.update(settings)
-  setInterval(() => {
-    settings.state = pick(stateArray)
-    rpc.update(settings)
-  }, 60e3)
+  updateApp() // update settings
+  generatePosterSection() // show the up next to watch posters
+  updateRpc() // show rpc on discord
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -76,9 +70,9 @@ function show(x) {
 }
 
 
-/**:::: SIDEBAR ::::**/
+/*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-BAR :::::::::::::::::::::::::::::::::::::::::::::::*/
 
-// This object holds the DOM-elements and actions of the sidebar. Further comments explain the functioning.
+// This object holds the DOM-elements and actions of the sidebar. We need this to generate the frame of the sidebar where content can be added dynamically later. Further comments explain the functioning.
 let sideBar = {
   element: document.getElementById('side_panel'),
   // This variable tells which sidebar is currently open. The possible values are:
@@ -96,7 +90,7 @@ let sideBar = {
       search_field.classList.add('panel_header', 'search', 'fs23', 'fw500', 'white_t', 'black_d_b', 'z4')
       search_field.type = 'text'
       search_field.onkeydown = function() {
-        if(event.keyCode == 13) {
+        if(event.keyCode === 13) { // ENTER
           search(search_field.value)
           return false
         }
@@ -148,12 +142,33 @@ let sideBar = {
       setting_list.classList.add('side_panel_list', 'animation_slide_right')
 
       let settings = getSettings('app')
-      for(let s in settings) {
+
+      let settingsArray = objectToArray(settings)
+
+      delayFunction((index, arr) => {
+        let s = arr[index].name
         let settingBox = addSetting(settings[s], s)
         setting_list.appendChild(settingBox)
+      }, 150, getObjectLength(settings), settingsArray, 2)
+
+      let relaunch_box = document.createElement('div')
+      relaunch_box.id = 'relaunch_box'
+      relaunch_box.innerHTML = `<h3 class="fs18 fw500 white_t">Some settings require a</h3>` // rest is added below
+      relaunch_box.classList.add('black_d_b', 'shadow_h', 'bottom', 'z4')
+      relaunch_box.style.display = 'none'
+
+      let relaunch_button = document.createElement('div')
+      relaunch_button.innerText = 'relaunch'
+      relaunch_button.classList.add('btn', 'red_d_b', 'white_t')
+      relaunch_button.onclick = function() {
+        relaunchApp()
       }
+      relaunch_box.appendChild(relaunch_button)
+
       panel.appendChild(setting_list)
 
+      let side_panel = document.getElementById('side_panel')
+      side_panel.appendChild(relaunch_box)
       return panel
     },
     open: function() {
@@ -283,6 +298,10 @@ function closeSidePanel() {
   }
 }
 
+
+/*::::::::::::::::::::::::::::::::::::::::::::::: SETTINGS PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
+let wantsRelaunch = []
+
 // This adds a setting box to the sidepanel
 function addSetting(setting, name) {
   let setting_area = document.createElement('div')
@@ -291,6 +310,34 @@ function addSetting(setting, name) {
   let setting_title = document.createElement('h3')
   setting_title.classList.add('fs18', 'fw500', 'tu', 'tOverflow')
   setting_title.innerText = name
+
+  let settingOld = setting.status
+
+  function alertRequiredReload(settingNew) {
+    let relaunch_box = document.getElementById('relaunch_box')
+    let setting_list = document.getElementById('side_panel')
+    let side_panel_list = setting_list.children[1].children[3]
+
+    if(settingNew !== settingOld) {
+      wantsRelaunch.push(name)
+      relaunch_box.style.display = 'block'
+      relaunch_box.classList.add('animation_slide_up')
+      side_panel_list.classList.add('relaunch')
+    } else {
+      wantsRelaunch = wantsRelaunch.filter(item => item !== name)
+      //need to find a proper way of having it wait for the animation to finish then remove styles
+      if(wantsRelaunch.length === 0) {
+        relaunch_box.classList.remove('animation_slide_up')
+        //relaunch_box.classList.add('animation_fade_out')
+        /*setTimeout(function() {*/
+          side_panel_list.classList.remove('relaunch')
+          relaunch_box.style.display = 'none'
+        /*}, 500)*/
+      }
+    }
+
+    debugLog('relaunch required', wantsRelaunch)
+  }
 
   switch(setting.type) {
     case 'select': {
@@ -374,6 +421,7 @@ function addSetting(setting, name) {
 
       toggle_switch.onclick = function() {
         let radio = document.getElementById(`yes_${idname}`)
+        alertRequiredReload(radio.checked)
         setSetting('app', name, radio.checked)
         updateApp()
       }
@@ -430,7 +478,8 @@ function addSetting(setting, name) {
   box.appendChild(setting_area)
   return box
 }
-/**:::: SEARCH-PANEL ::::*/
+
+/*::::::::::::::::::::::::::::::::::::::::::::::: SEARCH-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
@@ -542,7 +591,7 @@ function removeSearchResults() {
 }
 
 
-/**:::: UP-NEXT-TO-WATCH ::::**/
+/*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 // This gets fired when the dashboard is loaded
 async function generatePosterSection() {
   let requestTime = Date.now()
@@ -568,7 +617,7 @@ async function generatePosterSection() {
         subtitle: subtitle,
         rating: next.rating,
         id: item.show.ids.tvdb,
-        img: item.img
+        season: next.season
       })
     }
   })
@@ -607,12 +656,15 @@ async function createPoster(itemToAdd) {
   poster_content.appendChild(poster_content_left)
   poster_content.appendChild(poster_content_right)
 
-  let img = document.createElement('img')
-
-  img.src = await itemToAdd.img
-
   li.appendChild(poster_content)
-  li.appendChild(img)
+  
+  requestAndLoadImage({
+    parent: li,
+    use: 'poster',
+    type: 'season',
+    itemId: itemToAdd.id,
+    reference: itemToAdd.season
+  })
 
   let posters = document.getElementById('posters')
   posters.appendChild(li);
@@ -671,17 +723,27 @@ function toggleAnimation(x, y, z) {
   x.innerText = z
   x.classList.add(y)
 }
-/**:::: RPC ::::**/
+
+/*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/
+async function updateRpc() {
+  if(config.client.settings.app['discord rpc'].status) {
+    let settings = await createRpcContent()
+    let stateArray = config.client.rpc.states
+    settings.state = pick(stateArray)
+    rpc.update(settings)
+    setInterval(() => {
+      settings.state = pick(stateArray)
+      rpc.update(settings)
+    }, 60e3)
+  }
+}
+
 async function createRpcContent() {
-  let stats = await getUserStats()
+  let stats = await getUserStats() // from request module
   return {
     time: {
       movies: stats.movies.minutes,
       shows: stats.episodes.minutes
     }
   }
-}
-
-function pick(array) {
-  return array[Math.floor(Math.random() * array.length)]
 }

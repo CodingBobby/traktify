@@ -6,7 +6,7 @@
 }
 
 .wrapper.dashboard {
-  height: 100%;
+  height: 100vh;
 }
 
 .dashboard {
@@ -108,6 +108,10 @@
   background: var(--black);
   color: var(--white);
   right: calc(-1 * var(--side_panel_width));
+}
+
+.side_panel .relaunch {
+  margin-bottom: 150px;
 }
 
 .panel {
@@ -310,6 +314,22 @@
   width: 100%;
   pointer-events: none;
 }
+
+#relaunch_box {
+  width: calc(var(--side_panel_width) - (2*var(--side_dist)));
+  padding: var(--side_dist);
+}
+
+#relaunch_box > h3 {
+  text-align: center;
+  margin: 0 auto 10px;
+}
+
+#relaunch_box > div {
+  width: fit-content;
+  margin: auto;
+  padding: 5px 20px;
+}
 /*::::::::::::::::::::::: LOGOUT-COMPONENTS :::::::::::::::::::::::*/
 .logout_btn {
   height: 44px;
@@ -346,5 +366,9 @@
   }
   .poster-dashboard:nth-child(5) {
     display: none;
+  }
+
+  .side_panel .relaunch {
+    margin-bottom: 130px;
   }
 }

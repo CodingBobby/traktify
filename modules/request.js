@@ -5,8 +5,15 @@ module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
    getUpNextToWatch: getUpNextToWatch,
    searchRequestHelper: searchRequestHelper,
-   getUserStats: getUserStats
+   getUserStats: getUserStats,
+   getSeasonPoster: getSeasonPoster
 }
+
+
+// Job stuff
+const Queue = require('./jobQueue.js')
+const jobQueue = new Queue()
+
 
 //:::: SYNCING ::::\\
 let syncingCache = new Cache('syncing')
@@ -59,6 +66,84 @@ function getLatestActivities() {
    return trakt.sync.last_activities().then(res => res)
 }
 
+
+//:::: IMAGE REQUESTING ::::\\
+let imageCache = new Cache('images')
+
+async function getSeasonPoster(showId, season) {
+   let cacheKey = showId+'_'+season
+   let cacheContent = imageCache.getKey(cacheKey)
+
+   if(cacheContent === undefined) {
+      let data = await requestSeasonPoster(showId, season)
+
+      debugLog('caching', cacheKey)
+      imageCache.setKey(cacheKey, data)
+      jobQueue.push(() => { imageCache.save() })
+      return data
+   } else {
+      debugLog('cache available', cacheKey)
+      return cacheContent
+   }
+}
+
+function requestSeasonPoster(showId, season) {
+   return fanart.shows.get(showId).then(async result => {
+      function currentSeasonPoster() {
+         let index = -1
+         let first = true
+         let preindex = -1
+         for(let i in result.seasonposter) {
+            let poster = result.seasonposter[i]
+            if(poster.season == season) {
+               if(poster.lang == 'en') {
+                  debugLog('poster', 'found fitting')
+                  return i
+               }
+               if(first) {
+                  preindex = i
+                  first = false
+               }
+            }
+         }
+         if(preindex > -1) {
+            debugLog('poster', 'only found different language')
+            return preindex
+         } else {
+            debugLog('poster', 'did not found correct season')
+            return index
+         }
+      }
+
+      let url = ''
+
+      function fallback() {
+         if(Object.keys(result).includes('tvposter')) {
+            debugLog('poster', 'placing tv poster as fallback')
+            url = result.tvposter[0].url
+         } else {
+            debugLog('poster', 'replacing unavailable poster')
+            url = '../../assets/'+config.client.placeholder.poster
+         }
+      }
+      
+      if(Object.keys(result).includes('seasonposter')) {
+         let index = await currentSeasonPoster()
+         if(index > -1) {
+            url = result.seasonposter[index].url
+         } else {
+            fallback()
+         }
+      } else {
+         fallback()
+      }
+
+      return url
+   }).catch(() => {
+      debugLog('error', 'fanart not found', new Error().stack)
+      return '../../assets/'+config.client.placeholder.poster
+   })
+}
 
 //:::: SEARCH ::::\\
 let searchQueryCache = new Cache('searchQuery')
@@ -122,10 +207,10 @@ function searchRequestHelper(text) {
                result: requestArray
             }
    
+            debugLog('caching', text)
             searchQueryCache.setKey(text, data)
-            searchQueryCache.save()
+            jobQueue.push(() => { searchQueryCache.save() })
    
-            debugLog('cached', text, data)
             return data
          })
          .catch(err => {
@@ -137,6 +222,7 @@ function searchRequestHelper(text) {
    })
 }
 
+// To sent API requests, we need a properly formed query. This formats the raw input text into a usable object.
 function formatSearch(text) {
    let searchOptions = [
       's', 'show', 'shows', 'tv',
@@ -211,10 +297,8 @@ async function getUpNextToWatch() {
    if(cacheContent === undefined || unseenShowActivity) {
       return requestUpNextToWatch().then(upNextToWatch => {
          debugLog('caching', 'up next to watch')
-         let cachingTime = Date.now()
          posterCache.setKey('upNextToWatch', upNextToWatch)
-         posterCache.save()
-         debugLog('caching time', Date.now()-cachingTime)
+         jobQueue.push(() => { posterCache.save() })
          return upNextToWatch
       })
    } else {
@@ -226,13 +310,14 @@ async function getUpNextToWatch() {
 
 async function requestUpNextToWatch() {
    let data = await getUsersShows().then(res => res)
-   debugLog('users shows', data.length)
+   // debugLog('users shows', data.length)
 
    return new Promise((resolve, reject) => {
       let upNextPromises = []
+      let limiter = 6
 
       data.forEach((item, index) => {
-         if(index < 6) {
+         if(index < limiter) {
             upNextPromises.push(
                new Promise((resolve, reject) => {
                   debugLog('api request', 'trakt')
@@ -243,6 +328,11 @@ async function requestUpNextToWatch() {
                         extended: 'full'
                      }).then(async res => {
                         debugLog('requesting time', Date.now()-requestTime)
+                        if(res.completed === res.aired) {
+                           // no next episode available, because all are watched
+                           limiter++
+                        }
+
                         // this creates us a more compact version of the next up item
                         return {
                            completed: res.aired === res.completed,
@@ -259,56 +349,7 @@ async function requestUpNextToWatch() {
                               rating: res.next_episode.rating,
                               aired: res.next_episode.first_aired,
                               runtime: res.next_episode.runtime
-                           } : undefined,
-                           img: await fanart.shows.get(data[index].show.ids.tvdb)
-                              .then(async resFan => {
-                                 function currentSeasonPoster() {
-                                    let index = -1
-                                    let first = true
-                                    let preindex = -1
-                                    for(let i in resFan.seasonposter) {
-                                       let poster = resFan.seasonposter[i]
-                                       if(poster.season == res.next_episode.season) {
-                                          if(poster.lang == 'en') {
-                                             debugLog('poster', 'found fitting')
-                                             return i
-                                          }
-                                          if(first) {
-                                             preindex = i
-                                             first = false
-                                          }
-                                       }
-                                    }
-                                    if(preindex > -1) {
-                                       debugLog('poster', 'only found different language')
-                                       return preindex
-                                    } else {
-                                       debugLog('poster', 'did not found correct season')
-                                       return index
-                                    }
-                                 }
-
-                                 let url = ''
-                                 if(resFan.seasonposter === undefined && resFan.tvposter === undefined) {
-                                    debugLog('poster', 'replacing unavailable poster')
-                                    url = '../../assets/'+config.client.placeholder.poster
-                                 } else if(resFan.seasonposter === undefined && resFan.tvposter !== undefined) {
-                                    debugLog('poster', 'placing tv poster as fallback')
-                                    url = resFan.tvposter[0].url
-                                 } else {
-                                    let index = await currentSeasonPoster()
-                                    if(index > -1) {
-                                       url = resFan.seasonposter[index].url
-                                    } else {
-                                       debugLog('poster', 'placing tv poster as fallback')
-                                       url = resFan.tvposter[0].url
-                                    }
-                                 }
-                                 return url
-                              })
-                              .catch(() => {
-                                 return url = '../../assets/'+config.client.placeholder.poster
-                              })
+                           } : undefined
                         }
                      })
                   )
@@ -332,10 +373,8 @@ async function getUsersShows() {
       let usersShows = await requestUsersShows()
 
       debugLog('caching', 'users shows')
-      let cachingTime = Date.now()
       posterCache.setKey('usersShows', usersShows)
-      posterCache.save()
-      debugLog('caching time', Date.now()-cachingTime)
+      jobQueue.push(() => { posterCache.save() })
 
       return usersShows
    } else {
@@ -348,10 +387,8 @@ async function getUsersShows() {
          let usersShows = await requestUsersShows()
          
          debugLog('caching', 'users shows')
-         let cachingTime = Date.now()
          posterCache.setKey('usersShows', usersShows)
-         posterCache.save()
-         debugLog('caching time', Date.now()-cachingTime)
+         jobQueue.push(() => { posterCache.save() })
 
          return usersShows
       } else {
@@ -363,17 +400,18 @@ async function getUsersShows() {
 }
 
 function requestUsersShows() {
-   return getWatchedAndHiddenShows().then(([res, res2]) => {
-      let arr = Array.from(res)
+   return getWatchedAndHiddenShows().then(([watched, hidden]) => {
+      watched = Array.from(watched)
       debugLog('request finished', 'trakt')
-      let arr2 = Array.from(res2)
+      hidden = Array.from(hidden)
       debugLog('request finished', 'trakt')
 
       // filters hidden items
-      let array2Ids = arr2.map(item => item.show.ids.trakt)
-      arr = arr.filter((item) => !array2Ids.includes(item.show.ids.trakt))
+      let hiddenIds = hidden.map(item => item.show.ids.trakt)
+      watched = watched.filter(item => !hiddenIds.includes(item.show.ids.trakt))
 
-      return arr
+      // At this point the completed seasons cannot be filtered out because we didn't obtain information about how much the user watched of the show. Unfortunately this can only be done with another request, which we are doing later in the requestUpNextToWatch function.
+      return watched
    })
 }
 
@@ -410,9 +448,23 @@ function getWatchedAndHiddenShows() {
 
 
 //:::: STATS ::::\\
+
+// we're using the syncingCache from above here
 async function getUserStats() {
-   let userStats = await requestUserStats()
-   return userStats
+   let cacheContent = syncingCache.getKey('userStats')
+   if(cacheContent === undefined) {
+      return requestUserStats().then(userStats => {
+         debugLog('caching', 'user stats')
+         syncingCache.setKey('userStats', userStats)
+         jobQueue.push(() => { syncingCache.save() })
+
+         return userStats
+      })
+   } else {
+      // In this case, everything that was cached is uptodate
+      debugLog('cache available', 'user stats')
+      return cacheContent
+   }
 }
 
 function requestUserStats() {
