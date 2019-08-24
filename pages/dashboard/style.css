@@ -319,7 +319,6 @@
 #relaunch_box {
   width: calc(var(--side_panel_width) - (2*var(--side_dist)));
   padding: var(--side_dist);
-  display: block;
   margin-left: calc(-1 * var(--side_dist) - 10px);
 }
 
