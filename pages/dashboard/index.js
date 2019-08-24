@@ -155,7 +155,7 @@ let sideBar = {
       relaunch_box.id = 'relaunch_box'
       relaunch_box.innerHTML = `<h3 class="fs18 fw500 white_t">Some settings require a</h3>` // rest is added below
       relaunch_box.classList.add('black_d_b', 'shadow_h', 'bottom', 'z4')
-      relaunch_box.style.display = 'none'
+      relaunch_box.style.visibility = 'hidden'
 
       let relaunch_button = document.createElement('div')
       relaunch_button.innerText = 'relaunch'
@@ -166,9 +166,7 @@ let sideBar = {
       relaunch_box.appendChild(relaunch_button)
 
       panel.appendChild(setting_list)
-
-      let side_panel = document.getElementById('side_panel')
-      side_panel.appendChild(relaunch_box)
+      panel.appendChild(relaunch_box)
       return panel
     },
     open: function() {
@@ -316,23 +314,23 @@ function addSetting(setting, name) {
   function alertRequiredReload(settingNew) {
     let relaunch_box = document.getElementById('relaunch_box')
     let setting_list = document.getElementById('side_panel')
-    let side_panel_list = setting_list.children[1].children[3]
+    let panel = setting_list.children[0]
 
     if(settingNew !== settingOld) {
       wantsRelaunch.push(name)
-      relaunch_box.style.display = 'block'
+      relaunch_box.style = 'visiblity:visible;animation-duration:300ms;'
+      relaunch_box.classList.remove('animation_fade_out')
       relaunch_box.classList.add('animation_slide_up')
-      side_panel_list.classList.add('relaunch')
+      panel.children[3].classList.add('relaunch')
+      let pos = panel.scrollTop
+      panel.scrollTop = pos+200
     } else {
       wantsRelaunch = wantsRelaunch.filter(item => item !== name)
-      //need to find a proper way of having it wait for the animation to finish then remove styles
       if(wantsRelaunch.length === 0) {
+        relaunch_box.style.visibility = 'hidden'
         relaunch_box.classList.remove('animation_slide_up')
-        //relaunch_box.classList.add('animation_fade_out')
-        /*setTimeout(function() {*/
-          side_panel_list.classList.remove('relaunch')
-          relaunch_box.style.display = 'none'
-        /*}, 500)*/
+        relaunch_box.classList.add('animation_fade_out')
+        panel.children[3].classList.remove('relaunch')
       }
     }
 

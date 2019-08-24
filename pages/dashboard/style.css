@@ -118,6 +118,7 @@
   padding: var(--side_dist)  var(--panel_padding);
   overflow: hidden auto;
   height: calc(100vh - var(--side_dist));
+  scroll-behavior: smooth;
 }
 
 .panel_header,
@@ -318,6 +319,8 @@
 #relaunch_box {
   width: calc(var(--side_panel_width) - (2*var(--side_dist)));
   padding: var(--side_dist);
+  display: block;
+  margin-left: calc(-1 * var(--side_dist) - 10px);
 }
 
 #relaunch_box > h3 {
@@ -370,5 +373,9 @@
 
   .side_panel .relaunch {
     margin-bottom: 130px;
+  }
+
+  #relaunch_box {
+    margin-left: calc(-1 * var(--side_dist) - 20px);
   }
 }

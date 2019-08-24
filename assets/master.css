@@ -4,9 +4,8 @@
   --white: #FFF;
   --white_d: #CECECE;
   --gray: #696969;
-
-
   --side_dist: 30px;
+  
   /* the following variables will be set by the renderer when the window loads, these settings prevent short flashing and double file loading */
   --accent_color: transparent;
   --accent_color_d: transparent;
