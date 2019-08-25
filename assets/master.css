@@ -479,12 +479,12 @@ body::after {
 }
 
 .animation_fade_out {
-  animation: fade_out 500ms cubic-bezier(.165,.84,.44,1) 1 forwards;
+  animation: fade_out 1.2s cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
 @keyframes fade_out {
   0% {opacity:1;transform:translateY(0)}
-  50% {opacity:0;transform:translateY(25px)}
-  100% {opacity:0;transform:translateY(50px)}
+  50% {opacity:0;transform:translateY(50px)}
+  100% {opacity:0;transform:translateY(100px)}
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: RESPONSIVE :::::::::::::::::::::::::::::::::::::::::::::::*/
 @media screen and (max-width: 952px) {

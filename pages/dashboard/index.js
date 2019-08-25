@@ -318,7 +318,7 @@ function addSetting(setting, name) {
 
     if(settingNew !== settingOld) {
       wantsRelaunch.push(name)
-      relaunch_box.style = 'visiblity:visible;animation-duration:300ms;'
+      relaunch_box.style = 'visiblity:visible;'
       relaunch_box.classList.remove('animation_fade_out')
       relaunch_box.classList.add('animation_slide_up')
       panel.children[3].classList.add('relaunch')
@@ -327,13 +327,11 @@ function addSetting(setting, name) {
     } else {
       wantsRelaunch = wantsRelaunch.filter(item => item !== name)
       if(wantsRelaunch.length === 0) {
-        relaunch_box.style.visibility = 'hidden'
         relaunch_box.classList.remove('animation_slide_up')
         relaunch_box.classList.add('animation_fade_out')
         panel.children[3].classList.remove('relaunch')
       }
     }
-
     debugLog('relaunch required', wantsRelaunch)
   }
 
