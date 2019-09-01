@@ -604,14 +604,3 @@ function shadeHexColor(hex, percent) {
 
   return '#'+RR+GG+BB
 }
-
-
-// here we finally build the app
-app.on('ready', build)
-
-// this quits the whole app
-app.on('window-all-closed', () => {
-  debugLog('app', 'now closing')
-	app.quit()
-})
-
