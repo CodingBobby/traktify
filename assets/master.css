@@ -101,7 +101,7 @@
   white-space: nowrap;
 }
 
-.tOverflow-normal {
+.tOverflow.normal {
   white-space: normal;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: POSITIONING :::::::::::::::::::::::::::::::::::::::::::::::*/

@@ -515,7 +515,7 @@ async function search(text) {
       type: item.trakt.type,
       rating: Math.round(item.trakt[item.trakt.type].rating * 10),
       img: img,
-      description: item.trakt[item.trakt.type].tagline
+      description: item.trakt[item.trakt.type].overview
     })
   })
 
@@ -540,8 +540,9 @@ function addSearchResult(result) {
   h3.classList.add('fs18', 'tOverflow')
   h3.innerText = result.title
 
-  let p = document.createElement('p', 'tOverflow-normal')
-  p.innerText = result.overview
+  let p = document.createElement('p')
+  p.classList.add('tOverflow', 'normal')
+  p.innerText = result.description
 
   let poster_content = document.createElement('div')
   poster_content.classList.add('poster-content')
