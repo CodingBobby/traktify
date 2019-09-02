@@ -333,7 +333,7 @@ function addSetting(setting, name) {
       }
     }
     debugLog('relaunch required', wantsRelaunch)
-  }
+  }  
 
   switch(setting.type) {
     case 'select': {

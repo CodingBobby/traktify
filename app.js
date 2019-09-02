@@ -521,6 +521,32 @@ function inRange(value, range) {
   return value >= min && value <= max
 }
 
+// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
+// function mainly used to generate dark version of the accent colors
+function shadeHexColor(hex, percent) {
+  // convert hex to decimal
+  let R = parseInt(hex.substring(1,3), 16)
+  let G = parseInt(hex.substring(3,5), 16)
+  let B = parseInt(hex.substring(5,7), 16)
+
+  // change by given percentage
+  B = parseInt(B*(100 + percent)/100)
+  R = parseInt(R*(100 + percent)/100)
+  G = parseInt(G*(100 + percent)/100)
+
+  // clip colors to max value
+  R = R<255 ? R : 255 
+  G = G<255 ? G : 255 
+  B = B<255 ? B : 255 
+
+  // zero-ize single-digit values
+  let RR = R.toString(16).length==1 ? '0'+R.toString(16) : R.toString(16)
+  let GG = G.toString(16).length==1 ? '0'+G.toString(16) : G.toString(16)
+  let BB = B.toString(16).length==1 ? '0'+B.toString(16) : B.toString(16)
+
+  return '#'+RR+GG+BB
+}
+
 // This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
 function debugLog(...args) {
   if(process.env.NODE_ENV !== 'production') {
@@ -578,14 +604,3 @@ function shadeHexColor(hex, percent) {
 
   return '#'+RR+GG+BB
 }
-
-
-// here we finally build the app
-app.on('ready', build)
-
-// this quits the whole app
-app.on('window-all-closed', () => {
-  debugLog('app', 'now closing')
-	app.quit()
-})
-
