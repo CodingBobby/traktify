@@ -515,7 +515,8 @@ async function search(text) {
       type: item.trakt.type,
       rating: Math.round(item.trakt[item.trakt.type].rating * 10),
       img: img,
-      description: item.trakt[item.trakt.type].overview
+      description: item.trakt[item.trakt.type].overview,
+      id: item.trakt[item.trakt.type].ids.tmdb
     })
   })
 
@@ -558,8 +559,8 @@ function addSearchResult(result) {
   span.innerText = result.rating + "%"
 
   let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right', 'fs16', 'tu')
-  poster_content_right.innerText = result.type
+  poster_content_right.classList.add('poster-content-right')
+  poster_content_right.append(...createActionButtons(result.id))
 
   poster_content_left.appendChild(heart)
   poster_content_left.appendChild(span)
@@ -647,8 +648,8 @@ async function createPoster(itemToAdd) {
   poster_content_left.appendChild(rate)
 
   let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right', 'fs14', 'white_t', 'fw700', 't_')
-  poster_content_right.innerText = 'Add to History'
+  poster_content_right.classList.add('poster-content-right')
+  poster_content_right.append(...createActionButtons(itemToAdd.id))
 
   poster_content.appendChild(poster_content_left)
   poster_content.appendChild(poster_content_right)
@@ -743,4 +744,36 @@ async function createRpcContent() {
       shows: stats.episodes.minutes
     }
   }
+}
+
+/*::::::::::::::::::::::::::::::::::::::::::::::: ACTION BUTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
+function createActionButtons(item) {
+  let playNow = document.createElement('div')
+  playNow.classList.add('action_btn', 'play')
+  playNow.innerHTML = '<img src="../../assets/icons/app/play.svg">'
+  playNow.setAttribute('onclick', `playNow(${item})`)
+
+  let addToList = document.createElement('div')
+  addToList.classList.add('action_btn', 'list')
+  addToList.innerHTML = '<img src="../../assets/icons/app/list.svg">'
+  addToList.setAttribute('onclick', `addToWatchlist(${item})`)
+
+  let addToHistory = document.createElement('div')
+  addToHistory.classList.add('action_btn', 'history')
+  addToHistory.innerHTML = '<img src="../../assets/icons/app/check.svg">'
+  addToHistory.setAttribute('onclick', `addToHistory(${item})`)
+
+  return [playNow, addToList, addToHistory];
+}
+
+function playNow(item) {
+  alert('playing now!')
+}
+
+function addToHistory(item) {
+  alert('added to history!')
+}
+
+function addToWatchlist(item) {
+  alert('added to watchlist!')
 }
