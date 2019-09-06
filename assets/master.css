@@ -241,6 +241,16 @@ body::after {
   75%{background-position:0% 50%}
   100%{backround-position:100% 0%}
 }
+
+.gray-animation {
+  animation: gray-animation 2s ease infinite;
+}
+
+@keyframes gray-animation { 
+  0%{filter:grayscale(0%)}
+  75%{filter:grayscale(50%)}
+  100%{filter:grayscale(0%)}
+}
 /*::::::::::::::::::::::: SCROLLERS :::::::::::::::::::::::*/
 ::-webkit-scrollbar {
   background-color: transparent;
