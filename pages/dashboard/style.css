@@ -13,6 +13,73 @@
   margin: auto;
   min-width: 716px;
 }
+/*:::::::::::::::::::::::::::::::::::::::::::::::: ACTION-BUTTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
+.action_btn {
+  vertical-align: middle;
+  padding: 8px;
+  position: relative;
+  cursor: pointer;
+  margin: 3px;
+  border-radius: 5px;
+}
+
+.action_btn,
+.action_btn > img {
+  display: inline-block;
+  width: 16px;
+  height: 19px;
+}
+
+.action_btn:first-child {
+  margin-left: 0;
+}
+.action_btn:last-child {
+  margin-right: 0;
+}
+
+.action_btn::before {
+  position: absolute;
+  transform: translateY(-15%) translateX(calc(-100% - 7px));
+  opacity: 0;
+  visibility: hidden;
+  padding: 3px 25px;
+  font-size: 14px;
+  white-space: nowrap;
+  font-weight: 200;
+  color: var(--white);
+  border-radius: 3px 0 0 3px;
+  transition: all 200ms ease;
+  z-index: 1;
+}
+
+.action_btn:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.action_btn.play {
+  background-color: #C61017;
+}
+.action_btn.play::before {
+  content: 'Play Now?';
+  background-color: rgb(153, 13, 17);
+}
+
+.action_btn.list {
+  background-color: #2B678F;
+}
+.action_btn.list:before {
+  content: 'Add to watchlist?';
+  background-color: rgb(25, 61, 85);
+}
+
+.action_btn.history {
+  background-color: #8E44AD;
+}
+.action_btn.history:before {
+  content: 'Add to history?';
+  background-color: rgb(106, 51, 129);
+}
 /*:::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 .titles {
   margin-left: 20px;
@@ -75,7 +142,6 @@
 }
 .poster-dashboard:first-child > .poster-content {
   flex-direction: row;
-  align-items: initial;
 }
 .poster-dashboard:hover > .poster-content {
   opacity: 1;
@@ -231,7 +297,6 @@
 }
 .panel_box.search:hover {
   box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.3);
-  transform: scale(1.01)
 }
 
 .panel_box.search .poster {
@@ -257,8 +322,7 @@
   font-size: 13px;
   opacity: .60;
   display: -webkit-box;
-  line-height: 20px;
-  max-height: 100px;
+  line-height: 18px;
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   margin: 0;
@@ -273,6 +337,11 @@
 
 .panel_box.search .poster-content-left img {
   width: 20px;
+}
+
+#results .action_btn, 
+#results .action_btn > img {
+  width: 6px;
 }
 /*::::::::::::::::::::::: SETTINGS-COMPONENTS :::::::::::::::::::::::*/
 .panel_box.setting > h3 {
@@ -346,7 +415,7 @@
 /*::::::::::::::::::::::::::::::::::::::::::::::: RESPONSIVE :::::::::::::::::::::::::::::::::::::::::::::::*/
 @media screen and (max-width: 952px) {
   :root {
-    --side_panel_width: 350px;
+    --side_panel_width: 380px;
     --search_result_height: 165px;
   }
 
@@ -376,5 +445,9 @@
 
   #relaunch_box {
     margin-left: calc(-1 * var(--side_dist) - 20px);
+  }
+
+  #results .panel_box_container > p {
+    display: none;
   }
 }
