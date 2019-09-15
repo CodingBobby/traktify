@@ -29,6 +29,7 @@ const {
 // file stuff
 const fs = require('fs')
 const path = require('path')
+const rimraf = require('rimraf')
 
 // api stuff
 const Trakt = require('trakt.tv')
@@ -288,6 +289,7 @@ function tryLogin() {
         user.trakt.status = false
         saveConfig()
         debugLog('login failed', err)
+        deleteCacheFolder()
         loadLogin()
       }
     })
@@ -336,11 +338,24 @@ function disconnect() {
   global.trakt.revoke_token()
   user.trakt.auth = false
   user.trakt.status = false
+  defaultAll('app')
   saveConfig()
+  deleteCacheFolder()
   loadLogin()
 }
 global.disconnect = disconnect
 
+function deleteCacheFolder() {
+  fs.exists('./.cache', ex => {
+    if(ex) {
+      rimraf('./.cache', () => {
+        debugLog('cache', 'removed all files')
+      })
+    } else {
+      debugLog('cache', 'not available')
+    }
+  })
+}
 
 // These functions do nothing but load a render page
 function loadLogin() {
@@ -505,7 +520,7 @@ global.relaunchApp = relaunchApp
 const Cache = require('./modules/cache.js')
 const Queue = new(require('./modules/queue.js'))
 
-
+// Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
 ipcMain.on('cache', (event, details) => {
   // details: { name, action }
   if(details.action === 'save') {
@@ -551,36 +566,7 @@ function shadeHexColor(hex, percent) {
   return '#'+RR+GG+BB
 }
 
-// This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
-function debugLog(...args) {
-  if(process.env.NODE_ENV !== 'production') {
-    let date = new Date()
-    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
-    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
-    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
-    let time = `${
-      date.getHours().toString().length === 1
-        ? '0'+date.getHours() : date.getHours()
-    }:${
-      date.getMinutes().toString().length === 1
-        ? '0'+date.getMinutes() : date.getMinutes()
-    }:${
-      date.getSeconds().toString().length === 1
-        ? '0'+date.getSeconds() : date.getSeconds()
-    }`
-    if(args[0] == 'err' || args[0] == 'error') {
-      console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args[2]) {
-        console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
-      }
-    } else {
-      console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args.length > 2) {
-        console.log.apply(null, args.splice(2, args.length-2))
-      }
-    }
-  }
-}
+const { debugLog } = require('./modules/helper.js')
 global.debugLog = debugLog
 
 // Simple helper to clone objects which prevents cross-linking.
