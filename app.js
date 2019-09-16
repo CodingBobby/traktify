@@ -40,6 +40,32 @@ const TmDB = require('moviedb-promise')
 // request stuff
 const request = require('request')
 
+const { debugLog } = require('./modules/helper.js')
+global.debugLog = debugLog
+
+
+// important checks regarding required files
+let fatalError = false
+
+fs.exists('./config.json', ex => {
+  if(!ex) {
+    debugLog('error', 'config does not exist', new Error().stack)
+    fatalError = true
+  }
+})
+
+if(process.env.trakt_id == undefined) envErr()
+if(process.env.trakt_secret == undefined) envErr()
+if(process.env.fanart_key == undefined) envErr()
+if(process.env.tmdb_key == undefined) envErr()
+if(process.env.tvdb_key == undefined) envErr()
+if(process.env.discord_key == undefined) envErr()
+
+function envErr() {
+  debugLog('error', 'one or more env vars do not exist', new Error().stack)
+  fatalError = true
+}
+
 
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
@@ -151,6 +177,10 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
 // This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  if(fatalError) {
+    return process.crash()
+  }
+
   debugLog('app', 'now building')
   let mainWindowState = windowStateKeeper({
     defaultWidth: 900,
@@ -565,9 +595,6 @@ function shadeHexColor(hex, percent) {
 
   return '#'+RR+GG+BB
 }
-
-const { debugLog } = require('./modules/helper.js')
-global.debugLog = debugLog
 
 // Simple helper to clone objects which prevents cross-linking.
 function clone(object) {
