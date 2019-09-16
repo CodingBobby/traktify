@@ -1,7 +1,17 @@
+.absolute {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(calc(50% - 120px));
+}
+
 .logo {
   height: 180px;
   width: 180px;
   margin: auto;
+  display: block;
 }
 
 .alert_box {
@@ -10,7 +20,7 @@
   width: 100vw;
   display: flex;
   justify-content: center;
-  top: 70%;
+  top: 60%;
   animation: fly_in_alert 0.6s;
 }
 
@@ -24,7 +34,7 @@
     opacity: 0;
   }
   65% {
-    transform: translateY(0) scale(1.2);
+    transform: translateY(0) scale(1.1);
     opacity: 1;
   }
   100% {
