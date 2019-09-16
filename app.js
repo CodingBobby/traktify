@@ -29,6 +29,7 @@ const {
 // file stuff
 const fs = require('fs')
 const path = require('path')
+const rimraf = require('rimraf')
 
 // api stuff
 const Trakt = require('trakt.tv')
@@ -38,6 +39,32 @@ const TmDB = require('moviedb-promise')
 
 // request stuff
 const request = require('request')
+
+const { debugLog } = require('./modules/helper.js')
+global.debugLog = debugLog
+
+
+// important checks regarding required files
+let fatalError = false
+
+fs.exists('./config.json', ex => {
+  if(!ex) {
+    debugLog('error', 'config does not exist', new Error().stack)
+    fatalError = true
+  }
+})
+
+if(process.env.trakt_id == undefined) envErr()
+if(process.env.trakt_secret == undefined) envErr()
+if(process.env.fanart_key == undefined) envErr()
+if(process.env.tmdb_key == undefined) envErr()
+if(process.env.tvdb_key == undefined) envErr()
+if(process.env.discord_key == undefined) envErr()
+
+function envErr() {
+  debugLog('error', 'one or more env vars do not exist', new Error().stack)
+  fatalError = true
+}
 
 
 // configuration and boolean checks that we need frequently
@@ -150,6 +177,10 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
 // This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  if(fatalError) {
+    return process.crash()
+  }
+
   debugLog('app', 'now building')
   let mainWindowState = windowStateKeeper({
     defaultWidth: 900,
@@ -288,6 +319,7 @@ function tryLogin() {
         user.trakt.status = false
         saveConfig()
         debugLog('login failed', err)
+        deleteCacheFolder()
         loadLogin()
       }
     })
@@ -336,11 +368,24 @@ function disconnect() {
   global.trakt.revoke_token()
   user.trakt.auth = false
   user.trakt.status = false
+  defaultAll('app')
   saveConfig()
+  deleteCacheFolder()
   loadLogin()
 }
 global.disconnect = disconnect
 
+function deleteCacheFolder() {
+  fs.exists('./.cache', ex => {
+    if(ex) {
+      rimraf('./.cache', () => {
+        debugLog('cache', 'removed all files')
+      })
+    } else {
+      debugLog('cache', 'not available')
+    }
+  })
+}
 
 // These functions do nothing but load a render page
 function loadLogin() {
@@ -377,6 +422,8 @@ function saveConfig() {
   })
 }
 
+// Hard reset the app, deletes user accounts.
+// TODO: also delete the cache folder.
 function resetTraktify(removeLogin) {
   let userTemp = false
   if(removeLogin) {
@@ -391,21 +438,8 @@ function resetTraktify(removeLogin) {
   saveConfig()
 }
 
-function clone(object) {
-  if(null == object || "object" != typeof object) return object
-  // create new blank object of same type
-  let copy = object.constructor()
 
-  // copy all attributes into it
-  for(let attr in object) {
-     if(object.hasOwnProperty(attr)) {
-        copy[attr] = object[attr]
-     }
-  }
-  return copy
-}
-
-
+// The getSetting and setSetting functions are used by the settings panel to get and apply custom settings. defaultAll can reset these settings by replacing the current ones with those from the default file def_config.json
 function getSettings(scope) {
   let settings = global.config.client.settings
   if(settings.hasOwnProperty(scope)) {
@@ -415,7 +449,6 @@ function getSettings(scope) {
   }
 }
 global.getSettings = getSettings
-
 
 function setSetting(scope, settingOption, newStatus) {
   let settings = global.config.client.settings[scope]
@@ -451,7 +484,6 @@ function setSetting(scope, settingOption, newStatus) {
 }
 global.setSetting = setSetting
 
-
 function defaultAll(scope) {
   let settings = getSettings(scope)
   for(let s in settings) {
@@ -459,6 +491,7 @@ function defaultAll(scope) {
   }
 }
 global.defaultAll = defaultAll
+
 
 // This applies the saved settings to the master css file. The currently loaded HTML must handle the incoming message via the proper IPC helpers.
 function updateApp() {
@@ -505,12 +538,28 @@ function updateApp() {
 }
 global.updateApp = updateApp
 
-
+// Quits the app and reopens it automatically. This is used to apply settings which would interfer with this this app.js file.
 function relaunchApp() {
   app.relaunch()
   app.quit(0)
 }
 global.relaunchApp = relaunchApp
+
+
+//:::: CACHE HELPERS ::::\\
+const Cache = require('./modules/cache.js')
+const Queue = new(require('./modules/queue.js'))
+
+// Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
+ipcMain.on('cache', (event, details) => {
+  // details: { name, action }
+  if(details.action === 'save') {
+    Queue.add(function() {
+      const cache = new Cache(details.name)
+      cache.save()
+    }, { overwrite: true })
+  }
+})
 
 
 //:::: HELPERS ::::\\
@@ -547,60 +596,17 @@ function shadeHexColor(hex, percent) {
   return '#'+RR+GG+BB
 }
 
-// This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
-function debugLog(...args) {
-  if(process.env.NODE_ENV !== 'production') {
-    let date = new Date()
-    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
-    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
-    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
-    let time = `${
-      date.getHours().toString().length === 1
-        ? '0'+date.getHours() : date.getHours()
-    }:${
-      date.getMinutes().toString().length === 1
-        ? '0'+date.getMinutes() : date.getMinutes()
-    }:${
-      date.getSeconds().toString().length === 1
-        ? '0'+date.getSeconds() : date.getSeconds()
-    }`
-    if(args[0] == 'err' || args[0] == 'error') {
-      console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args[2]) {
-        console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
-      }
-    } else {
-      console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args.length > 2) {
-        console.log.apply(null, args.splice(2, args.length-2))
-      }
-    }
+// Simple helper to clone objects which prevents cross-linking.
+function clone(object) {
+  if(null == object || "object" != typeof object) return object
+  // create new blank object of same type
+  let copy = object.constructor()
+
+  // copy all attributes into it
+  for(let attr in object) {
+     if(object.hasOwnProperty(attr)) {
+        copy[attr] = object[attr]
+     }
   }
-}
-global.debugLog = debugLog
-
-// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
-// function mainly used to generate dark version of the accent colors
-function shadeHexColor(hex, percent) {
-  // convert hex to decimal
-  let R = parseInt(hex.substring(1,3), 16)
-  let G = parseInt(hex.substring(3,5), 16)
-  let B = parseInt(hex.substring(5,7), 16)
-
-  // change by given percentage
-  B = parseInt(B*(100 + percent)/100)
-  R = parseInt(R*(100 + percent)/100)
-  G = parseInt(G*(100 + percent)/100)
-
-  // clip colors to max value
-  R = R<255 ? R : 255 
-  G = G<255 ? G : 255 
-  B = B<255 ? B : 255 
-
-  // zero-ize single-digit values
-  let RR = R.toString(16).length==1 ? '0'+R.toString(16) : R.toString(16)
-  let GG = G.toString(16).length==1 ? '0'+G.toString(16) : G.toString(16)
-  let BB = B.toString(16).length==1 ? '0'+B.toString(16) : B.toString(16)
-
-  return '#'+RR+GG+BB
+  return copy
 }

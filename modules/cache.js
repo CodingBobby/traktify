@@ -4,9 +4,10 @@
 
 const flatCache = require('flat-cache')
 const path = require('path')
-const { remote } = require('electron')
-const config = remote.getGlobal('config')
-const debugLog = remote.getGlobal('debugLog')
+
+const {
+   config, debugLog
+} = require('./helper.js')
 
 module.exports = class Cache {
    constructor(name, cacheTime=0) {
