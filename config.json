@@ -10,14 +10,20 @@
                         "red": {
                             "value": "#ED1C24"
                         },
-                        "green": {
-                            "value": "#0FD67C"
-                        },
-                        "blue": {
-                            "value": "#04BA9C"
+                        "brown": {
+                            "value": "#A88E79"
                         },
                         "yellow": {
                             "value": "#FF980D"
+                        },
+                        "green": {
+                            "value": "#0FD67C"
+                        },
+                        "violet": {
+                            "value": "#610BEA"
+                        },
+                        "blue": {
+                            "value": "#04BA9C"
                         }
                     },
                     "needsReload": false
@@ -98,7 +104,7 @@
                 "I'll be back.",
                 "You can't handle the truth!",
                 "E.T. phone home.",
-                "Yippie-ki-yay, motherf—er!",
+                "Yippie-ki-yay, motherfâ€”er!",
                 "To infinity and beyond!",
                 "Houston, we have a problem.",
                 "You had me at hello.",
@@ -123,7 +129,7 @@
                 "Help me, Obi-Wan Kenobi.",
                 "Go ahead, make my day.",
                 "It's alive! It's alive!",
-                "Argo f— yourself.",
+                "Argo fâ€” yourself.",
                 "My precious.",
                 "Good morning, Vietnam!",
                 "I wish I knew how to quit you.",

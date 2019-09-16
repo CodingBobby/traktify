@@ -44,7 +44,7 @@ window.onload = function() {
 }
 
 
-function showAlertBox(text) {
+function showAlertBox() {
    let alert_box = document.createElement('div')
    alert_box.classList.add('alert_box', 'white_t')
    alert_box.innerHTML = `

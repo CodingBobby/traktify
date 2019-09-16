@@ -10,11 +10,6 @@ module.exports = {
 }
 
 
-// Job stuff
-const Queue = require('./jobQueue.js')
-const jobQueue = new Queue()
-
-
 //:::: SYNCING ::::\\
 let syncingCache = new Cache('syncing')
 
@@ -79,7 +74,11 @@ async function getSeasonPoster(showId, season) {
 
       debugLog('caching', cacheKey)
       imageCache.setKey(cacheKey, data)
-      jobQueue.push(() => { imageCache.save() })
+      ipcRenderer.send('cache', {
+         action: 'save', 
+         name: 'images'
+      })
+
       return data
    } else {
       debugLog('cache available', cacheKey)
@@ -209,8 +208,11 @@ function searchRequestHelper(text) {
    
             debugLog('caching', text)
             searchQueryCache.setKey(text, data)
-            jobQueue.push(() => { searchQueryCache.save() })
-   
+            ipcRenderer.send('cache', {
+               action: 'save', 
+               name: 'searchQuery'
+            })
+
             return data
          })
          .catch(err => {
@@ -298,7 +300,11 @@ async function getUpNextToWatch() {
       return requestUpNextToWatch().then(upNextToWatch => {
          debugLog('caching', 'up next to watch')
          posterCache.setKey('upNextToWatch', upNextToWatch)
-         jobQueue.push(() => { posterCache.save() })
+         ipcRenderer.send('cache', {
+            action: 'save', 
+            name: 'poster'
+         })
+
          return upNextToWatch
       })
    } else {
@@ -374,7 +380,10 @@ async function getUsersShows() {
 
       debugLog('caching', 'users shows')
       posterCache.setKey('usersShows', usersShows)
-      jobQueue.push(() => { posterCache.save() })
+      ipcRenderer.send('cache', {
+         action: 'save', 
+         name: 'poster'
+      })
 
       return usersShows
    } else {
@@ -388,7 +397,10 @@ async function getUsersShows() {
          
          debugLog('caching', 'users shows')
          posterCache.setKey('usersShows', usersShows)
-         jobQueue.push(() => { posterCache.save() })
+         ipcRenderer.send('cache', {
+            action: 'save', 
+            name: 'poster'
+         })
 
          return usersShows
       } else {
@@ -456,7 +468,10 @@ async function getUserStats() {
       return requestUserStats().then(userStats => {
          debugLog('caching', 'user stats')
          syncingCache.setKey('userStats', userStats)
-         jobQueue.push(() => { syncingCache.save() })
+         ipcRenderer.send('cache', {
+            action: 'save', 
+            name: 'syncing'
+         })
 
          return userStats
       })

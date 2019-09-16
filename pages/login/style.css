@@ -1,5 +1,6 @@
 :root {
   --accent_color: #ED1C24;
+  --accent_color_d: #BD161C;
   --background_image: url('../assets/furniture.png');
   --background_opacity : 1;
 }
