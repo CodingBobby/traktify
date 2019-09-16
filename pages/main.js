@@ -1,5 +1,8 @@
 if(!remote.getGlobal('darwin')) {
-  document.getElementById('dragger').remove()
+  let dragger = document.getElementById('dragger')
+  if(dragger !== null) {
+    dragger.remove()
+  }
 }
 
 
