@@ -3,6 +3,8 @@ const relaunchApp = remote.getGlobal('relaunchApp')
 
 const { ipcRenderer } = require('electron')
 
+ipcRenderer.send('test', 'from the renderer')
+
 
 let loadingTime = Date.now()
 

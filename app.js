@@ -562,3 +562,7 @@ ipcMain.on('cache', (event, details) => {
     }, { overwrite: true })
   }
 })
+
+ipcMain.on('test', (event, msg) => {
+  debugLog('!test', msg)
+})
