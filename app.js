@@ -290,41 +290,45 @@ function launchApp() {
 function tryLogin() {
   loadLoadingScreen()
 
-  global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
-      user.trakt.auth = newAuth
-      user.trakt.status = true
-      saveConfig()
-      debugLog('login', 'success')
+  // wait until loading screen is fully loaded
+  ipcMain.once('loading-screen', (event, data) => {
+    if(data === 'loaded') {
+      debugLog('loading', 'can start now')
 
-      // track user stats for traktify analytics
-      let userSettings = await trakt.users.settings().then(res => res)
-      request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
-        json: true
-      }, (err, res, body) => {
-        debugLog('user authentications', body.data.requests)
-      })
+      global.trakt.import_token(user.trakt.auth).then(() => {
+        global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
+          user.trakt.auth = newAuth
+          user.trakt.status = true
+          saveConfig()
+          debugLog('login', 'success')
+    
+          // track user stats for traktify analytics
+          let userSettings = await trakt.users.settings().then(res => res)
+          request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+            json: true
+          }, (err, res, body) => {
+            debugLog('user authentications', body.data.requests)
+          })
+    
 
-      // wait until loading screen is fully loaded
-      ipcMain.once('loading-screen', (event, data) => {
-        if(data === 'loaded') {
-          debugLog('loading', 'can start now')
+          event.returnValue = 'start'
+
           // After loadingHandler is finished with everything, the dashboard is opened
           loadingHandler().then(() => {
             loadDashboard()
           })
-        }
+        }).catch(err => {
+          if(err) {
+            user.trakt.auth = false
+            user.trakt.status = false
+            saveConfig()
+            debugLog('login failed', err)
+            deleteCacheFolder()
+            loadLogin()
+          }
+        })
       })
-    }).catch(err => {
-      if(err) {
-        user.trakt.auth = false
-        user.trakt.status = false
-        saveConfig()
-        debugLog('login failed', err)
-        deleteCacheFolder()
-        loadLogin()
-      }
-    })
+    }
   })
 }
 
@@ -348,7 +352,7 @@ function authenticate() {
 
     // going back to the app and heading into dashboard
     window.focus()
-    loadDashboard()
+    tryLogin() // confirm login credentials for extra safety and start loading
 
     return true
   }).catch(err => {
@@ -404,9 +408,6 @@ function loadingHandler() {
   let loadingTime = Date.now()
   
   return new Promise((resolve, reject) => {
-    // send a message, that the loading can begin
-    window.webContents.send('loading-screen', 'start')
-
     // waiting for the loading to be done
     ipcMain.once('loading-screen', (event, data) => {
       if(data === 'done') {
@@ -425,7 +426,6 @@ function saveConfig() {
 }
 
 // Hard reset the app, deletes user accounts.
-// TODO: also delete the cache folder.
 function resetTraktify(removeLogin) {
   let userTemp = false
   if(removeLogin) {
