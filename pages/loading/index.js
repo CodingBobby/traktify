@@ -1,3 +1,4 @@
+// Required for loading! Do not remove the following constants even if they say to be unused!
 const trakt = remote.getGlobal('trakt')
 const relaunchApp = remote.getGlobal('relaunchApp')
 
@@ -44,29 +45,6 @@ new Promise((resolve, rej) => {
       debugLog('error', res, new Error().stack)
    }
 })
-
-
-
-// ipcRenderer.send('loading-screen', 'loaded')
-
-// ipcRenderer.on('loading-screen', async (event, data) => {
-//    if(data === 'start') {
-//       debugLog('loading', 'started')
-      
-//       debugLog('loading', 'activities')
-//       let activities = await newActivitiesAvailable()
-   
-//       debugLog('loading', 'up next to watch')
-//       let upNext = await getUpNextToWatch()
-      
-//       debugLog('loading', 'done')
-//       setTimeout(() => {
-//          // telling the app to move on, we need this to trigger the opening of the dashboard page
-//          ipcRenderer.send('loading-screen', 'done')
-//       }, 33.3) // giving some small extra timeout
-//    }
-// })
-
 
 
 function showAlertBox() {
