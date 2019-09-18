@@ -25,7 +25,14 @@ function debugLog(...args) {
             console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
          }
       } else {
-         console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
+         let bgColor = '\x1b[47m'
+         let title = args[0].split('')
+         if(title[0] === '!') {
+            title[0] = ''
+            bgColor = '\x1b[43m'
+         }
+         title = title.join('')
+         console.log(`${bgColor}\x1b[30m${time} -> ${title}:\x1b[0m`, args[1])
          if(args.length > 2) {
             console.log.apply(null, args.splice(2, args.length-2))
          }
