@@ -1,6 +1,6 @@
 {
   "name": "traktify",
-  "version": "0.1.0",
+  "version": "0.1.7",
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
