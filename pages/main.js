@@ -16,6 +16,7 @@ function openDonate() {
   remote.getGlobal('openExternal')('https://paypal.me/CodingBobby')
 }
 
+// TODO: Reloading should only fetch latest changes without reloading the html
 function reload() {
   remote.getGlobal('loadDashboard')()
 }
