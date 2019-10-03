@@ -33,6 +33,7 @@ module.exports = class Queue {
             if(!result) {
                //console.log('stopping ticker...')
                clearInterval(this._interval)
+               this._interval = null
             }
          }, this._timeOut)
       }
@@ -90,7 +91,7 @@ class Task {
             result = await this.callback(this.args)
          } catch(err) {
             if(err) {
-            rej(err)
+               rej(err)
             }
          }
          resolve(result)
