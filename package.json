@@ -33,6 +33,7 @@
     "flat-cache": "^2.0.1",
     "fs": "0.0.1-security",
     "moviedb-promise": "^1.4.1",
+    "natsort": "^2.0.2",
     "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
     "request": "^2.88.0",

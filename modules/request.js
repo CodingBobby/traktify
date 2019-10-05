@@ -511,3 +511,138 @@ function requestUserSettings() {
       return res
    })
 }
+
+
+//:::: CONTENT INDEXING ::::\\
+
+// The following functions are used by the loading screen. They attempt to request everything about the user that would take too long to perform within the app.
+
+const natsort = require('natsort').default
+let sorter = natsort({ desc: true })
+
+let showCache = new Cache('shows')
+let episodeCache = new Cache('episodes')
+let movieCache = new Cache('movies')
+
+
+function type(item) {
+   let construct = item.constructor.toString()
+   return construct.match(/function (.*)\(/)[1]
+}
+
+
+module.exports.indexShows = async function indexShows() {
+   filteredShowProgress(function(progress) {
+      console.log('length:', progress.length)
+
+      ipcRenderer.send('cache', {
+         action: 'saveKeys',
+         name: 'showProgress'
+      })
+
+      // FIXME: sorting doesn't take any effect
+      let sorted = progress.sort(function(a, b) {
+         return sorter(a.last_watched_at, b.last_watched_at)
+      })
+
+      console.log('same sorting:', sorted == progress)
+   })
+}
+
+
+async function filteredShowProgress(onFinish, onFail) {
+   // Pay attention as the order in which the shows are sorted is by the date of last interaction. This interaction is not always a newly added episode but might also be a comment, rating or anything else unrelated to the watching history. Thus, it is not guaranteed that the order in which they appear in this list is the order of watching.
+   let showList = await getWatchedShows()
+   let hiddenShows = await getHiddenItems()
+   let visibleShows = filterHiddenShows(showList, hiddenShows)
+
+   let showProgress = []
+
+   let processed = 1
+   let toProcess = visibleShows.length
+
+   async function checkMate(next) {
+      let forward = await next()
+
+      if(processed === toProcess) {
+         console.log('completed')
+         console.log(type(forward), forward.length)
+         onFinish(forward)
+      }
+
+      processed++
+   }
+
+   async function nextItem(counter) {
+      if(counter < visibleShows.length) {
+         let item = visibleShows[counter]
+
+         await checkMate(async function() {
+            let progress = await requestShowProgress(item.show.ids.trakt)
+            showProgress.push(progress)
+            return showProgress
+         })
+
+         nextItem(++counter)
+      }
+   }
+
+   nextItem(0)
+}
+
+
+function filterHiddenShows(all, hidden) {
+   let hiddenIds = hidden.map(item => item.show.ids.trakt)
+   return all.filter(item => !hiddenIds.includes(item.show.ids.trakt))
+}
+
+
+// wrapper for the raw request
+function requestShowProgress(id) {
+   /** res:
+    *    aired,
+    *    completed,
+    *    hidden_seasons,
+    *    last_episode,
+    *    last_watched_at,
+    *    next_episode,
+    *    reset_at,
+    *    seasons
+    */
+   return cacheRequest('showProgress', id, () => {
+      return trakt.shows.progress.watched({
+         id: id,
+         extended: 'full'
+      })
+   })
+}
+
+
+//
+// CACHING
+//
+
+function cacheRequest(cacheName, cacheKey, request) {
+   let cache = new Cache(cacheName)
+   let cacheContent = cache.getKey(cacheKey)
+
+   if(cacheContent === undefined) {
+      return request().then(result => {
+         debugLog('caching', cacheKey)
+
+         // Adding the data along with the key to a temporary list. The cache will be saved later from the callback inside filteredShowProgress()
+         ipcRenderer.send('cache', {
+            action: 'addKey',
+            name: cacheName,
+            key: cacheKey,
+            data: result
+         })
+
+         return result
+      })
+   } else {
+      // In this case, everything that was cached is uptodate
+      debugLog('cache available', cacheKey)
+      return cacheContent
+   }
+}
