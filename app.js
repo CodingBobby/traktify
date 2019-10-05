@@ -552,13 +552,47 @@ global.relaunchApp = relaunchApp
 const Cache = require('./modules/cache.js')
 const Queue = new(require('./modules/queue.js'))
 
+// TODO: Add keyList creator, so different caches can be used simultaniously.
+let keyList = {}
+
 // Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
 ipcMain.on('cache', (event, details) => {
-  // details: { name, action }
-  if(details.action === 'save') {
-    Queue.add(function() {
+  /** details:
+   *    name,
+   *    action,
+   *    ?data,
+   *    ?key
+   */
+
+  switch(details.action) {
+    case 'save': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.save()
+      }, { overwrite: false })
+      break
+    }
+
+    case 'addKey': {
+      keyList[details.key] = details.data
+      break
+    }
+
+    case 'saveKeys': {
       const cache = new Cache(details.name)
+      for(let k in keyList) {
+        cache.setKey(k, keyList[k])
+      }
       cache.save()
-    }, { overwrite: true })
+      break
+    }
+
+    case 'setKey': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.setKey(details.key, details.data)
+      }, { overwrite: false })
+      break
+    }
   }
 })
