@@ -569,19 +569,24 @@ ipcMain.on('cache', (event, details) => {
       Queue.add(function() {
         const cache = new Cache(details.name)
         cache.save()
-      }, { overwrite: false })
+      }, { overwrite: true })
       break
     }
 
     case 'addKey': {
-      keyList[details.key] = details.data
+      keyList[details.name][details.key] = details.data
       break
     }
 
     case 'saveKeys': {
       const cache = new Cache(details.name)
-      for(let k in keyList) {
-        cache.setKey(k, keyList[k])
+      if(!keyList.hasOwnProperty(details.name)) {
+        // somehow the list wasn't used yet
+        debugLog('!caching', 'attempted keylist doesn\'t exist')
+        break
+      }
+      for(let k in keyList[details.name]) {
+        cache.setKey(k, keyList[details.name][k])
       }
       cache.save()
       break
@@ -591,7 +596,7 @@ ipcMain.on('cache', (event, details) => {
       Queue.add(function() {
         const cache = new Cache(details.name)
         cache.setKey(details.key, details.data)
-      }, { overwrite: false })
+      }, { overwrite: true })
       break
     }
   }

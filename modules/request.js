@@ -535,6 +535,7 @@ module.exports.indexShows = async function indexShows() {
    filteredShowProgress(function(progress) {
       console.log('length:', progress.length)
 
+      // TODO: Only send this when uncached data was requested which has to be saved.
       ipcRenderer.send('cache', {
          action: 'saveKeys',
          name: 'showProgress'
