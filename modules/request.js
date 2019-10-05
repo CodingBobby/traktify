@@ -516,24 +516,13 @@ function requestUserSettings() {
 //:::: CONTENT INDEXING ::::\\
 
 // The following functions are used by the loading screen. They attempt to request everything about the user that would take too long to perform within the app.
-
-const natsort = require('natsort').default
-let sorter = natsort({ desc: true })
-
 let showCache = new Cache('shows')
 let episodeCache = new Cache('episodes')
 let movieCache = new Cache('movies')
 
-
-function type(item) {
-   let construct = item.constructor.toString()
-   return construct.match(/function (.*)\(/)[1]
-}
-
-
 module.exports.indexShows = async function indexShows() {
    filteredShowProgress(function(progress) {
-      console.log('length:', progress.length)
+      console.log('shows:', progress.length)
 
       // TODO: Only send this when uncached data was requested which has to be saved.
       ipcRenderer.send('cache', {
@@ -541,12 +530,16 @@ module.exports.indexShows = async function indexShows() {
          name: 'showProgress'
       })
 
-      // FIXME: sorting doesn't take any effect
-      let sorted = progress.sort(function(a, b) {
-         return sorter(a.last_watched_at, b.last_watched_at)
+      progress.sort(function(a, b) {
+         let aTime = new Date(a.last_watched_at).valueOf()
+         let bTime = new Date(b.last_watched_at).valueOf()
+
+         if(aTime > bTime) return -1
+         if(aTime < bTime) return 1
+         return 0
       })
 
-      console.log('same sorting:', sorted == progress)
+      console.log(progress)
    })
 }
 
@@ -559,32 +552,16 @@ async function filteredShowProgress(onFinish, onFail) {
 
    let showProgress = []
 
-   let processed = 1
-   let toProcess = visibleShows.length
-
-   async function checkMate(next) {
-      let forward = await next()
-
-      if(processed === toProcess) {
-         console.log('completed')
-         console.log(type(forward), forward.length)
-         onFinish(forward)
-      }
-
-      processed++
-   }
-
    async function nextItem(counter) {
       if(counter < visibleShows.length) {
          let item = visibleShows[counter]
 
-         await checkMate(async function() {
-            let progress = await requestShowProgress(item.show.ids.trakt)
-            showProgress.push(progress)
-            return showProgress
-         })
+         let progress = await requestShowProgress(item.show.ids.trakt)
+         showProgress.push(progress)
 
          nextItem(++counter)
+      } else {
+         onFinish(showProgress)
       }
    }
 

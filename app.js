@@ -552,7 +552,6 @@ global.relaunchApp = relaunchApp
 const Cache = require('./modules/cache.js')
 const Queue = new(require('./modules/queue.js'))
 
-// TODO: Add keyList creator, so different caches can be used simultaniously.
 let keyList = {}
 
 // Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
