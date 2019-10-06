@@ -41,6 +41,8 @@ Traktify is currently at it's climax of development. You can dive in really soon
 ### Requirements
 Traktify is an electron based app and thus requires a Windows 7 (and higher) or macOS 10.10 (and higher) machine to run on. You'll also need a [Node.js](https://nodejs.org/en/download/) installation. Traktify is tested on versions higher than `v10.10.0` but we recommend the latest `LTS` release.
 
+If you want to use the Discord Rich-Presence integration, you'll also have to install [Python](https://www.python.org/downloads/).
+
 
 ## Contributing
 Contributions are very welcome! To report issues and start pull requests, please use gihub's integrated systems.
