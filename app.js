@@ -40,7 +40,9 @@ const TmDB = require('moviedb-promise')
 // request stuff
 const request = require('request')
 
-const { debugLog } = require('./modules/helper.js')
+const {
+  debugLog, inRange, shadeHexColor, clone
+} = require('./modules/helper.js')
 global.debugLog = debugLog
 
 
@@ -288,41 +290,45 @@ function launchApp() {
 function tryLogin() {
   loadLoadingScreen()
 
-  global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
-      user.trakt.auth = newAuth
-      user.trakt.status = true
-      saveConfig()
-      debugLog('login', 'success')
+  // wait until loading screen is fully loaded
+  ipcMain.once('loading-screen', (event, data) => {
+    if(data === 'loaded') {
+      debugLog('loading', 'can start now')
 
-      // track user stats for traktify analytics
-      let userSettings = await trakt.users.settings().then(res => res)
-      request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
-        json: true
-      }, (err, res, body) => {
-        debugLog('user authentications', body.data.requests)
-      })
+      global.trakt.import_token(user.trakt.auth).then(() => {
+        global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
+          user.trakt.auth = newAuth
+          user.trakt.status = true
+          saveConfig()
+          debugLog('login', 'success')
+    
+          // track user stats for traktify analytics
+          let userSettings = await trakt.users.settings().then(res => res)
+          request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+            json: true
+          }, (err, res, body) => {
+            debugLog('user authentications', body.data.requests)
+          })
+    
 
-      // wait until loading screen is fully loaded
-      ipcMain.once('loading-screen', (event, data) => {
-        if(data === 'loaded') {
-          debugLog('loading', 'can start now')
+          event.returnValue = 'start'
+
           // After loadingHandler is finished with everything, the dashboard is opened
           loadingHandler().then(() => {
             loadDashboard()
           })
-        }
+        }).catch(err => {
+          if(err) {
+            user.trakt.auth = false
+            user.trakt.status = false
+            saveConfig()
+            debugLog('login failed', err)
+            deleteCacheFolder()
+            loadLogin()
+          }
+        })
       })
-    }).catch(err => {
-      if(err) {
-        user.trakt.auth = false
-        user.trakt.status = false
-        saveConfig()
-        debugLog('login failed', err)
-        deleteCacheFolder()
-        loadLogin()
-      }
-    })
+    }
   })
 }
 
@@ -346,7 +352,7 @@ function authenticate() {
 
     // going back to the app and heading into dashboard
     window.focus()
-    loadDashboard()
+    tryLogin() // confirm login credentials for extra safety and start loading
 
     return true
   }).catch(err => {
@@ -402,9 +408,6 @@ function loadingHandler() {
   let loadingTime = Date.now()
   
   return new Promise((resolve, reject) => {
-    // send a message, that the loading can begin
-    window.webContents.send('loading-screen', 'start')
-
     // waiting for the loading to be done
     ipcMain.once('loading-screen', (event, data) => {
       if(data === 'done') {
@@ -423,7 +426,6 @@ function saveConfig() {
 }
 
 // Hard reset the app, deletes user accounts.
-// TODO: also delete the cache folder.
 function resetTraktify(removeLogin) {
   let userTemp = false
   if(removeLogin) {
@@ -546,67 +548,58 @@ function relaunchApp() {
 global.relaunchApp = relaunchApp
 
 
-//:::: CACHE HELPERS ::::\\
+//:::: CACHE Listener ::::\\
 const Cache = require('./modules/cache.js')
 const Queue = new(require('./modules/queue.js'))
 
+let keyList = {}
+
 // Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
 ipcMain.on('cache', (event, details) => {
-  // details: { name, action }
-  if(details.action === 'save') {
-    Queue.add(function() {
+  /** details:
+   *    name,
+   *    action,
+   *    ?data,
+   *    ?key
+   */
+  switch(details.action) {
+    case 'save': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.save()
+      }, { overwrite: true })
+      break
+    }
+
+    case 'addKey': {
+      if(!keyList.hasOwnProperty(details.name)) {
+        // list wasn't used yet
+        keyList[details.name] = {}
+      }
+      keyList[details.name][details.key] = details.data
+      break
+    }
+
+    case 'saveKeys': {
       const cache = new Cache(details.name)
+      if(!keyList.hasOwnProperty(details.name)) {
+        // nothing was saved in the keylist
+        debugLog('!caching', 'attempted keylist doesn\'t exist')
+        break
+      }
+      for(let k in keyList[details.name]) {
+        cache.setKey(k, keyList[details.name][k])
+      }
       cache.save()
-    }, { overwrite: true })
+      break
+    }
+
+    case 'setKey': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.setKey(details.key, details.data)
+      }, { overwrite: true })
+      break
+    }
   }
 })
-
-
-//:::: HELPERS ::::\\
-
-// Range must be an array of two numeric values
-function inRange(value, range) {
-  let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
-  return value >= min && value <= max
-}
-
-// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
-// function mainly used to generate dark version of the accent colors
-function shadeHexColor(hex, percent) {
-  // convert hex to decimal
-  let R = parseInt(hex.substring(1,3), 16)
-  let G = parseInt(hex.substring(3,5), 16)
-  let B = parseInt(hex.substring(5,7), 16)
-
-  // change by given percentage
-  B = parseInt(B*(100 + percent)/100)
-  R = parseInt(R*(100 + percent)/100)
-  G = parseInt(G*(100 + percent)/100)
-
-  // clip colors to max value
-  R = R<255 ? R : 255 
-  G = G<255 ? G : 255 
-  B = B<255 ? B : 255 
-
-  // zero-ize single-digit values
-  let RR = R.toString(16).length==1 ? '0'+R.toString(16) : R.toString(16)
-  let GG = G.toString(16).length==1 ? '0'+G.toString(16) : G.toString(16)
-  let BB = B.toString(16).length==1 ? '0'+B.toString(16) : B.toString(16)
-
-  return '#'+RR+GG+BB
-}
-
-// Simple helper to clone objects which prevents cross-linking.
-function clone(object) {
-  if(null == object || "object" != typeof object) return object
-  // create new blank object of same type
-  let copy = object.constructor()
-
-  // copy all attributes into it
-  for(let attr in object) {
-     if(object.hasOwnProperty(attr)) {
-        copy[attr] = object[attr]
-     }
-  }
-  return copy
-}

@@ -1,5 +1,8 @@
 if(!remote.getGlobal('darwin')) {
-  document.getElementById('dragger').remove()
+  let dragger = document.getElementById('dragger')
+  if(dragger !== null) {
+    dragger.remove()
+  }
 }
 
 
@@ -10,9 +13,10 @@ function signout() {
 }
 
 function openDonate() {
-  remote.getGlobal('openExternal')('https://paypal.me/CodingBobby')
+  remote.getGlobal('openExternal')('https://buymeacoff.ee/CodingBobby')
 }
 
+// TODO: Reloading should only fetch latest changes without reloading the html
 function reload() {
   remote.getGlobal('loadDashboard')()
 }

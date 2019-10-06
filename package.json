@@ -1,6 +1,6 @@
 {
   "name": "traktify",
-  "version": "0.1.0",
+  "version": "0.1.8",
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
@@ -35,6 +35,7 @@
     "moviedb-promise": "^1.4.1",
     "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
+    "register-scheme": "0.0.2",
     "request": "^2.88.0",
     "rimraf": "^3.0.0",
     "trakt.tv": "^7.2.0"
