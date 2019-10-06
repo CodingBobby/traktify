@@ -6,7 +6,8 @@ module.exports = {
    getUpNextToWatch: getUpNextToWatch,
    searchRequestHelper: searchRequestHelper,
    getUserStats: getUserStats,
-   getSeasonPoster: getSeasonPoster
+   getSeasonPoster: getSeasonPoster,
+   getUnfinishedProgressList: getUnfinishedProgressList
 }
 
 
@@ -516,28 +517,20 @@ function requestUserSettings() {
 //:::: CONTENT INDEXING ::::\\
 
 // The following functions are used by the loading screen. They attempt to request everything about the user that would take too long to perform within the app.
-let showCache = new Cache('shows')
-let episodeCache = new Cache('episodes')
-let movieCache = new Cache('movies')
 
-module.exports.indexShows = function indexShows() {
-   getShowProgress(sortAndFilterProgress).then(console.log)
+function indexShows() {
+   /** shows:
+    *    all
+    *    finished
+    *    unfinished
+    */
+   return getAllShowsProgress(sortAndFilterProgress).then(shows => shows)
 }
-
 
 function sortAndFilterProgress(allShows) {
    console.log('shows:', allShows.length)
 
    cacheSave('showProgress')
-
-   allShows.sort(function(a, b) {
-      let aTime = new Date(a.last_watched_at).valueOf()
-      let bTime = new Date(b.last_watched_at).valueOf()
-
-      if(aTime > bTime) return -1
-      if(aTime < bTime) return 1
-      return 0
-   })
 
    let finishedShows = allShows.filter(s => {
       return s.completed === s.aired
@@ -547,18 +540,21 @@ function sortAndFilterProgress(allShows) {
       return s.completed !== s.aired
    })
 
-   return {
+   let result = {
       all: allShows,
       finished: finishedShows,
       unfinished: unfinishedShows
    }
+
+   return result
 }
 
-async function getShowProgress(onFinish, onFail) {
-   // Pay attention as the order in which the shows are sorted is by the date of last interaction. This interaction is not always a newly added episode but might also be a comment, rating or anything else unrelated to the watching history. Thus, it is not guaranteed that the order in which they appear in this list is the order of watching.
+async function getAllShowsProgress(onFinish, onFail) {
    let showList = await getWatchedShows()
    let hiddenShows = await getHiddenItems()
-   let visibleShows = filterHiddenShows(showList, hiddenShows)
+   let visibleShows = filterAndSortShows(showList, hiddenShows)
+
+   console.log(visibleShows)
 
    let showProgress = []
 
@@ -567,7 +563,7 @@ async function getShowProgress(onFinish, onFail) {
          if(counter < visibleShows.length) {
             let item = visibleShows[counter]
    
-            let progress = await requestShowProgress(item.show.ids.trakt)
+            let progress = await getShowProgress(item.show.ids.trakt)
             showProgress.push(progress)
    
             nextItem(++counter)
@@ -580,14 +576,84 @@ async function getShowProgress(onFinish, onFail) {
    })
 }
 
-function filterHiddenShows(all, hidden) {
-   let hiddenIds = hidden.map(item => item.show.ids.trakt)
-   return all.filter(item => !hiddenIds.includes(item.show.ids.trakt))
+
+
+//
+// GET WRAPPERS
+//
+
+// Gets an array of n shows and it's progress that are not finished yet.
+function getUnfinishedProgressList(n) {
+   return new Promise(async (resolve, rej) => {
+      let visible = await getShowList()
+      let list = []
+
+      for(let i=0; i<n && n<visible.length; i++) {
+         let id = visible[i].show.ids.trakt
+         let progress = await getShowProgress(id)
+
+         if(progress.completed < progress.aired) {
+            list.push({
+               show: visible[i],
+               progress: progress
+            })
+         } else {
+            // show is completed, jump to the next one
+            n++
+         }
+      }
+
+      resolve(list)
+   })
 }
 
-// wrapper for the raw request
+
+function getShowList() {
+   return cacheRequest('itemList', 'shows', () => {
+      return requestShowList()
+   }, true)
+}
+
+function getShowProgress(id) {
+   return cacheRequest('showProgress', id, () => {
+      return requestShowProgress(id)
+   }, true)
+}
+
+
+//
+// REQUEST WRAPPERS
+//
+
+function requestShowList() {
+   /** return[]:
+    *    last_updated_at
+    *    last_watched_at
+    *    plays
+    *    reset_at
+    *    seasons[]:
+    *       episodes[]:
+    *          last_watched_at
+    *          number
+    *          plays
+    *       number
+    *    show:
+    *       ids:
+    *          imdb, slig, tmdb, trakt, tvdb, tvrange
+    *       title
+    *       year       
+    */
+   return new Promise(async (resolve, rej) => {
+      let all = await getWatchedShows()
+      let hidden = await getHiddenItems()
+      let visible = filterAndSortShows(all, hidden)
+
+      resolve(visible)
+   })
+}
+
 function requestShowProgress(id) {
-   /** res:
+   /** return:
     *    aired,
     *    completed,
     *    hidden_seasons,
@@ -597,12 +663,32 @@ function requestShowProgress(id) {
     *    reset_at,
     *    seasons
     */
-   return cacheRequest('showProgress', id, () => {
-      return trakt.shows.progress.watched({
-         id: id,
-         extended: 'full'
-      })
+   return trakt.shows.progress.watched({
+      id: id,
+      extended: 'full'
    })
+}
+
+
+//
+// MODIFIERS
+//
+
+function filterAndSortShows(all, hidden) {
+   // Pay attention as the order in which the shows are sorted is by the date of last interaction. This interaction is not always a newly added episode but might also be a comment, rating or anything else unrelated to the watching history. Thus, it is not guaranteed that the order in which they appear in this list is the order of watching.
+   let hiddenIds = hidden.map(item => item.show.ids.trakt)
+   let visible = all.filter(item => !hiddenIds.includes(item.show.ids.trakt))
+
+   visible.sort(function(a, b) {
+      let aTime = new Date(a.last_watched_at).valueOf()
+      let bTime = new Date(b.last_watched_at).valueOf()
+
+      if(aTime > bTime) return -1
+      if(aTime < bTime) return 1
+      return 0
+   })
+
+   return visible
 }
 
 
@@ -615,8 +701,9 @@ function requestShowProgress(id) {
  * @param {String} cacheName Name of the cache data will be saved to
  * @param {String} cacheKey Key under which the data is acessed
  * @param {Promise} request API request which gets the data in case it wasn't cached before
+ * @param {Boolean} saveRightAfter Save the data to cache after requesting it
  */
-function cacheRequest(cacheName, cacheKey, request) {
+function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
    let cache = new Cache(cacheName)
    let cacheContent = cache.getKey(cacheKey)
 
@@ -630,6 +717,10 @@ function cacheRequest(cacheName, cacheKey, request) {
             key: cacheKey,
             data: result
          })
+
+         if(saveRightAfter) {
+            cacheSave(cacheName)
+         }
 
          return result
       })
