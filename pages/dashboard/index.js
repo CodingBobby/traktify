@@ -594,30 +594,28 @@ function removeSearchResults() {
 async function generatePosterSection() {
   let requestTime = Date.now()
 
-  let data = await getUpNextToWatch()
+  let data = await getUnfinishedProgressList(5)
 
   data.forEach((item, index) => {
-    if(!item.completed) {
-      debugLog('item to add', item.show.title)
+    debugLog('item to add', item.show.show.title)
 
-      let next = item.nextEp
-      let title = item.show.title
-      let subtitle = `${next.season} x ${next.episode+(next.count?' ('+next.count +')':'')} ${next.title}`
+    let next = item.progress.next_episode
+    let title = item.show.show.title
+    let subtitle = `${next.season} x ${next.number+(next.number_abs?' ('+next.number_abs +')':'')} ${next.title}`
 
-      if(index === 0) {
-        createTitle({
-          title: title,
-          subtitle: subtitle
-        })
-      }
-      createPoster({
+    if(index === 0) {
+      createTitle({
         title: title,
-        subtitle: subtitle,
-        rating: next.rating,
-        id: item.show.ids.tvdb,
-        season: next.season
+        subtitle: subtitle
       })
     }
+    createPoster({
+      title: title,
+      subtitle: subtitle,
+      rating: next.rating,
+      id: item.show.show.ids.tvdb,
+      season: next.season
+    })
   })
 
   debugLog('time taken',  Date.now()-requestTime+'ms')

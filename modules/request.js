@@ -3,7 +3,6 @@ let config = remote.getGlobal('config')
 
 module.exports = {
    newActivitiesAvailable: newActivitiesAvailable,
-   getUpNextToWatch: getUpNextToWatch,
    searchRequestHelper: searchRequestHelper,
    getUserStats: getUserStats,
    getSeasonPoster: getSeasonPoster,
@@ -72,11 +71,17 @@ async function getSeasonPoster(showId, season) {
 
    if(cacheContent === undefined) {
       let data = await requestSeasonPoster(showId, season)
-
       debugLog('caching', cacheKey)
-      imageCache.setKey(cacheKey, data)
+
       ipcRenderer.send('cache', {
-         action: 'save', 
+         action: 'addKey',
+         name: 'images',
+         key: cacheKey,
+         data: data
+      })
+
+      ipcRenderer.send('cache', {
+         action: 'saveKeys', 
          name: 'images'
       })
 
@@ -208,7 +213,14 @@ function searchRequestHelper(text) {
             }
    
             debugLog('caching', text)
-            searchQueryCache.setKey(text, data)
+
+            ipcRenderer.send('cache', {
+               action: 'addKey',
+               name: 'searchQuery',
+               key: text,
+               data: data
+            })
+
             ipcRenderer.send('cache', {
                action: 'save', 
                name: 'searchQuery'
@@ -288,178 +300,6 @@ function startsWithFilter(string, options, removeFromFilter) {
 }
 
 
-//:::: POSTERS ::::\\
-let posterCache = new Cache('poster')
-
-async function getUpNextToWatch() {
-   // To find uncached activities, we want to check for new activity on the episodes scope. That way we will find out, if the user has been watching a show after the app was closed previously
-   let newActivities = await newActivitiesAvailable()
-   let unseenShowActivity = newActivities.includes('episodes')
-
-   let cacheContent = posterCache.getKey('upNextToWatch')
-   if(cacheContent === undefined || unseenShowActivity) {
-      return requestUpNextToWatch().then(upNextToWatch => {
-         debugLog('caching', 'up next to watch')
-         posterCache.setKey('upNextToWatch', upNextToWatch)
-         ipcRenderer.send('cache', {
-            action: 'save', 
-            name: 'poster'
-         })
-
-         return upNextToWatch
-      })
-   } else {
-      // In this case, everything that was cached is uptodate
-      debugLog('cache available', 'up next to watch')
-      return cacheContent
-   }
-}
-
-async function requestUpNextToWatch() {
-   let data = await getUsersShows().then(res => res)
-   // debugLog('users shows', data.length)
-
-   return new Promise((resolve, reject) => {
-      let upNextPromises = []
-      let limiter = 6
-
-      data.forEach((item, index) => {
-         if(index < limiter) {
-            upNextPromises.push(
-               new Promise((resolve, reject) => {
-                  debugLog('api request', 'trakt')
-                  let requestTime = Date.now()
-                  resolve(
-                     trakt.shows.progress.watched({
-                        id: item.show.ids.trakt,
-                        extended: 'full'
-                     }).then(async res => {
-                        debugLog('requesting time', Date.now()-requestTime)
-                        if(res.completed === res.aired) {
-                           // no next episode available, because all are watched
-                           limiter++
-                        }
-
-                        // this creates us a more compact version of the next up item
-                        return {
-                           completed: res.aired === res.completed,
-                           show: data[index].show,
-                           updated: res.last_watched_at,
-                           progress: res.seasons,
-                           nextEp: res.next_episode ? {
-                              season: res.next_episode.season,
-                              episode: res.next_episode.number,
-                              count: res.next_episode.number_abs,
-                              title: res.next_episode.title,
-                              ids: res.next_episode.ids,
-                              info: res.next_episode.overview,
-                              rating: res.next_episode.rating,
-                              aired: res.next_episode.first_aired,
-                              runtime: res.next_episode.runtime
-                           } : undefined
-                        }
-                     })
-                  )
-               })
-            )  
-         }
-      })
-
-      resolve(
-         Promise.all(upNextPromises).then(res => res)
-      )
-   })
-}
-
-
-async function getUsersShows() {
-   // Lets see, if we already cached something before. If not, we will have to request everything from scratch. If yes, we only need to update the activity which is not cached yet.
-   let cacheContent = posterCache.getKey('usersShows')
-   if(cacheContent === undefined) {
-      // request everything
-      let usersShows = await requestUsersShows()
-
-      debugLog('caching', 'users shows')
-      posterCache.setKey('usersShows', usersShows)
-      ipcRenderer.send('cache', {
-         action: 'save', 
-         name: 'poster'
-      })
-
-      return usersShows
-   } else {
-      // To find uncached activities, we want to check for new activity on the episodes scope. That way we will find out, if the user has been watching a show after the app was closed previously
-      let newActivities = await newActivitiesAvailable()
-      let unseenShowActivity = newActivities.includes('episodes')
-
-      if(unseenShowActivity) {
-         // this request everything until we found a good filter system
-         let usersShows = await requestUsersShows()
-         
-         debugLog('caching', 'users shows')
-         posterCache.setKey('usersShows', usersShows)
-         ipcRenderer.send('cache', {
-            action: 'save', 
-            name: 'poster'
-         })
-
-         return usersShows
-      } else {
-         // In this case, everything that was cached is uptodate
-         debugLog('cache available', 'users shows')
-         return cacheContent
-      }
-   }
-}
-
-function requestUsersShows() {
-   return getWatchedAndHiddenShows().then(([watched, hidden]) => {
-      watched = Array.from(watched)
-      debugLog('request finished', 'trakt')
-      hidden = Array.from(hidden)
-      debugLog('request finished', 'trakt')
-
-      // filters hidden items
-      let hiddenIds = hidden.map(item => item.show.ids.trakt)
-      watched = watched.filter(item => !hiddenIds.includes(item.show.ids.trakt))
-
-      // At this point the completed seasons cannot be filtered out because we didn't obtain information about how much the user watched of the show. Unfortunately this can only be done with another request, which we are doing later in the requestUpNextToWatch function.
-      return watched
-   })
-}
-
-
-function getWatchedShows() {
-   debugLog('api request', 'trakt')
-   let requestTime = Date.now()
-   return trakt.sync.watched({
-      type: 'shows'
-   }).then(res => {
-      debugLog('requesting time', Date.now()-requestTime)
-      return res
-   })
-}
-
-function getHiddenItems() {
-   debugLog('api request', 'trakt')
-   let requestTime = Date.now()
-   return trakt.users.hidden.get({
-      section: 'progress_watched',
-      limit: 100
-   }).then(res => {
-      debugLog('requesting time', Date.now()-requestTime)
-      return res
-   })
-}
-
-function getWatchedAndHiddenShows() {
-   return Promise.all([
-      getWatchedShows(),
-      getHiddenItems()
-   ])
-}
-
-
 //:::: STATS ::::\\
 
 // we're using the syncingCache from above here
@@ -468,7 +308,14 @@ async function getUserStats() {
    if(cacheContent === undefined) {
       return requestUserStats().then(userStats => {
          debugLog('caching', 'user stats')
-         syncingCache.setKey('userStats', userStats)
+
+         ipcRenderer.send('cache', {
+            action: 'addKey',
+            name: 'syncing',
+            key: 'userStats',
+            data: userStats
+         })
+
          ipcRenderer.send('cache', {
             action: 'save', 
             name: 'syncing'
@@ -585,6 +432,7 @@ async function getAllShowsProgress(onFinish, onFail) {
 // Gets an array of n shows and it's progress that are not finished yet.
 function getUnfinishedProgressList(n) {
    return new Promise(async (resolve, rej) => {
+      // TODO: If newActivitiesAvailable, re-request the showList, compare what shows updated and re-request only those in getShowProgress
       let visible = await getShowList()
       let list = []
 
@@ -644,8 +492,8 @@ function requestShowList() {
     *       year       
     */
    return new Promise(async (resolve, rej) => {
-      let all = await getWatchedShows()
-      let hidden = await getHiddenItems()
+      let all = await requestWatchedShows()
+      let hidden = await requestHiddenItems()
       let visible = filterAndSortShows(all, hidden)
 
       resolve(visible)
@@ -654,18 +502,61 @@ function requestShowList() {
 
 function requestShowProgress(id) {
    /** return:
-    *    aired,
-    *    completed,
-    *    hidden_seasons,
-    *    last_episode,
-    *    last_watched_at,
-    *    next_episode,
-    *    reset_at,
-    *    seasons
+    *    aired
+    *    completed
+    *    hidden_seasons[]:
+    *       number
+    *       ids[]:
+    *          trakt, tvdb, tmdb, imdb
+    *    last_episode[]:
+    *       season
+    *       number
+    *       title
+    *       ids[]:
+    *          trakt, tvdb, tmdb, imdb
+    *    last_watched_at
+    *    next_episode[]:
+    *       season
+    *       number
+    *       title
+    *       ids[]:
+    *          trakt, tvdb, tmdb, imdb
+    *    reset_at
+    *    seasons[]:
+    *       number
+    *       aired
+    *       completed
+    *       episodes[]:
+    *          number
+    *          completed
+    *          last_watched_at
     */
    return trakt.shows.progress.watched({
       id: id,
       extended: 'full'
+   })
+}
+
+function requestWatchedShows() {
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
+   return trakt.sync.watched({
+      type: 'shows'
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
+}
+
+function requestHiddenItems() {
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
+   return trakt.users.hidden.get({
+      section: 'progress_watched',
+      limit: 100
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
    })
 }
 
