@@ -520,31 +520,41 @@ let showCache = new Cache('shows')
 let episodeCache = new Cache('episodes')
 let movieCache = new Cache('movies')
 
-module.exports.indexShows = async function indexShows() {
-   filteredShowProgress(function(progress) {
-      console.log('shows:', progress.length)
-
-      // TODO: Only send this when uncached data was requested which has to be saved.
-      ipcRenderer.send('cache', {
-         action: 'saveKeys',
-         name: 'showProgress'
-      })
-
-      progress.sort(function(a, b) {
-         let aTime = new Date(a.last_watched_at).valueOf()
-         let bTime = new Date(b.last_watched_at).valueOf()
-
-         if(aTime > bTime) return -1
-         if(aTime < bTime) return 1
-         return 0
-      })
-
-      console.log(progress)
-   })
+module.exports.indexShows = function indexShows() {
+   getShowProgress(sortAndFilterProgress).then(console.log)
 }
 
 
-async function filteredShowProgress(onFinish, onFail) {
+function sortAndFilterProgress(allShows) {
+   console.log('shows:', allShows.length)
+
+   cacheSave('showProgress')
+
+   allShows.sort(function(a, b) {
+      let aTime = new Date(a.last_watched_at).valueOf()
+      let bTime = new Date(b.last_watched_at).valueOf()
+
+      if(aTime > bTime) return -1
+      if(aTime < bTime) return 1
+      return 0
+   })
+
+   let finishedShows = allShows.filter(s => {
+      return s.completed === s.aired
+   })
+
+   let unfinishedShows = allShows.filter(s => {
+      return s.completed !== s.aired
+   })
+
+   return {
+      all: allShows,
+      finished: finishedShows,
+      unfinished: unfinishedShows
+   }
+}
+
+async function getShowProgress(onFinish, onFail) {
    // Pay attention as the order in which the shows are sorted is by the date of last interaction. This interaction is not always a newly added episode but might also be a comment, rating or anything else unrelated to the watching history. Thus, it is not guaranteed that the order in which they appear in this list is the order of watching.
    let showList = await getWatchedShows()
    let hiddenShows = await getHiddenItems()
@@ -552,28 +562,28 @@ async function filteredShowProgress(onFinish, onFail) {
 
    let showProgress = []
 
-   async function nextItem(counter) {
-      if(counter < visibleShows.length) {
-         let item = visibleShows[counter]
-
-         let progress = await requestShowProgress(item.show.ids.trakt)
-         showProgress.push(progress)
-
-         nextItem(++counter)
-      } else {
-         onFinish(showProgress)
+   return new Promise((resolve, rej) => {
+      async function nextItem(counter) {
+         if(counter < visibleShows.length) {
+            let item = visibleShows[counter]
+   
+            let progress = await requestShowProgress(item.show.ids.trakt)
+            showProgress.push(progress)
+   
+            nextItem(++counter)
+         } else {
+            resolve(onFinish(showProgress))
+         }
       }
-   }
-
-   nextItem(0)
+   
+      nextItem(0)
+   })
 }
-
 
 function filterHiddenShows(all, hidden) {
    let hiddenIds = hidden.map(item => item.show.ids.trakt)
    return all.filter(item => !hiddenIds.includes(item.show.ids.trakt))
 }
-
 
 // wrapper for the raw request
 function requestShowProgress(id) {
@@ -600,6 +610,12 @@ function requestShowProgress(id) {
 // CACHING
 //
 
+/**
+ * Returns the data saved in the cache as the given key and requests it if nothing was saved. The data will be temporarily stored to make processing request arrays easier. To permanently save the results to the cache, use cacheSave().
+ * @param {String} cacheName Name of the cache data will be saved to
+ * @param {String} cacheKey Key under which the data is acessed
+ * @param {Promise} request API request which gets the data in case it wasn't cached before
+ */
 function cacheRequest(cacheName, cacheKey, request) {
    let cache = new Cache(cacheName)
    let cacheContent = cache.getKey(cacheKey)
@@ -608,7 +624,6 @@ function cacheRequest(cacheName, cacheKey, request) {
       return request().then(result => {
          debugLog('caching', cacheKey)
 
-         // Adding the data along with the key to a temporary list. The cache will be saved later from the callback inside filteredShowProgress()
          ipcRenderer.send('cache', {
             action: 'addKey',
             name: cacheName,
@@ -623,4 +638,12 @@ function cacheRequest(cacheName, cacheKey, request) {
       debugLog('cache available', cacheKey)
       return cacheContent
    }
+}
+
+function cacheSave(cacheName) {
+   // TODO: Only send this when uncached data was requested which has to be saved.
+   ipcRenderer.send('cache', {
+      action: 'saveKeys',
+      name: cacheName
+   })
 }

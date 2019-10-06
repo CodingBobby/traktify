@@ -562,7 +562,6 @@ ipcMain.on('cache', (event, details) => {
    *    ?data,
    *    ?key
    */
-
   switch(details.action) {
     case 'save': {
       Queue.add(function() {
@@ -573,6 +572,10 @@ ipcMain.on('cache', (event, details) => {
     }
 
     case 'addKey': {
+      if(!keyList.hasOwnProperty(details.name)) {
+        // list wasn't used yet
+        keyList[details.name] = {}
+      }
       keyList[details.name][details.key] = details.data
       break
     }
@@ -580,7 +583,7 @@ ipcMain.on('cache', (event, details) => {
     case 'saveKeys': {
       const cache = new Cache(details.name)
       if(!keyList.hasOwnProperty(details.name)) {
-        // somehow the list wasn't used yet
+        // nothing was saved in the keylist
         debugLog('!caching', 'attempted keylist doesn\'t exist')
         break
       }
