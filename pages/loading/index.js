@@ -34,7 +34,7 @@ new Promise((resolve, rej) => {
       let activities = await newActivitiesAvailable()
    
       debugLog('loading', 'up next to watch')
-      let upNext = await getUpNextToWatch()
+      let upNext = await getUnfinishedProgressList(5)
       
       debugLog('loading', 'done')
       setTimeout(() => {
