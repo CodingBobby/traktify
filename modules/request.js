@@ -6,7 +6,8 @@ module.exports = {
    searchRequestHelper: searchRequestHelper,
    getUserStats: getUserStats,
    getSeasonPoster: getSeasonPoster,
-   getUnfinishedProgressList: getUnfinishedProgressList
+   getUnfinishedProgressList: getUnfinishedProgressList,
+   reloadAllItems: reloadAllItems
 }
 
 
@@ -59,6 +60,13 @@ async function newActivitiesAvailable() {
 function getLatestActivities() {
    debugLog('api request', 'latest trakt activites')
    return trakt.sync.last_activities().then(res => res)
+}
+
+// This function is triggered when hitting the reload button on the dashboard.
+async function reloadAllItems(_this, _par, onStart, onFinish) {
+   onStart(_this) 
+   await generatePosterSection(true)
+   onFinish(_this, _par.children[0])
 }
 
 
@@ -429,16 +437,41 @@ async function getAllShowsProgress(onFinish, onFail) {
 // GET WRAPPERS
 //
 
-// Gets an array of n shows and it's progress that are not finished yet.
-function getUnfinishedProgressList(n) {
+/** Gets an array of n shows and it's progress that are not finished yet. If argument update is true, the updated items are re-requested instead of directly restored from cache.
+ * @param {Number} n Number of sequential shows with unseen episodes to get
+ * @param {Boolean} update If cached data should be checked against possible updates
+ */
+function getUnfinishedProgressList(n, update) {
    return new Promise(async (resolve, rej) => {
-      // TODO: If newActivitiesAvailable, re-request the showList, compare what shows updated and re-request only those in getShowProgress
       let visible = await getShowList()
+      
+      // holds ids of shows that require re-requests
+      let updatedIDs = []
+
+      if(update) {
+         // This contains a freshly requested show list which could have the last_watched_at property of one or more shows updated and/or one or more additional shows at the start of the list. In the first case, the order of the already stored shows changed. In the second case, all already stored shows are shifted down by some indices.
+         let updated = await getShowList(true)
+
+         updated.forEach(item => {
+            let oldIndex = visible.map(v => v.show.ids.trakt).indexOf(item.show.ids.trakt)
+
+            // store show id if it already exists but had updated watching progress
+            if(oldIndex > -1) {
+               if(visible[oldIndex].last_watched_at !== item.last_watched_at) {
+                  updatedIDs.push(item.show.ids.trakt)
+               }
+            }
+         })
+
+         // overwrite old data with new
+         visible = updated
+      }
+
       let list = []
 
       for(let i=0; i<n && n<visible.length; i++) {
          let id = visible[i].show.ids.trakt
-         let progress = await getShowProgress(id)
+         let progress = await getShowProgress(id, updatedIDs.includes(id))
 
          if(progress.completed < progress.aired) {
             list.push({
@@ -451,21 +484,35 @@ function getUnfinishedProgressList(n) {
          }
       }
 
+      cacheSave('showProgress')
+
       resolve(list)
    })
 }
 
 
-function getShowList() {
+function getShowList(update) {
+   if(update) {
+      let cache = new Cache('itemList')
+      cache.removeKey('shows')
+      cache.save()
+   }
+
    return cacheRequest('itemList', 'shows', () => {
       return requestShowList()
    }, true)
 }
 
-function getShowProgress(id) {
+function getShowProgress(id, update) {
+   if(update) {
+      let cache = new Cache('showProgress')
+      cache.removeKey(id)
+      cache.save()
+   }
+
    return cacheRequest('showProgress', id, () => {
       return requestShowProgress(id)
-   }, true)
+   }, false)
 }
 
 

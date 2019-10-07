@@ -302,6 +302,15 @@ body::after {
 .btn.selected {
   background-color: var(--accent_color);
 }
+.btn.rotating {
+  animation-name: rotate;
+  animation-duration: 0.8s;
+  animation-iteration-count: infinite;
+}
+@keyframes rotate {
+  from {transform: rotate(0deg);}
+  to {transform: rotate(360deg);}
+}
 .btn.bottom {
   padding: 10px 19px;
   border-radius: 20px 20px 0 0;

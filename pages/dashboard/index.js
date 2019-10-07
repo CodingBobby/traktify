@@ -69,6 +69,14 @@ function show(x) {
   })
 }
 
+function rotate(x) {
+  if(x.classList.contains('rotating')) {
+    x.classList.remove('rotating')
+  } else {
+    x.classList.add('rotating')
+  }
+}
+
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-BAR :::::::::::::::::::::::::::::::::::::::::::::::*/
 
@@ -591,10 +599,17 @@ function removeSearchResults() {
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 // This gets fired when the dashboard is loaded
-async function generatePosterSection() {
+async function generatePosterSection(update) {
   let requestTime = Date.now()
 
-  let data = await getUnfinishedProgressList(5)
+  let data = await getUnfinishedProgressList(5, update)
+
+  if(update) {
+    // clear dashboard
+    document.querySelector('#dash').innerHTML = `
+      <div class="titles" id="poster_title"></div>
+      <ul class="posters" id="posters"></ul>`
+  }
 
   data.forEach((item, index) => {
     debugLog('item to add', item.show.show.title)
