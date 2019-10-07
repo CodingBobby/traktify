@@ -1,6 +1,3 @@
-'use strict'
-const client = require('./presence.js')(process.env.discord_key)
-
 module.exports = {
    update: update
 }
@@ -10,6 +7,8 @@ async function update(options) {
    debugLog('rpc status', options.state)
 
    let total = ((options.time.movies+options.time.shows)/60).toFixed(1)
+
+   const client = require('./presence.js')(process.env.discord_key)
 
    client.updatePresence({
       details: `watched for ${total} hours`,
