@@ -14,6 +14,9 @@ window.onload = function() {
   updateApp() // update settings
   generatePosterSection() // show the up next to watch posters
   updateRpc() // show rpc on discord
+  
+  // testing
+  // testCards()
 }
 
 // This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
@@ -79,6 +82,15 @@ function rotate(x) {
 
 //:::: INFOCARD ::::\\
 // moves in one direction through the stacks
+function testCards() {
+  addInfoCard(exampleInfo, 'left')
+  addInfoCard(exampleInfo, 'left')
+  addInfoCard(exampleInfo, 'middle')
+  addInfoCard(exampleInfo, 'right')
+  triggerInfoCardOverlay()
+  generateStackSlider()
+}
+
 function moveCards(clickedButton, direction) {
   let stacks = getCardStacks()
   switch(direction) {
@@ -137,6 +149,9 @@ function updateLeftRightButtons() {
   } else {
     rightButton.style.display = 'flex'
   }
+
+  // update the position of the slider thumb
+  generateStackSlider()
 }
 
 // opens and closes the info card
@@ -201,6 +216,33 @@ function generateInfoCard(itemToAdd, stack) {
     </div>
   `
   return infocard
+}
+
+function generateStackSlider() {
+  let slider = document.getElementById('indicator_slider')
+  let stacks = getCardStacks()
+  let totalSize = stacks.left.length
+    + stacks.middle.length // will always be 1, this makes it understandable
+    + stacks.right.length
+
+  // Checking if we actually need an indicator which is not the case if there is only one card.
+  if(totalSize !== 1) {
+    // set the width of the thump to match the ratio
+    let sliderWidth = slider.offsetWidth
+    let styler = document.querySelector('[data="indicator"]')
+    styler.innerHTML = `
+      #indicator input::-webkit-slider-thumb {
+        width: ${sliderWidth/totalSize}px !important;
+      }
+    `
+
+    // set position of the thumb
+    slider.min = 1;
+    slider.max = totalSize
+    slider.value = stacks.left.length+1
+  } else {
+    slider.style.display = 'none'
+  }
 }
 
 

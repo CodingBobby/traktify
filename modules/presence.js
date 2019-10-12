@@ -36,7 +36,7 @@ module.exports = function(clientId) {
         .catch(err => debugLog('error', '', new Error().stack))
       activityCache = null
     }
-  }).catch(err => debugLog('error', '', new Error().stack))
+  }).catch(err => debugLog('error', 'rpc login', new Error().stack))
 
   return instance
 }

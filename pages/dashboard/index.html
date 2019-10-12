@@ -29,7 +29,7 @@
   <div class="wrapper flex dashboard">
 
     <div id="infocard_overlay" style="display: none;" class="white_t">
-      <ul class="btns above_all">
+      <ul class="btns z4">
         <li>
           <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards(this, 'left')">
             <img src="../../assets/icons/app/left.svg">
@@ -44,6 +44,11 @@
 
       <div id="infocard_stack">
         <!-- Here, the info cards will go -->
+      </div>
+
+      <div id="indicator">
+        <style data="indicator" type="text/css"></style>
+        <input type="range" id="indicator_slider">  
       </div>
 
     </div>
