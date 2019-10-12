@@ -14,9 +14,12 @@
     const Cache = require('../../modules/cache.js');
     const {
       searchRequestHelper,
-      getUpNextToWatch,
-      getUserStats
+      getUserStats,
+      getSeasonPoster,
+      getUnfinishedProgressList,
+      reloadAllItems
     } = require('../../modules/request.js');
+    const request = require('../../modules/request.js');
     const rpc = require('../../modules/rpc.js');
   </script>
   <title>Traktify | Dashboard</title>
@@ -46,21 +49,18 @@
     </div>
     <div id="info_overlay"></div>
 
-    <ul class="btns top right above_all" id="side_buttons">
+    <ul class="btns top_p right z4" id="side_buttons">
       <li><div class="btn icon black_b shadow_b selected" id="search_button_side" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="settings_button_side" onclick="show(this); openSettings()"><img src="../../assets/icons/app/settings.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="logout_button_side" onclick="show(this); openLogout()"><img src="../../assets/icons/app/signout.svg"></div></li>
-      <li><div class="btn icon black_b shadow_b" onclick="show(this);reload()"><img src="../../assets/icons/app/sync.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" onclick="show(this); reloadAllItems(this, this.parentElement.parentElement, function(_this) { rotate(_this) }, function(_this, par) { rotate(_this); show(par.children[0]) })"><img src="../../assets/icons/app/sync.svg"></div></li>
     </ul>
 
-    <div id="side_panel"></div>
-    <div id="dash_overlay" onclick="closeSidePanel()"></div>
-
-    <div id="main_wrapper" class="wrapper dashboard flex">
-      <div class="dashboard" id="dash">
-        <div class="titles" id="poster_title"></div>
-        <ul class="posters" id="posters"></ul>
-      </div>
+    <div class="side_panel top z3" id="side_panel"></div>
+    <div class="overlay top z2" id="overlay" onclick="closeSidePanel()"></div>
+    <div class="dashboard" id="dash">
+      <div class="titles" id="poster_title"></div>
+      <ul class="posters" id="posters"></ul>
     </div>
 
   </div>

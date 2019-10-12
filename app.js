@@ -29,12 +29,44 @@ const {
 // file stuff
 const fs = require('fs')
 const path = require('path')
+const rimraf = require('rimraf')
 
 // api stuff
 const Trakt = require('trakt.tv')
 const Fanart = require('fanart.tv')
 const TvDB = require('node-tvdb')
 const TmDB = require('moviedb-promise')
+
+// request stuff
+const request = require('request')
+
+const {
+  debugLog, inRange, shadeHexColor, clone
+} = require('./modules/helper.js')
+global.debugLog = debugLog
+
+
+// important checks regarding required files
+let fatalError = false
+
+fs.exists('./config.json', ex => {
+  if(!ex) {
+    debugLog('error', 'config does not exist', new Error().stack)
+    fatalError = true
+  }
+})
+
+if(process.env.trakt_id == undefined) envErr()
+if(process.env.trakt_secret == undefined) envErr()
+if(process.env.fanart_key == undefined) envErr()
+if(process.env.tmdb_key == undefined) envErr()
+if(process.env.tvdb_key == undefined) envErr()
+if(process.env.discord_key == undefined) envErr()
+
+function envErr() {
+  debugLog('error', 'one or more env vars do not exist', new Error().stack)
+  fatalError = true
+}
 
 
 // configuration and boolean checks that we need frequently
@@ -147,6 +179,10 @@ const mainMenu = Menu.buildFromTemplate(menuTemplate)
 
 // This function builds the app window, shows the correct page and handles window.on() events
 function build() {
+  if(fatalError) {
+    return process.crash()
+  }
+
   debugLog('app', 'now building')
   let mainWindowState = windowStateKeeper({
     defaultWidth: 900,
@@ -254,32 +290,45 @@ function launchApp() {
 function tryLogin() {
   loadLoadingScreen()
 
-  global.trakt.import_token(user.trakt.auth).then(() => {
-    global.trakt.refresh_token(user.trakt.auth).then(newAuth => {
-      user.trakt.auth = newAuth
-      user.trakt.status = true
-      saveConfig()
-      debugLog('login', 'success')
+  // wait until loading screen is fully loaded
+  ipcMain.once('loading-screen', (event, data) => {
+    if(data === 'loaded') {
+      debugLog('loading', 'can start now')
 
-      // wait until loading screen is fully loaded
-      ipcMain.once('loading-screen', (event, data) => {
-        if(data === 'loaded') {
-          debugLog('loading', 'can start now')
+      global.trakt.import_token(user.trakt.auth).then(() => {
+        global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
+          user.trakt.auth = newAuth
+          user.trakt.status = true
+          saveConfig()
+          debugLog('login', 'success')
+    
+          // track user stats for traktify analytics
+          let userSettings = await trakt.users.settings().then(res => res)
+          request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
+            json: true
+          }, (err, res, body) => {
+            debugLog('user authentications', body.data.requests)
+          })
+    
+
+          event.returnValue = 'start'
+
           // After loadingHandler is finished with everything, the dashboard is opened
           loadingHandler().then(() => {
             loadDashboard()
           })
-        }
+        }).catch(err => {
+          if(err) {
+            user.trakt.auth = false
+            user.trakt.status = false
+            saveConfig()
+            debugLog('login failed', err)
+            deleteCacheFolder()
+            loadLogin()
+          }
+        })
       })
-    }).catch(err => {
-      if(err) {
-        user.trakt.auth = false
-        user.trakt.status = false
-        saveConfig()
-        debugLog('login failed', err)
-        loadLogin()
-      }
-    })
+    }
   })
 }
 
@@ -303,7 +352,7 @@ function authenticate() {
 
     // going back to the app and heading into dashboard
     window.focus()
-    loadDashboard()
+    tryLogin() // confirm login credentials for extra safety and start loading
 
     return true
   }).catch(err => {
@@ -325,11 +374,24 @@ function disconnect() {
   global.trakt.revoke_token()
   user.trakt.auth = false
   user.trakt.status = false
+  defaultAll('app')
   saveConfig()
+  deleteCacheFolder()
   loadLogin()
 }
 global.disconnect = disconnect
 
+function deleteCacheFolder() {
+  fs.exists('./.cache', ex => {
+    if(ex) {
+      rimraf('./.cache', () => {
+        debugLog('cache', 'removed all files')
+      })
+    } else {
+      debugLog('cache', 'not available')
+    }
+  })
+}
 
 // These functions do nothing but load a render page
 function loadLogin() {
@@ -346,9 +408,6 @@ function loadingHandler() {
   let loadingTime = Date.now()
   
   return new Promise((resolve, reject) => {
-    // send a message, that the loading can begin
-    window.webContents.send('loading-screen', 'start')
-
     // waiting for the loading to be done
     ipcMain.once('loading-screen', (event, data) => {
       if(data === 'done') {
@@ -366,6 +425,7 @@ function saveConfig() {
   })
 }
 
+// Hard reset the app, deletes user accounts.
 function resetTraktify(removeLogin) {
   let userTemp = false
   if(removeLogin) {
@@ -380,21 +440,8 @@ function resetTraktify(removeLogin) {
   saveConfig()
 }
 
-function clone(object) {
-  if(null == object || "object" != typeof object) return object
-  // create new blank object of same type
-  let copy = object.constructor()
 
-  // copy all attributes into it
-  for(let attr in object) {
-     if(object.hasOwnProperty(attr)) {
-        copy[attr] = object[attr]
-     }
-  }
-  return copy
-}
-
-
+// The getSetting and setSetting functions are used by the settings panel to get and apply custom settings. defaultAll can reset these settings by replacing the current ones with those from the default file def_config.json
 function getSettings(scope) {
   let settings = global.config.client.settings
   if(settings.hasOwnProperty(scope)) {
@@ -404,7 +451,6 @@ function getSettings(scope) {
   }
 }
 global.getSettings = getSettings
-
 
 function setSetting(scope, settingOption, newStatus) {
   let settings = global.config.client.settings[scope]
@@ -440,7 +486,6 @@ function setSetting(scope, settingOption, newStatus) {
 }
 global.setSetting = setSetting
 
-
 function defaultAll(scope) {
   let settings = getSettings(scope)
   for(let s in settings) {
@@ -450,6 +495,7 @@ function defaultAll(scope) {
 global.defaultAll = defaultAll
 
 
+// This applies the saved settings to the master css file. The currently loaded HTML must handle the incoming message via the proper IPC helpers.
 function updateApp() {
   let settings = getSettings('app')
   for(let s in settings) {
@@ -463,6 +509,13 @@ function updateApp() {
           name: '--accent_color',
           value: value
         })
+
+        let value_dark = shadeHexColor(value, -20)
+        window.webContents.send('modify-root', {
+          name: '--accent_color_d',
+          value: value_dark
+        })
+
         break
       }
       case 'background image': {
@@ -487,7 +540,7 @@ function updateApp() {
 }
 global.updateApp = updateApp
 
-
+// Quits the app and reopens it automatically. This is used to apply settings which would interfer with this this app.js file.
 function relaunchApp() {
   app.relaunch()
   app.quit(0)
@@ -495,42 +548,58 @@ function relaunchApp() {
 global.relaunchApp = relaunchApp
 
 
-//:::: HELPERS ::::\\
+//:::: CACHE Listener ::::\\
+const Cache = require('./modules/cache.js')
+const Queue = new(require('./modules/queue.js'))
 
-// Range must be an array of two numeric values
-function inRange(value, range) {
-  let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
-  return value >= min && value <= max
-}
+let keyList = {}
 
-// This function can be used instead of console.log(). It will work exactly the same but it only fires when the app is in development.
-function debugLog(...args) {
-  if(process.env.NODE_ENV !== 'production') {
-    let date = new Date()
-    let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
-    let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
-    let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
-    let time = `${
-      date.getHours().toString().length === 1
-        ? '0'+date.getHours() : date.getHours()
-    }:${
-      date.getMinutes().toString().length === 1
-        ? '0'+date.getMinutes() : date.getMinutes()
-    }:${
-      date.getSeconds().toString().length === 1
-        ? '0'+date.getSeconds() : date.getSeconds()
-    }`
-    if(args[0] == 'err' || args[0] == 'error') {
-      console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args[2]) {
-        console.log(`  @ .${args[2].toString().split(/\r\n|\n/)[1].split('traktify')[1].split(')')[0]}`)
+// Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
+ipcMain.on('cache', (event, details) => {
+  /** details:
+   *    name,
+   *    action,
+   *    ?data,
+   *    ?key
+   */
+  switch(details.action) {
+    case 'save': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.save()
+      }, { overwrite: true })
+      break
+    }
+
+    case 'addKey': {
+      if(!keyList.hasOwnProperty(details.name)) {
+        // list wasn't used yet
+        keyList[details.name] = {}
       }
-    } else {
-      console.log(`\x1b[47m\x1b[30m${time} -> ${args[0]}:\x1b[0m`, args[1])
-      if(args.length > 2) {
-        console.log.apply(null, args.splice(2, args.length-2))
+      keyList[details.name][details.key] = details.data
+      break
+    }
+
+    case 'saveKeys': {
+      const cache = new Cache(details.name)
+      if(!keyList.hasOwnProperty(details.name)) {
+        // nothing was saved in the keylist
+        debugLog('!caching', 'attempted keylist doesn\'t exist')
+        break
       }
+      for(let k in keyList[details.name]) {
+        cache.setKey(k, keyList[details.name][k])
+      }
+      cache.save()
+      break
+    }
+
+    case 'setKey': {
+      Queue.add(function() {
+        const cache = new Cache(details.name)
+        cache.setKey(details.key, details.data)
+      }, { overwrite: true })
+      break
     }
   }
-}
-global.debugLog = debugLog
+})

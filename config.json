@@ -1,147 +1,154 @@
 {
-    "client": {
-        "settings": {
-            "app": {
-                "accent color": {
-                    "type": "select",
-                    "status": "red",
-                    "default": "red",
-                    "options": {
-                        "red": {
-                            "value": "#ED1C24"
-                        },
-                        "green": {
-                            "value": "#0FD67C"
-                        },
-                        "blue": {
-                            "value": "#04BA9C"
-                        },
-                        "yellow": {
-                            "value": "#FF980D"
-                        }
-                    },
-                    "needsReload": false
-                },
-                "background image": {
-                    "type": "select",
-                    "status": "furniture",
-                    "default": "furniture",
-                    "options": {
-                        "furniture": {
-                            "value": "furniture.png",
-                            "preview": true
-                        },
-                        "grid": {
-                            "value": "grid.png",
-                            "preview": true
-                        },
-                        "grunge": {
-                            "value": "grunge.png",
-                            "preview": true
-                        },
-                        "blank": {
-                            "value": "blank.png",
-                            "preview": true
-                        }
-                    },
-                    "needsReload": false
-                },
-                "background opacity": {
-                    "type": "range",
-                    "status": 100,
-                    "default": 100,
-                    "accuracy": 5,
-                    "range": [
-                        0,
-                        100
-                    ],
-                    "needsReload": false
-                },
-                "keep window state": {
-                    "type": "toggle",
-                    "status": false,
-                    "default": false,
-                    "needsReload": true
-                },
-                "discord rpc": {
-                    "type": "toggle",
-                    "status": false,
-                    "default": false,
-                    "needsReload": true
-                }
-            }
-        },
-        "cache": {
-            "path": "../.cache/",
-            "expires": 0
-        },
-        "placeholder": {
-            "poster": "placeholder.png",
-            "search": "placeholder_nobg.png"
-        },
-        "rpc": {
-            "states": [
-                "Frankly, my dear, I don't give a damn.",
-                "Here's looking at you, kid.",
-                "You're gonna need a bigger boat.",
-                "May the Force be with you.",
-                "Toto, I've a feeling we're not in Kansas anymore.",
-                "I'm going to make him an offer he can't refuse.",
-                "You talkin' to me?",
-                "There's no place like home.",
-                "I am your father.",
-                "Why so serious?",
-                "I'll have what she's having.",
-                "We'll always have Paris.",
-                "Bond. James Bond.",
-                "I see dead people.",
-                "I'll be back.",
-                "You can't handle the truth!",
-                "E.T. phone home.",
-                "Yippie-ki-yay, motherf—er!",
-                "To infinity and beyond!",
-                "Houston, we have a problem.",
-                "You had me at hello.",
-                "There's no crying in baseball!",
-                "Here's Johnny!",
-                "I am serious. And don't call me Shirley.",
-                "Carpe diem. Seize the day, boys.",
-                "Leave the gun. Take the cannoli.",
-                "Show me the money!",
-                "Say hello to my little friend!",
-                "Shaken, not stirred.",
-                "I'm the king of the world!",
-                "Mama says, 'Stupid is as stupid does.'",
-                "Just keep swimming.",
-                "If you build it, he will come.",
-                "I'm not bad. I'm just drawn that way.",
-                "I'm having an old friend for dinner.",
-                "Hasta la vista, baby.",
-                "The Dude abides.",
-                "Stella! Hey, Stella!",
-                "After all, tomorrow is another day!",
-                "Help me, Obi-Wan Kenobi.",
-                "Go ahead, make my day.",
-                "It's alive! It's alive!",
-                "Argo f— yourself.",
-                "My precious.",
-                "Good morning, Vietnam!",
-                "I wish I knew how to quit you.",
-                "That'll do, pig. That'll do.",
-                "Elementary, my dear Watson.",
-                "You ain't heard nothin' yet!",
-                "Wax on, wax off.",
-                "Yo, Adrian!",
-                "Nobody's perfect.",
-                "They call it a Royale with cheese.",
-                "It was Beauty killed the Beast."
-            ]
-        }
-    },
-    "user": {
-        "trakt": {
-            "auth": false,
-            "status": false
-        }
-    }
+   "client": {
+       "settings": {
+           "app": {
+               "accent color": {
+                   "type": "select",
+                   "status": "red",
+                   "default": "red",
+                   "options": {
+                       "red": {
+                           "value": "#ED1C24"
+                       },
+                       "brown": {
+                           "value": "#A88E79"
+                       },
+                       "yellow": {
+                           "value": "#FF980D"
+                       },
+                       "green": {
+                           "value": "#0FD67C"
+                       },
+                       "violet": {
+                           "value": "#610BEA"
+                       },
+                       "blue": {
+                           "value": "#04BA9C"
+                       }
+                   },
+                   "needsReload": false
+               },
+               "background image": {
+                   "type": "select",
+                   "status": "furniture",
+                   "default": "furniture",
+                   "options": {
+                       "furniture": {
+                           "value": "furniture.png",
+                           "preview": true
+                       },
+                       "grid": {
+                           "value": "grid.png",
+                           "preview": true
+                       },
+                       "grunge": {
+                           "value": "grunge.png",
+                           "preview": true
+                       },
+                       "blank": {
+                           "value": "blank.png",
+                           "preview": true
+                       }
+                   },
+                   "needsReload": false
+               },
+               "background opacity": {
+                   "type": "range",
+                   "status": 100,
+                   "default": 100,
+                   "accuracy": 5,
+                   "range": [
+                       0,
+                       100
+                   ],
+                   "needsReload": false
+               },
+               "keep window state": {
+                   "type": "toggle",
+                   "status": false,
+                   "default": false,
+                   "needsReload": true
+               },
+               "discord rpc": {
+                   "type": "toggle",
+                   "status": false,
+                   "default": false,
+                   "needsReload": true
+               }
+           }
+       },
+       "cache": {
+           "path": "../.cache/",
+           "expires": 0
+       },
+       "placeholder": {
+           "poster": "placeholder.png",
+           "search": "placeholder_nobg.png"
+       },
+       "rpc": {
+           "states": [
+               "Frankly, my dear, I don't give a damn.",
+               "Here's looking at you, kid.",
+               "You're gonna need a bigger boat.",
+               "May the Force be with you.",
+               "Toto, I've a feeling we're not in Kansas anymore.",
+               "I'm going to make him an offer he can't refuse.",
+               "You talkin' to me?",
+               "There's no place like home.",
+               "I am your father.",
+               "Why so serious?",
+               "I'll have what she's having.",
+               "We'll always have Paris.",
+               "Bond. James Bond.",
+               "I see dead people.",
+               "I'll be back.",
+               "You can't handle the truth!",
+               "E.T. phone home.",
+               "Yippie-ki-yay, motherfâ€”er!",
+               "To infinity and beyond!",
+               "Houston, we have a problem.",
+               "You had me at hello.",
+               "There's no crying in baseball!",
+               "Here's Johnny!",
+               "I am serious. And don't call me Shirley.",
+               "Carpe diem. Seize the day, boys.",
+               "Leave the gun. Take the cannoli.",
+               "Show me the money!",
+               "Say hello to my little friend!",
+               "Shaken, not stirred.",
+               "I'm the king of the world!",
+               "Mama says, 'Stupid is as stupid does.'",
+               "Just keep swimming.",
+               "If you build it, he will come.",
+               "I'm not bad. I'm just drawn that way.",
+               "I'm having an old friend for dinner.",
+               "Hasta la vista, baby.",
+               "The Dude abides.",
+               "Stella! Hey, Stella!",
+               "After all, tomorrow is another day!",
+               "Help me, Obi-Wan Kenobi.",
+               "Go ahead, make my day.",
+               "It's alive! It's alive!",
+               "Argo fâ€” yourself.",
+               "My precious.",
+               "Good morning, Vietnam!",
+               "I wish I knew how to quit you.",
+               "That'll do, pig. That'll do.",
+               "Elementary, my dear Watson.",
+               "You ain't heard nothin' yet!",
+               "Wax on, wax off.",
+               "Yo, Adrian!",
+               "Nobody's perfect.",
+               "They call it a Royale with cheese.",
+               "It was Beauty killed the Beast.",
+               "I bought the airline. It seemed neater!"
+           ]
+       }
+   },
+   "user": {
+       "trakt": {
+           "auth": false,
+           "status": false
+       }
+   }
 }

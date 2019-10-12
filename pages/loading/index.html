@@ -5,26 +5,23 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta http-equiv="X-UA-Compatible" content="ie=edge">
    <title>Loading...</title>
+   <link rel="stylesheet" href="../../assets/master.css">
    <link rel="stylesheet" href="style.css">
    <script>
       const {
          remote,
-         ipcRenderer
+         // ipcRenderer
       } = require('electron');
       const Cache = require('../../modules/cache.js');
       const {
          newActivitiesAvailable,
-         getUpNextToWatch
+         getUnfinishedProgressList
       } = require('../../modules/request.js');
    </script>
 </head>
 <body>
-   <div id="dragger"></div>
-   <div class="dead_center">
-      <div class="loading">
-         <img src="../../assets/icons/trakt/trakt_no_circle.png">
-         <div class="loader"></div>
-      </div>
+   <div class="absolute">
+      <img class="logo gray-animation" src="../../assets/icons/traktify/512x512.png">
    </div>
    <script src="../main.js"></script>
    <script src="./index.js"></script>
