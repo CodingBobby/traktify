@@ -198,7 +198,7 @@ function generateInfoCard(itemToAdd, stack) {
   let infocard = document.createElement('div')
   infocard.classList.add('infocard', 'shadow_b', stack)
   infocard.innerHTML = `
-    <ul class="btns above_all">
+    <ul class="btns z4">
       <li>
         <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
           <img src="../../assets/icons/app/close.svg">
