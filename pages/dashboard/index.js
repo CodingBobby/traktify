@@ -81,16 +81,27 @@ function rotate(x) {
 }
 
 //:::: INFOCARD ::::\\
-// moves in one direction through the stacks
-function testCards() {
-  addInfoCard(exampleInfo, 'left')
-  addInfoCard(exampleInfo, 'left')
-  addInfoCard(exampleInfo, 'middle')
-  addInfoCard(exampleInfo, 'right')
+function testCards(n) { // insert and display n dummy cards
+  let half = n/2
+  if(half !== (half).toFixed(0)) {
+    half += 0.5
+  }
+
+  for(let i=0; i<n; i++) {
+    if(i<half) {
+      addInfoCard(exampleInfo, 'left')
+    } else if(i>half) {
+      addInfoCard(exampleInfo, 'right')
+    } else {
+      addInfoCard(exampleInfo, 'middle')
+    }
+  }
+
   triggerInfoCardOverlay()
   generateStackSlider()
 }
 
+// moves in one direction through the stacks
 function moveCards(clickedButton, direction) {
   let stacks = getCardStacks()
   switch(direction) {
@@ -166,6 +177,7 @@ function triggerInfoCardOverlay() {
   } else {
     // close it
     infocard_overlay.style.display = 'none'
+    document.getElementById('infocard_stack').innerHTML = ''
     dark_overlay.classList.remove('dark_overlay')
   }
 }
@@ -225,28 +237,25 @@ function generateStackSlider() {
     + stacks.middle.length // will always be 1, this makes it understandable
     + stacks.right.length
 
-  // Checking if we actually need an indicator which is not the case if there is only one card.
-  if(totalSize !== 1) {
-    // set the width of the thump to match the ratio
-    let sliderWidth = slider.offsetWidth
-    let styler = document.querySelector('[data="indicator"]')
-    styler.innerHTML = `
-      #indicator input::-webkit-slider-thumb {
-        width: ${sliderWidth/totalSize}px !important;
-      }
-    `
-
-    // set position of the thumb
-    slider.min = 1;
-    slider.max = totalSize
-    slider.value = stacks.left.length+1
-  } else {
-    slider.style.display = 'none'
+  // Here, we could check if there are more than one items, but its okay to show a single red bar for now.
+  // set the width of the thump to match the ratio
+  let sliderWidth = slider.offsetWidth/totalSize
+  if(sliderWidth < 5) {
+    sliderWidth = 5 // fix width to height, so it stays visible
   }
+
+  let styler = document.querySelector('[data="indicator"]')
+  styler.innerHTML = `
+    #indicator input::-webkit-slider-thumb {
+      width: ${sliderWidth}px !important;
+    }
+  `
+  // set position of the thumb
+  slider.min = 1;
+  slider.max = totalSize
+  slider.value = stacks.left.length+1
 }
 
-
-//:::: SIDEBAR ::::\\
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-BAR :::::::::::::::::::::::::::::::::::::::::::::::*/
 
@@ -797,7 +806,8 @@ async function generatePosterSection(update) {
       subtitle: subtitle,
       rating: next.rating,
       id: item.show.show.ids.tvdb,
-      season: next.season
+      season: next.season,
+      matcher: `${item.show.show.ids.tvdb}_e_${next.season}_${next.number}`
     })
   })
 
@@ -808,10 +818,16 @@ async function generatePosterSection(update) {
 async function createPoster(itemToAdd) {
   let li = document.createElement('li')
   li.classList.add('poster', 'poster-dashboard', 'shadow_h')
+  // This is the most important one, as it will tell the rest of the app what item the poster shows. It will be used to provide information when the user clicks on this item.
+  li.setAttribute('data_matcher', itemToAdd.matcher)
+
   li.setAttribute('data_title', itemToAdd.title)
   li.setAttribute('data_subtitle', itemToAdd.subtitle)
+
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
+
+  li.setAttribute('onclick', 'openInfoCard(this)')
 
   let poster_content = document.createElement('div')
   poster_content.classList.add('poster-content')
@@ -901,6 +917,29 @@ function toggleAnimation(x, y, z) {
   void x.offsetWidth
   x.innerText = z
   x.classList.add(y)
+}
+
+function openInfoCard(poster) {
+  // <id>_<m,t,s,e,p,l>_[season]_[episode]
+  let matcher = poster.getAttribute('data_matcher')
+  debugLog('info card', matcher)
+  matcher = matcher.split('_')
+
+  let id = matcher[0]
+
+  switch(matcher[1]) {
+    case 'e': { // episode
+      addInfoCard({
+        img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+        title: poster.getAttribute('data_title'),
+        description: 'Lorem ipsum dolor sit amet.'
+      }, 'middle')
+      break
+    }
+  }
+
+  triggerInfoCardOverlay()
+  generateStackSlider()
 }
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/

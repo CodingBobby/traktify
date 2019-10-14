@@ -68,6 +68,10 @@
   overflow-y: scroll;
 }
 
+.cardcontent::-webkit-scrollbar {
+  display: none;
+}
+
 .infocard .banner {
   max-height: 200px;
   overflow: hidden;
