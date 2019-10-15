@@ -83,17 +83,17 @@ function rotate(x) {
 //:::: INFOCARD ::::\\
 function testCards(n) { // insert and display n dummy cards
   let half = n/2
-  if(half !== (half).toFixed(0)) {
+  if(half != (half).toFixed(0)) {
     half += 0.5
   }
 
   for(let i=0; i<n; i++) {
     if(i<half) {
       addInfoCard(exampleInfo, 'left')
-    } else if(i>half) {
-      addInfoCard(exampleInfo, 'right')
-    } else {
+    } else if(i==half) {
       addInfoCard(exampleInfo, 'middle')
+    } else {
+      addInfoCard(exampleInfo, 'right')
     }
   }
 
@@ -920,7 +920,7 @@ function toggleAnimation(x, y, z) {
 }
 
 function openInfoCard(poster) {
-  // <id>_<m,t,s,e,p,l>_[season]_[episode]
+  // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
   let matcher = poster.getAttribute('data_matcher')
   debugLog('info card', matcher)
   matcher = matcher.split('_')
