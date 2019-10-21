@@ -7,7 +7,8 @@ module.exports = {
    getUserStats: getUserStats,
    getSeasonPoster: getSeasonPoster,
    getUnfinishedProgressList: getUnfinishedProgressList,
-   reloadAllItems: reloadAllItems
+   reloadAllItems: reloadAllItems,
+   getBufferArea: getBufferArea
 }
 
 
@@ -515,6 +516,97 @@ function getShowProgress(id, update) {
    }, false)
 }
 
+// This will be used to get data for the card slider when clicking on an episode.
+// TODO: delay triggering (on renderer side, not here!) to prevent buffering too many items when scrolling quickly through a list.
+async function getBufferArea(id, s, e, onSeasons, onFirst, onBuffer) {
+   let seasonList;
+   let episodeData = await requestEpisodeData(id, s, e).then(async d => {
+      // We first have to know the length of the season. With that information, we can add the required amount of cards to the stack—which will be done by the renderer receiving the callback.
+      seasonList = await requestSeasonList(id).then(seasons => {
+         let total = 0
+         seasons.forEach(el => {
+            if(el.title != 'Specials') {
+               total += el.episode_count
+            }
+         })
+
+         onSeasons({
+            total: total,
+            current: d.number_abs
+         })
+         return seasons
+      })
+      
+      // Now, we can send the episode data back via the callback.
+      onFirst(d)
+      return d
+   })
+
+   // now we can start with the buffer
+   let episodeList = await requestEpisodeList(id, s).then(r => r)
+
+   let numList = []
+   episodeList.filter((el, i) => {
+      if(el.season == s && el.number == e) {
+         // buffers will be requested in this order
+         numList = [i, i+1, i-1, i+2, i-2]
+         return true
+      } else return false
+   })
+
+   let indexList = []
+   numList.forEach(i => {
+      // season and episode index relative to current position
+      let si, ei
+      if(i < 0) {
+         si = -1
+         ei = i
+      } else if(i > episodeList.length-1) {
+         si = 1
+         ei = Math.abs(episodeList.length - i)
+      } else {
+         si = 0
+         ei = i
+      }
+      indexList.push({si, ei})
+   })
+
+   console.log('indexList', indexList)
+
+   // In the code above, I assumed that seasons which finished airing always contain more than one episode. Otherwise, the buffer would have to jump across more than two different seasons in one direction. Hopefully such show does not exist.
+
+   function translateIndex(array, index) {
+      if(index < 0) {
+         return array.length - index
+      } else return index+1
+   }
+
+   function sumUntil(array, index) {
+      let sum = 0
+      for(let i=0; i<index; i++) {
+         if(array[i].title != 'Specials') {
+            sum += array[i].episode_count
+         }
+      }
+      console.log('sum of', array, 'up to', index, 'is', sum)
+      return sum
+   }
+
+   indexList.shift() // remove first element, as its already returned
+   indexList.forEach(async i => {
+      let seasonNum = Number(s) + i.si // numberizing required!
+
+      if(seasonNum <= await seasonList.length) {
+         episodeList = requestEpisodeList(id, seasonNum).then(r => r)
+         let epBuffer = requestEpisodeData(id, seasonNum,
+            translateIndex(episodeList, i.ei)
+         )
+         let totalIndex = sumUntil(seasonList, seasonNum) + i.ei
+         console.log('buffer', totalIndex, epBuffer)
+         onBuffer(await epBuffer, totalIndex)
+      }
+   })
+}
 
 //
 // REQUEST WRAPPERS
@@ -604,6 +696,30 @@ function requestHiddenItems() {
    }).then(res => {
       debugLog('requesting time', Date.now()-requestTime)
       return res
+   })
+}
+
+
+function requestSeasonList(id) {
+   return trakt.seasons.summary({
+      id: id,
+      extended: 'full'
+   })
+}
+
+function requestEpisodeList(id, season) {
+   return trakt.seasons.season({
+      id: id,
+      season: season
+   })
+}
+
+function requestEpisodeData(id, season, episode) {
+   return trakt.episodes.summary({
+      id: id,
+      season: season,
+      episode: episode,
+      extended: 'full'
    })
 }
 

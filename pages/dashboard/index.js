@@ -173,7 +173,6 @@ function triggerInfoCardOverlay() {
     // open it
     infocard_overlay.style.display = 'flex'
     dark_overlay.classList.add('dark_overlay')
-    updateLeftRightButtons()
   } else {
     // close it
     infocard_overlay.style.display = 'none'
@@ -183,7 +182,7 @@ function triggerInfoCardOverlay() {
 }
 
 
-function addInfoCard(itemToAdd, position) {
+function addInfoCard(position, index) {
   let stack
   switch(position) {
     case 'left':
@@ -197,7 +196,7 @@ function addInfoCard(itemToAdd, position) {
       break
   }
   let infocard_stack = document.getElementById('infocard_stack')
-  infocard_stack.appendChild(generateInfoCard(itemToAdd, stack))
+  infocard_stack.appendChild(addInfoCardDummy(stack, index))
 }
 
 exampleInfo = {
@@ -206,10 +205,25 @@ exampleInfo = {
   description: 'Lorem ipsum dolor sit amet.'
 }
 
-function generateInfoCard(itemToAdd, stack) {
+function addInfoCardDummy(stack, index) {
   let infocard = document.createElement('div')
-  infocard.classList.add('infocard', 'shadow_b', stack)
+  infocard.classList = 'infocard shadow_b '+stack
+  infocard.id = 'card_'+index
   infocard.innerHTML = `
+    <ul class="btns z4">
+      <li>
+        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
+          <img src="../../assets/icons/app/close.svg">
+        </div>
+      </li>
+    </ul>
+    <div class="cardcontent"></div>
+  `
+  return infocard
+}
+
+function generateInfoCardContent(updates) {
+  return `
     <ul class="btns z4">
       <li>
         <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
@@ -219,15 +233,14 @@ function generateInfoCard(itemToAdd, stack) {
     </ul>
     <div class="cardcontent">
       <div class="banner">
-        <img src="${itemToAdd.img}">
+        <img src="${updates.img}">
       </div>
       <div class="infosection white_t">
-        <h2>${itemToAdd.title}</h2>
-        <p class="white_t">${itemToAdd.description}</p>
+        <h2>${updates.title}</h2>
+        <p class="white_t">${updates.description}</p>
       </div>
     </div>
   `
-  return infocard
 }
 
 function generateStackSlider() {
@@ -254,6 +267,20 @@ function generateStackSlider() {
   slider.min = 1;
   slider.max = totalSize
   slider.value = stacks.left.length+1
+}
+
+function updateInfoCard(itemUpdates, index) {
+  let stacks = getCardStacks()
+  console.log('index', index)
+
+  if(index < stacks.left.length) {
+    stacks.left[index].innerHTML = generateInfoCardContent(itemUpdates)
+  } else if(index == stacks.left.length) {
+    stacks.middle[0].innerHTML = generateInfoCardContent(itemUpdates)
+    console.log(stacks.middle[0])
+  } else {
+    stacks.right[index - stacks.left.length-1].innerHTML = generateInfoCardContent(itemUpdates)
+  }
 }
 
 
@@ -807,7 +834,7 @@ async function generatePosterSection(update) {
       rating: next.rating,
       id: item.show.show.ids.tvdb,
       season: next.season,
-      matcher: `${item.show.show.ids.tvdb}_e_${next.season}_${next.number}`
+      matcher: `${item.show.show.ids.trakt}_e_${next.season}_${next.number}`
     })
   })
 
@@ -925,21 +952,51 @@ function openInfoCard(poster) {
   debugLog('info card', matcher)
   matcher = matcher.split('_')
 
-  let id = matcher[0]
+  let showId = matcher[0]
 
   switch(matcher[1]) {
     case 'e': { // episode
-      addInfoCard({
-        img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-        title: poster.getAttribute('data_title'),
-        description: 'Lorem ipsum dolor sit amet.'
-      }, 'middle')
+      let seasonNum = matcher[2]
+      let episodeNum = matcher[3]
+
+      let bufferData = getBufferArea(showId, seasonNum, episodeNum,
+        epPosition => { // onSeasons
+          let leftStackSize = epPosition.current - 1
+          let rightStackSize = epPosition.total - epPosition.current
+
+          let i = 0
+
+          for(i; i<leftStackSize; i++) {
+            addInfoCard('left', i)
+          }
+          addInfoCard('middle', i+1)
+
+          for(let j=0; j<rightStackSize; j++) {
+            addInfoCard('right', i+1+j)
+          }
+          updateLeftRightButtons()
+          generateStackSlider()
+        }, epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard({
+            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+            title: epData.title,
+            description: epData.overview
+          }, index)
+        }, (bufferData, pos) => { // onBuffer
+        updateInfoCard({
+          img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+          title: bufferData.title,
+          description: bufferData.overview
+        }, pos) // position will be the total index in the stack
+      })
+
       break
     }
   }
 
   triggerInfoCardOverlay()
-  generateStackSlider()
 }
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/
