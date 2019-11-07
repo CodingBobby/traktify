@@ -41,7 +41,7 @@ const TmDB = require('moviedb-promise')
 const request = require('request')
 
 const {
-  debugLog, inRange, shadeHexColor, clone
+  debugLog, inRange, shadeHexColor, clone, ipcChannels
 } = require('./modules/helper.js')
 global.debugLog = debugLog
 
@@ -602,4 +602,15 @@ ipcMain.on('cache', (event, details) => {
       break
     }
   }
+})
+
+
+//:::: LOG LISTENER ::::\\
+ipcMain.on('log', (event, details) => {
+  /** details:
+   *    action,
+   *    log
+   */
+  // using the helper here to make calls from the main possible as well
+  ipcChannels['log'](details)
 })

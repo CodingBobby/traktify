@@ -1,12 +1,16 @@
 module.exports = class Queue {
    constructor(options) {
-      // options: { ?frequency }
+      // options: { ?frequency, ?reverse }
       options = options || {}
+
       if(options.frequency) {
          this._timeOut = 1e3/options.frequency
       } else {
          this._timeOut = 1e3
       }
+
+      this._reverse = options.reverse
+
       this._taskList = []
    }
  
@@ -22,16 +26,16 @@ module.exports = class Queue {
          })
       }
    
-      //console.log('enqueuing job...')
+      // enqueuing job
       this._enqueue(job)
    
-      // strart the queue if it hasn't already
+      // start the queue if it hasn't already
       if(!this._interval) {
-         //console.log('starting ticker...')
+         // starting ticker
          this._interval = setInterval(() => {
             let result = this._doTick()
             if(!result) {
-               //console.log('stopping ticker...')
+               // stopping ticker
                clearInterval(this._interval)
                this._interval = null
             }
@@ -41,22 +45,33 @@ module.exports = class Queue {
  
    _enqueue(job) {
       let len = this._taskList.push(job)
-      //console.log('list length:', len)
    }
  
    _doTick() {
-      let jobIndex = this._taskList.length - 1
+      let jobIndex
+      if(this._reverse) {
+         jobIndex = 0
+      } else {
+         jobIndex = this._taskList.length - 1
+      }
+      
    
-      if(jobIndex === -1) {
-         //console.log('no job available...')
+      if(this._taskList.length === 0) {
+         // no job available
          return null
       } else {
-         //console.log('ticking...')
+         // ticking
          let job = this._taskList[jobIndex]
          let result = job.run()
             .then(r => r)
             .catch(e => e)
-         this._taskList.pop()
+         
+         if(this._reverse) {
+            this._taskList.shift()
+         } else {
+            this._taskList.pop()
+         }
+         
          return result
       }
    }
@@ -68,7 +83,7 @@ module.exports = class Queue {
             String(j.args) == String(t.args)
             && String(j.callback) == String(t.callback)
          ) {
-            //console.log('found duplicate!')
+            // found duplicate
             indices.push(index)
          }
       })

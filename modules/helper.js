@@ -1,24 +1,78 @@
 const fs = require('fs')
 
-
 const config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
 
+const LogQueue = new(require(__dirname+'/queue.js'))({
+   frequency: 5,
+   reverse: true
+})
+
+
+class IPCChannels {
+   constructor() {}
+   log(details) {
+      switch(details.action) {
+         case 'save': {
+            let logPath = './.log'
+            LogQueue.add(function() {
+               fs.stat(logPath, function(err, stat) {
+                  if(err == null) {
+                     let currentLog = fs.readFileSync(logPath)
+                     fs.writeFileSync(logPath, currentLog+'\n'+details.log)
+                  } else if(err.code == 'ENOENT') {
+                     // file does not exist yet
+                     fs.writeFileSync(logPath, 'TRAKTIFY LOG\n'+details.log)
+                  } else {
+                     console.log('Error occured while saving log: ', err.code)
+                  }
+               })
+            })
+      
+            break
+         }
+      }
+   }
+}
+
+class IPCParallel {
+   send(channel, details) {
+      ipcChannels[channel](details)
+   }
+}
+
+const ipcChannels = new IPCChannels()
+const ipcParallel = new IPCParallel()
+
+
 function debugLog(...args) {
+   // helper used a little later
+   function saveLog(str) {
+      let ipc
+      if(typeof ipcRenderer === 'undefined') {
+         ipc = ipcParallel
+      } else {
+         ipc = ipcRenderer
+      }
+
+      ipc.send('log', {
+         action: 'save',
+         log: str
+      })
+   }
+
+   let date = new Date()
+   let time = `${
+      date.getHours().toString().length === 1
+         ? '0'+date.getHours() : date.getHours()
+   }:${
+      date.getMinutes().toString().length === 1
+         ? '0'+date.getMinutes() : date.getMinutes()
+   }:${
+      date.getSeconds().toString().length === 1
+         ? '0'+date.getSeconds() : date.getSeconds()
+   }`
+
    if(process.env.NODE_ENV !== 'production') {
-      let date = new Date()
-      let hr = date.getHours().toString().length === 1 ? '0'+date.getHours() : date.getHours()
-      let mi = date.getMinutes().toString().length === 1 ? '0'+date.getMinutes() : date.getMinutes()
-      let se = date.getSeconds().toString().length === 1 ? '0'+date.getSeconds() : date.getSeconds()
-      let time = `${
-         date.getHours().toString().length === 1
-            ? '0'+date.getHours() : date.getHours()
-      }:${
-         date.getMinutes().toString().length === 1
-            ? '0'+date.getMinutes() : date.getMinutes()
-      }:${
-         date.getSeconds().toString().length === 1
-            ? '0'+date.getSeconds() : date.getSeconds()
-      }`
       if(args[0] == 'err' || args[0] == 'error') {
          console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])
          if(args[2]) {
@@ -38,6 +92,12 @@ function debugLog(...args) {
          }
       }
    }
+
+   // some light formatting for the saved log
+   saveLog(date.toISOString()
+      .split('T').join(' ')
+      .split('Z').join('')
+      +': '+args)
 }
 
 // Range must be an array of two numeric values
@@ -89,5 +149,5 @@ function clone(object) {
 
 
 module.exports = {
-   config, debugLog, inRange, shadeHexColor, clone
+   config, debugLog, inRange, shadeHexColor, clone, ipcChannels, ipcParallel
 }
