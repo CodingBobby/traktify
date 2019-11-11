@@ -13,13 +13,10 @@ window.onload = function() {
   debugLog('window', 'dashboard loading')
   updateApp() // update settings
   generatePosterSection() // show the up next to watch posters
-  updateRpc() // show rpc on discord
-  
-  // testing
-  // testCards()
+  updateRpc() // show rpc on discord, handling the on/off setting is done within this function and doesn't have to be done here!
 }
 
-// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
+// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet. It is used to change the look of the app.
 ipcRenderer.on('modify-root', (event, data) => {
   let variables = document.styleSheets[0]
     .cssRules[0].style.cssText.split(';')
@@ -36,26 +33,51 @@ ipcRenderer.on('modify-root', (event, data) => {
   document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
 })
 
+// Identifies the currently open panel. Makes it easier to check against closed panels, as this would require each of them to check on their own.
+let openedPanel = null
+/**
+ * sidebar,
+ * cards
+ */
+
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
 document.onkeydown = function() {
   if(event.metaKey && event.keyCode === 83) { // meta + S
     debugLog('shortcut', 'Meta + S')
-    show(document.getElementById('search_button_side'))
-    triggerSidePanel('search')
+    if(openedPanel !== 'cards') {
+      show(document.getElementById('search_button_side'))
+      triggerSidePanel('search')
+    }
     return false
   } else if(event.metaKey && event.keyCode === 188) { // meta + ,
     debugLog('shortcut', 'Meta + ,')
-    show(document.getElementById('settings_button_side'))
-    triggerSidePanel('settings')
+    if(openedPanel !== 'cards') {
+      show(document.getElementById('settings_button_side'))
+      triggerSidePanel('settings')
+    }
     return false
   } else if(event.keyCode === 27) { // ESC
     debugLog('shortcut', 'ESC')
     // close the currently open panel
-    try {
+    if(openedPanel == 'sidebar') {
       triggerSidePanel(sideBar.status)
-    } catch(err) {
-      debugLog('error', 'no side panel available to close')
+    } else if(openedPanel == 'cards') {
+      triggerInfoCardOverlay()
     }
+  } else if(event.keyCode === 39) { // arrow right
+    debugLog('shortcut', 'ArrowRight')
+    if(openedPanel == 'cards') {
+      moveCards(null, 'right')
+    }
+  } else if(event.keyCode === 37) { // arrow left
+    debugLog('shortcut', 'ArrowLeft')
+    if(openedPanel == 'cards') {
+      moveCards(null, 'left')
+    }
+  } else if(event.keyCode === 38) { // arrow up
+
+  } else if(event.keyCode === 40) { // arrow down
+
   }
 }
 
@@ -81,25 +103,9 @@ function rotate(x) {
 }
 
 //:::: INFOCARD ::::\\
-function testCards(n) { // insert and display n dummy cards
-  let half = n/2
-  if(half != (half).toFixed(0)) {
-    half += 0.5
-  }
 
-  for(let i=0; i<n; i++) {
-    if(i<half) {
-      addInfoCard(exampleInfo, 'left')
-    } else if(i==half) {
-      addInfoCard(exampleInfo, 'middle')
-    } else {
-      addInfoCard(exampleInfo, 'right')
-    }
-  }
-
-  triggerInfoCardOverlay()
-  generateStackSlider()
-}
+// This variable can be overwritten by different new <>Buffer() classes.
+let localBuffer
 
 // moves in one direction through the stacks
 function moveCards(clickedButton, direction) {
@@ -171,10 +177,12 @@ function triggerInfoCardOverlay() {
   let dark_overlay = document.getElementById('info_overlay')
   if(infocard_overlay.style.display === 'none') {
     // open it
+    openedPanel = 'cards'
     infocard_overlay.style.display = 'flex'
     dark_overlay.classList.add('dark_overlay')
   } else {
     // close it
+    openedPanel = null
     infocard_overlay.style.display = 'none'
     document.getElementById('infocard_stack').innerHTML = ''
     dark_overlay.classList.remove('dark_overlay')
@@ -442,6 +450,7 @@ function triggerSidePanel(panelName) {
 
   if(sideBar.status == 'none') {
     sideBar.status = panelName
+    openedPanel = 'sidebar'
 
     // fading out the background
     overlay.classList.add('show')
@@ -461,6 +470,7 @@ function triggerSidePanel(panelName) {
       removeSearchResults()
     }
     sideBar.status = 'none'
+    openedPanel = null
 
     // removing the settings panel
     side_panel.classList.remove('side_panel_animate_in')
