@@ -618,7 +618,8 @@ function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
    } else {
       // In this case, everything that was cached is uptodate
       debugLog('cache available', cacheKey)
-      return cacheContent
+      // Returning a resolved Promise, so it will have the same type as the case above. That way it can be used with a .then() later in the caller without needing to know if the result comes from cache or an API request.
+      return Promise.resolve(cacheContent)
    }
 }
 
