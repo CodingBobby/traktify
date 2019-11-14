@@ -18,7 +18,8 @@
       getSeasonPoster,
       getUnfinishedProgressList,
       reloadAllItems,
-      getBufferArea
+      getBufferArea,
+      showBuffer
     } = require('../../modules/request.js');
     const request = require('../../modules/request.js');
     const rpc = require('../../modules/rpc.js');
@@ -30,7 +31,7 @@
   <div class="wrapper flex dashboard">
 
     <div id="infocard_overlay" style="display: none;" class="white_t">
-      <ul class="btns z4">
+      <ul class="btns z4" style="top: -22px; position: relative">
         <li>
           <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards(this, 'left')">
             <img src="../../assets/icons/app/left.svg">
