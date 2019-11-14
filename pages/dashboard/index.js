@@ -124,8 +124,22 @@ function moveCards(clickedButton, direction) {
 
       // TODO: Logging is only temporary, use results for actual rendering.
       localBuffer.move(1, {
-        first: x => console.log(x),
-        buffer: (x, y) => console.log(x)
+        first: epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard({
+            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+            title: epData.title,
+            description: epData.overview
+          }, index)
+        },
+        buffer: (bufferData, pos) => { // onBuffer
+          updateInfoCard({
+            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+            title: bufferData.title,
+            description: bufferData.overview
+          }, pos)
+        }
       })
       break
     case 'left':
@@ -141,8 +155,22 @@ function moveCards(clickedButton, direction) {
       }
 
       localBuffer.move(-1, {
-        first: x => console.log(x),
-        buffer: (x, y) => console.log(x)
+        first: epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard({
+            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+            title: epData.title,
+            description: epData.overview
+          }, index)
+        },
+        buffer: (bufferData, pos) => { // onBuffer
+          updateInfoCard({
+            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
+            title: bufferData.title,
+            description: bufferData.overview
+          }, pos)
+        }
       })
       break
   }
@@ -286,7 +314,7 @@ function generateStackSlider() {
 
 function updateInfoCard(itemUpdates, index) {
   let stacks = getCardStacks()
-  console.log('updating card', index)
+  debugLog('updating card', index)
 
   if(index < stacks.left.length) {
     stacks.left[index].innerHTML = generateInfoCardContent(itemUpdates)
@@ -980,7 +1008,6 @@ function openInfoCard(poster) {
 
       localBuffer.initAt(seasonNum, episodeNum, {
         size: epPosition => {
-          console.log('onsize')
           // remove possibly existing dummies that were used as a loading indicator
           document.getElementById('infocard_stack').innerHTML = ''
 
@@ -1002,7 +1029,6 @@ function openInfoCard(poster) {
           generateStackSlider()
         },
         first: epData => { // onFirst
-          console.log('onfirst', epData)
           // find index of the middle card
           let index = getCardStacks().left.length
           updateInfoCard({
@@ -1012,7 +1038,6 @@ function openInfoCard(poster) {
           }, index)
         },
         buffer: (bufferData, pos) => { // onBuffer
-          console.log('onbuffer', bufferData)
           updateInfoCard({
             img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
             title: bufferData.title,

@@ -592,7 +592,7 @@ module.exports.showBuffer = class showBuffer {
          
          // Now, we can send the episode data back via the callback and save it to the local scope.
          await on.first(d)
-         this.items[this.current] = d
+         this.items[this.current-1] = d
 
          this.updateBuffer(this.current, on)
       })
@@ -605,6 +605,7 @@ module.exports.showBuffer = class showBuffer {
     * @param {Function} on.buffer Callback for the buffered items.
     */
    move(dir, on) {
+      debugLog('cards', `moving ${dir>0 ? 'right' : 'left'}`)
       let newPos = this.current + dir
 
       // The new buffer position would be out of range. I hope this will never happen but in case it does, we'll clip it to the max or min.
@@ -614,6 +615,8 @@ module.exports.showBuffer = class showBuffer {
          newPos = this.items.length
       }
 
+      // update the current position in the buffer
+      this.current = newPos
       this.updateBuffer(newPos, on)
    }
 
@@ -627,8 +630,8 @@ module.exports.showBuffer = class showBuffer {
       let range = [0, 1, -1, 2, -2]
       range.forEach(r => {
          let epPos = pos+r
-         // the absolute positions can't become smaller than 1!
-         if(epPos > 0) {
+         // the absolute positions can't become smaller than 1 or greater the show length
+         if(epPos > 0 && epPos <= this.items.length) {
             this.queue.push(epPos)
          }
       })
@@ -643,7 +646,6 @@ module.exports.showBuffer = class showBuffer {
     */
    async nextInQueue(on) {
       if(this.queue.length > 0) {
-         console.log('queue', this.queue)
          let reqPos = this.queue[0]
          // remove it and possible dublicates from the queue
          this.queue = this.queue.filter(q => q != reqPos)
@@ -671,8 +673,7 @@ module.exports.showBuffer = class showBuffer {
     * @param {Number} pos Absolute index of the episode
     */
    requestEpisode(pos) {
-      console.log('requesting', pos)
-      if(this.items[pos] == null) {
+      if(this.items[pos-1] == null) {
          // a simple helper
          let counter = 0
 
@@ -682,7 +683,7 @@ module.exports.showBuffer = class showBuffer {
          for(let i=0; i<this.tree.length; i++) {
             let seasonLength = this.tree[i]
             counter += seasonLength
-            if(pos < counter) {
+            if(pos <= counter) {
                seasonIndex = i+1
                episodeIndex = pos - counter + seasonLength
                i = this.tree.length // trigger loop break
@@ -691,12 +692,12 @@ module.exports.showBuffer = class showBuffer {
 
          let id = this.id
          return getEpisodeData(id, seasonIndex, episodeIndex).then(epData => {
-            this.items[pos] = epData
+            this.items[pos-1] = epData
             return epData
          })
       } else {
          // item was already buffered before
-         return Promise.resolve(this.items[pos])
+         return Promise.resolve(this.items[pos-1])
       }
    }
 }
