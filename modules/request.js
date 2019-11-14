@@ -608,10 +608,10 @@ module.exports.showBuffer = class showBuffer {
       let newPos = this.current + dir
 
       // The new buffer position would be out of range. I hope this will never happen but in case it does, we'll clip it to the max or min.
-      if(newPos < 0) {
-         newPos = 0
-      } else if(newPos >= this.items.length) {
-         newPos = this.items.length - 1
+      if(newPos < 1) {
+         newPos = 1
+      } else if(newPos > this.items.length) {
+         newPos = this.items.length
       }
 
       this.updateBuffer(newPos, on)
@@ -619,46 +619,50 @@ module.exports.showBuffer = class showBuffer {
 
    /**
     * Updates the buffer to the new position and calculates the surrounding area to request.
-    * @param {Number} pos New position to move to
+    * @param {Number} pos New position to move to, absolute number.
     * @param {Function} on.first Callback for the data of the seen item.
     * @param {Function} on.buffer Callback for the buffered items.
     */
    updateBuffer(pos, on) {
       let range = [0, 1, -1, 2, -2]
       range.forEach(r => {
-         // queue the absolute positions
-         this.queue.push(pos+r)
+         let epPos = pos+r
+         // the absolute positions can't become smaller than 1!
+         if(epPos > 0) {
+            this.queue.push(epPos)
+         }
       })
 
-      // gets set to false as soon as one was buffered
-      let first = true
+      this.nextInQueue(on)
+   }
 
-      async function queueLoop(that, on) {
-         if(that.queue.length > 0) {
-            console.log('queue', that.queue)
-            let reqPos = that.queue[0]
-            // remove it and possible dublicates from the queue
-            that.queue = that.queue.filter(q => q != reqPos)
+   /**
+    * Recursive function that runs over the queue list where items were added by the updateBuffer() function.
+    * @param {Function} on.first Callback for the data of the seen item.
+    * @param {Function} on.buffer Callback for the buffered items.
+    */
+   async nextInQueue(on) {
+      if(this.queue.length > 0) {
+         console.log('queue', this.queue)
+         let reqPos = this.queue[0]
+         // remove it and possible dublicates from the queue
+         this.queue = this.queue.filter(q => q != reqPos)
 
-            if(first) {
-               console.log('queue pos', reqPos)
-               on.first(await that.requestEpisode(reqPos))
-               first = false
-            } else {
-               on.buffer(await that.requestEpisode(reqPos), reqPos-1)
-            }
-            
-            setTimeout(() => {
-               queueLoop(that, on)
-            }, 200)
+         if(reqPos == this.current) {
+            on.first(await this.requestEpisode(reqPos))
+         } else {
+            on.buffer(await this.requestEpisode(reqPos), reqPos-1)
          }
+         
+         // some time delay to allow flushing the quere
+         setTimeout(() => {
+            this.nextInQueue(on)
+         }, 200)
       }
-
-      queueLoop(this, on)
    }
 
    flushQueue() {
-      // This empties the queue, it does not fully kill the requesting process if some is currently running! The flushing is possible since the reqoesting queue is delayed after each finished item.
+      // This empties the queue, it does not fully kill the requesting process if some is currently running! The flushing is possible since the requesting queue is delayed after each finished item.
       this.queue = []
    }
 
