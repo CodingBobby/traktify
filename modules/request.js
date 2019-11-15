@@ -7,8 +7,7 @@ module.exports = {
    getUserStats: getUserStats,
    getSeasonPoster: getSeasonPoster,
    getUnfinishedProgressList: getUnfinishedProgressList,
-   reloadAllItems: reloadAllItems,
-   getBufferArea: getBufferArea
+   reloadAllItems: reloadAllItems
 }
 
 
