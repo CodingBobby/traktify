@@ -7,7 +7,8 @@ module.exports = {
    getUserStats: getUserStats,
    getSeasonPoster: getSeasonPoster,
    getUnfinishedProgressList: getUnfinishedProgressList,
-   reloadAllItems: reloadAllItems
+   reloadAllItems: reloadAllItems,
+   getBufferArea: getBufferArea
 }
 
 
@@ -368,69 +369,182 @@ function requestUserSettings() {
    })
 }
 
+//
+// BUFFER
+//
 
-//:::: CONTENT INDEXING ::::\\
+module.exports.showBuffer = class showBuffer {
+   constructor(showId) {
+      this.id = showId
 
-// The following functions are used by the loading screen. They attempt to request everything about the user that would take too long to perform within the app.
+      this.show = {
+         seasons: []
+      }
+      // array of episode_count
+      this.tree = []
+      // plain 1D array with a list of all items
+      this.items = []
+      // current position
+      this.current = 0
 
-function indexShows() {
-   /** shows:
-    *    all
-    *    finished
-    *    unfinished
-    */
-   return getAllShowsProgress(sortAndFilterProgress).then(shows => shows)
-}
-
-function sortAndFilterProgress(allShows) {
-   console.log('shows:', allShows.length)
-
-   cacheSave('showProgress')
-
-   let finishedShows = allShows.filter(s => {
-      return s.completed === s.aired
-   })
-
-   let unfinishedShows = allShows.filter(s => {
-      return s.completed !== s.aired
-   })
-
-   let result = {
-      all: allShows,
-      finished: finishedShows,
-      unfinished: unfinishedShows
+      // indices that are in queue to be requested
+      this.queue = []
    }
 
-   return result
-}
-
-async function getAllShowsProgress(onFinish, onFail) {
-   let showList = await getWatchedShows()
-   let hiddenShows = await getHiddenItems()
-   let visibleShows = filterAndSortShows(showList, hiddenShows)
-
-   console.log(visibleShows)
-
-   let showProgress = []
-
-   return new Promise((resolve, rej) => {
-      async function nextItem(counter) {
-         if(counter < visibleShows.length) {
-            let item = visibleShows[counter]
-   
-            let progress = await getShowProgress(item.show.ids.trakt)
-            showProgress.push(progress)
-   
-            nextItem(++counter)
-         } else {
-            resolve(onFinish(showProgress))
-         }
+   /**
+    * Initialize an array with an element for each episode.
+    * @param {Number} size Total size of TV show
+    */
+   applySize(size) {
+      for(let i=0; i<size; i++) {
+         this.items.push(null)
       }
-   
-      nextItem(0)
-   })
-}
+   }
 
+   /**
+    * Initialize the buffer at a given point in the TV show.
+    * @param {Number} s Number of the season
+    * @param {Number} e Number of the episode
+    * @param {Function} on.size Callback when the size of the entire show is known
+    * @param {Function} on.first Callback when full data for the current episode is available
+    * @param {Function} on.buffer Callback when one episode from the buffer area got requested. Will trigger once for each element.
+    */
+   initAt(s, e, on) {
+      getEpisodeData(this.id, s, e).then(async d => {
+         // We first have to know the length of the season. With that information, we can add the required amount of cards to the stack—which will be done by the renderer receiving the callback.
+         await getSeasonList(this.id).then(seasons => {
+            this.show.seasons = seasons
+
+            let total = 0
+            seasons.forEach(el => {
+               if(el.title != 'Specials') {
+                  // counting episodes but ignoring specials
+                  total += el.episode_count
+                  this.tree.push(el.episode_count)
+               }
+            })
+
+            let size = {
+               total: total,
+               current: d.number_abs
+            }
+
+            on.size(size)
+            this.applySize(size.total)
+            this.current = size.current
+         })
+         
+         // Now, we can send the episode data back via the callback and save it to the local scope.
+         await on.first(d)
+         this.items[this.current-1] = d
+
+         this.updateBuffer(this.current, on)
+      })
+   }
+
+   /**
+    * Moving through the buffer by a certain amount. To prevent buffer piling, this function has to be called in delay with the total movement happened during that delay.
+    * @param {Number} dir The amount of episodes to move, negative to move backwards.
+    * @param {Function} on.first Callback for the data of the seen item.
+    * @param {Function} on.buffer Callback for the buffered items.
+    */
+   move(dir, on) {
+      debugLog('cards', `moving ${dir>0 ? 'right' : 'left'}`)
+      let newPos = this.current + dir
+
+      // The new buffer position would be out of range. I hope this will never happen but in case it does, we'll clip it to the max or min.
+      if(newPos < 1) {
+         newPos = 1
+      } else if(newPos > this.items.length) {
+         newPos = this.items.length
+      }
+
+      // update the current position in the buffer
+      this.current = newPos
+      this.updateBuffer(newPos, on)
+   }
+
+   /**
+    * Updates the buffer to the new position and calculates the surrounding area to request.
+    * @param {Number} pos New position to move to, absolute number.
+    * @param {Function} on.first Callback for the data of the seen item.
+    * @param {Function} on.buffer Callback for the buffered items.
+    */
+   updateBuffer(pos, on) {
+      let range = [0, 1, -1, 2, -2]
+      range.forEach(r => {
+         let epPos = pos+r
+         // the absolute positions can't become smaller than 1 or greater the show length
+         if(epPos > 0 && epPos <= this.items.length) {
+            this.queue.push(epPos)
+         }
+      })
+
+      this.nextInQueue(on)
+   }
+
+   /**
+    * Recursive function that runs over the queue list where items were added by the updateBuffer() function.
+    * @param {Function} on.first Callback for the data of the seen item.
+    * @param {Function} on.buffer Callback for the buffered items.
+    */
+   async nextInQueue(on) {
+      if(this.queue.length > 0) {
+         let reqPos = this.queue[0]
+         // remove it and possible dublicates from the queue
+         this.queue = this.queue.filter(q => q != reqPos)
+
+         if(reqPos == this.current) {
+            on.first(await this.requestEpisode(reqPos))
+         } else {
+            on.buffer(await this.requestEpisode(reqPos), reqPos-1)
+         }
+         
+         // some time delay to allow flushing the quere
+         setTimeout(() => {
+            this.nextInQueue(on)
+         }, 200)
+      }
+   }
+
+   flushQueue() {
+      // This empties the queue, it does not fully kill the requesting process if some is currently running! The flushing is possible since the requesting queue is delayed after each finished item.
+      this.queue = []
+   }
+
+   /**
+    * Sends back data for a given episode number.
+    * @param {Number} pos Absolute index of the episode
+    */
+   requestEpisode(pos) {
+      if(this.items[pos-1] == null) {
+         // a simple helper
+         let counter = 0
+
+         // these two will be determined in the following loop
+         let seasonIndex = 0
+         let episodeIndex = 0
+         for(let i=0; i<this.tree.length; i++) {
+            let seasonLength = this.tree[i]
+            counter += seasonLength
+            if(pos <= counter) {
+               seasonIndex = i+1
+               episodeIndex = pos - counter + seasonLength
+               i = this.tree.length // trigger loop break
+            }
+         }
+
+         let id = this.id
+         return getEpisodeData(id, seasonIndex, episodeIndex).then(epData => {
+            this.items[pos-1] = epData
+            return epData
+         })
+      } else {
+         // item was already buffered before
+         return Promise.resolve(this.items[pos-1])
+      }
+   }
+}
 
 
 //
@@ -490,7 +604,6 @@ function getUnfinishedProgressList(n, update) {
    })
 }
 
-
 function getShowList(update) {
    if(update) {
       let cache = new Cache('itemList')
@@ -515,6 +628,31 @@ function getShowProgress(id, update) {
    }, false)
 }
 
+function getSeasonList(id, update) {
+   if(update) {
+      let cache = new Cache('seasonList')
+      cache.removeKey(id)
+      cache.save()
+   }
+
+   return cacheRequest('seasonList', id, () => {
+      return requestSeasonList(id)
+   }, true)
+}
+
+function getEpisodeData(id, season, episode, update) {
+   let cacheId = id+'_'+season+'_'+episode
+
+   if(update) {
+      let cache = new Cache('episodeData')
+      cache.removeKey(cacheId)
+      cache.save()
+   }
+
+   return cacheRequest('episodeData', cacheId, () => {
+      return requestEpisodeData(id, season, episode)
+   }, true)
+}
 
 //
 // REQUEST WRAPPERS
@@ -578,9 +716,14 @@ function requestShowProgress(id) {
     *          completed
     *          last_watched_at
     */
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
    return trakt.shows.progress.watched({
       id: id,
       extended: 'full'
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
    })
 }
 
@@ -601,6 +744,58 @@ function requestHiddenItems() {
    return trakt.users.hidden.get({
       section: 'progress_watched',
       limit: 100
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
+}
+
+
+function requestSeasonList(id) {
+   /**
+    * []:
+    *    number
+    *    ids: trakt, tvdb, tmdb
+    *    rating
+    *    votes
+    *    episode_count
+    *    aired_episodes
+    *    title
+    *    overview
+    *    first_aired
+    *    network
+    */
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
+   return trakt.seasons.summary({
+      id: id, // showid
+      extended: 'full'
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
+}
+
+function requestEpisodeList(id, season) {
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
+   return trakt.seasons.season({
+      id: id,
+      season: season
+   }).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
+}
+
+function requestEpisodeData(id, season, episode) {
+   debugLog('api request', 'trakt')
+   let requestTime = Date.now()
+   return trakt.episodes.summary({
+      id: id,
+      season: season,
+      episode: episode,
+      extended: 'full'
    }).then(res => {
       debugLog('requesting time', Date.now()-requestTime)
       return res
@@ -642,12 +837,13 @@ function filterAndSortShows(all, hidden) {
  * @param {Boolean} saveRightAfter Save the data to cache after requesting it
  */
 function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
+   debugLog('cache', `requesting ${cacheKey} from ${cacheName}`)
    let cache = new Cache(cacheName)
    let cacheContent = cache.getKey(cacheKey)
 
    if(cacheContent === undefined) {
       return request().then(result => {
-         debugLog('caching', cacheKey)
+         debugLog('cache', `caching ${cacheKey}`)
 
          ipcRenderer.send('cache', {
             action: 'addKey',
@@ -664,8 +860,9 @@ function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
       })
    } else {
       // In this case, everything that was cached is uptodate
-      debugLog('cache available', cacheKey)
-      return cacheContent
+      debugLog('cache', `restoring ${cacheKey}`)
+      // Returning a resolved Promise, so it will have the same type as the case above. That way it can be used with a .then() later in the caller without needing to know if the result comes from cache or an API request.
+      return Promise.resolve(cacheContent)
    }
 }
 

@@ -7,6 +7,7 @@
 
 .wrapper.dashboard {
   height: 100vh;
+  width: 100vw;
 }
 
 .dashboard {
@@ -23,6 +24,124 @@
   border-radius: 5px;
 }
 
+/*
+--- INFOCARDS ---
+*/
+
+#infocard_overlay {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#infocard_stack {
+  width: 70%;
+  height: 70%;
+}
+
+.infocard {
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  border-radius: 8px;
+  background-color: var(--black);
+  transition: ease 0.5s;
+}
+
+.left_stack {
+  transform: translateX(-110%);
+  opacity: 0;
+}
+
+.right_stack {
+  transform: translateX(110%);
+  opacity: 0;
+}
+
+.cardcontent {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+}
+
+.cardcontent::-webkit-scrollbar {
+  display: none;
+}
+
+.infocard .banner {
+  max-height: 200px;
+  overflow: hidden;
+}
+
+.infocard .banner img {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+}
+
+.infosection {
+  padding: 20px;
+  width: calc(100% - 40px);
+  z-index: 1;
+}
+
+.infocard .btns {
+  display: inline-flex;
+  position: absolute;
+  margin: 0;
+  right: -12px;
+  top: -12px;
+}
+
+.infocard .btns li {
+  padding: 5px;
+}
+
+.infocard .btns .btn {
+  margin: 0;
+}
+
+.infocard .btn.icon {
+  padding: 5px;
+}
+
+.infocard .btn.icon img {
+  width: 18px;
+  height: 18px;
+}
+
+#indicator {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  bottom: 4%;
+  width: 100%;
+}
+
+#indicator input {
+  -webkit-appearance: none;
+  width: 35%;
+  height: 3px; /* has to be odd! */
+  border-radius: 3px;
+  background: var(--black);
+  outline: none;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+
+#indicator input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 30px;
+  height: 5px;
+  border-radius: 5px;
+  background: var(--accent_color);
+}
+
+/* POSTERS */
 .action_btn,
 .action_btn > img {
   display: inline-block;
@@ -165,6 +284,49 @@
   height: auto;
   margin-right: 4px;
 }
+
+.dark_overlay {
+  display: block !important;
+  animation: blend_in 0.15s !important;
+  animation-fill-mode: forwards !important;
+}
+
+#dash_overlay {
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: none;
+
+  position: absolute;
+  overflow: hidden;
+  z-index: 2;
+  background-color: rgb(20, 20, 20);
+
+  opacity: 0.75;
+  backdrop-filter: blur(8px);
+  animation: blend_out 0.15s;
+  animation-fill-mode: forwards;
+}
+
+#info_overlay {
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: none;
+
+  position: absolute;
+  overflow: hidden;
+  z-index: 6;
+  background-color: rgb(20, 20, 20);
+
+  opacity: 0.75;
+  backdrop-filter: blur(8px);
+  animation: blend_out 0.15s;
+  animation-fill-mode: forwards;
+}
+
 /*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 .side_panel {
   display: block;

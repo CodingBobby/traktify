@@ -288,6 +288,7 @@ function launchApp() {
 }
 
 function tryLogin() {
+  // First, we show the loading screen to tell the user that something is happening. Eventually, when all loading processes are finished, it will be closed again to reveal the dashboard.
   loadLoadingScreen()
 
   // wait until loading screen is fully loaded

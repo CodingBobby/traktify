@@ -17,7 +17,8 @@
       getUserStats,
       getSeasonPoster,
       getUnfinishedProgressList,
-      reloadAllItems
+      reloadAllItems,
+      showBuffer
     } = require('../../modules/request.js');
     const request = require('../../modules/request.js');
     const rpc = require('../../modules/rpc.js');
@@ -27,18 +28,47 @@
 <body>
   <div id="dragger"></div>
   <div class="wrapper flex dashboard">
+
+    <div id="infocard_overlay" style="display: none;" class="white_t">
+      <ul class="btns z4" style="top: -22px; position: relative">
+        <li>
+          <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards(this, 'left')">
+            <img src="../../assets/icons/app/left.svg">
+          </div>
+        </li>
+        <li>
+          <div id="stack_right_button" class="btn small icon red_b shadow_b right" onclick="moveCards(this, 'right')">
+            <img src="../../assets/icons/app/right.svg">
+          </div>
+        </li>
+      </ul>
+
+      <div id="infocard_stack">
+        <!-- Here, the info cards will go -->
+      </div>
+
+      <div id="indicator">
+        <style data="indicator" type="text/css"></style>
+        <input type="range" id="indicator_slider">  
+      </div>
+
+    </div>
+    <div id="info_overlay"></div>
+
     <ul class="btns top_p right z4" id="side_buttons">
       <li><div class="btn icon black_b shadow_b selected" id="search_button_side" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="settings_button_side" onclick="show(this); openSettings()"><img src="../../assets/icons/app/settings.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="logout_button_side" onclick="show(this); openLogout()"><img src="../../assets/icons/app/signout.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" onclick="show(this); reloadAllItems(this, this.parentElement.parentElement, function(_this) { rotate(_this) }, function(_this, par) { rotate(_this); show(par.children[0]) })"><img src="../../assets/icons/app/sync.svg"></div></li>
     </ul>
+
     <div class="side_panel top z3" id="side_panel"></div>
     <div class="overlay top z2" id="overlay" onclick="closeSidePanel()"></div>
     <div class="dashboard" id="dash">
       <div class="titles" id="poster_title"></div>
       <ul class="posters" id="posters"></ul>
     </div>
+
   </div>
   <a class="btn bottom right fw300 fs14 red_b white_t">History</a>
   <script src="../main.js"></script>

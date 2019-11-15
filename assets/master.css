@@ -114,6 +114,22 @@
   position: fixed;
 }
 
+.center {
+  position: relative;
+  height: 100%;
+}
+
+.center * {
+  overflow: auto;
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  /* set height property to the individual element */
+}
+
 .top {
   top: 0;
 }
