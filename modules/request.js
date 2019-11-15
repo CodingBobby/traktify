@@ -566,9 +566,9 @@ module.exports.showBuffer = class showBuffer {
     * @param {Function} on.buffer Callback when one episode from the buffer area got requested. Will trigger once for each element.
     */
    initAt(s, e, on) {
-      requestEpisodeData(this.id, s, e).then(async d => {
+      getEpisodeData(this.id, s, e).then(async d => {
          // We first have to know the length of the season. With that information, we can add the required amount of cards to the stack—which will be done by the renderer receiving the callback.
-         await requestSeasonList(this.id).then(seasons => {
+         await getSeasonList(this.id).then(seasons => {
             this.show.seasons = seasons
 
             let total = 0
@@ -784,6 +784,18 @@ function getShowProgress(id, update) {
    }, false)
 }
 
+function getSeasonList(id, update) {
+   if(update) {
+      let cache = new Cache('seasonList')
+      cache.removeKey(id)
+      cache.save()
+   }
+
+   return cacheRequest('seasonList', id, () => {
+      return requestSeasonList(id)
+   }, true)
+}
+
 function getEpisodeData(id, season, episode, update) {
    let cacheId = id+'_'+season+'_'+episode
 
@@ -912,7 +924,7 @@ function requestSeasonList(id) {
    debugLog('api request', 'trakt')
    let requestTime = Date.now()
    return trakt.seasons.summary({
-      id: id,
+      id: id, // showid
       extended: 'full'
    }).then(res => {
       debugLog('requesting time', Date.now()-requestTime)
@@ -981,12 +993,13 @@ function filterAndSortShows(all, hidden) {
  * @param {Boolean} saveRightAfter Save the data to cache after requesting it
  */
 function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
+   debugLog('cache', `requesting ${cacheKey} from ${cacheName}`)
    let cache = new Cache(cacheName)
    let cacheContent = cache.getKey(cacheKey)
 
    if(cacheContent === undefined) {
       return request().then(result => {
-         debugLog('caching', cacheKey)
+         debugLog('cache', `caching ${cacheKey}`)
 
          ipcRenderer.send('cache', {
             action: 'addKey',
@@ -1003,7 +1016,7 @@ function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
       })
    } else {
       // In this case, everything that was cached is uptodate
-      debugLog('cache available', cacheKey)
+      debugLog('cache', `restoring ${cacheKey}`)
       // Returning a resolved Promise, so it will have the same type as the case above. That way it can be used with a .then() later in the caller without needing to know if the result comes from cache or an API request.
       return Promise.resolve(cacheContent)
    }
