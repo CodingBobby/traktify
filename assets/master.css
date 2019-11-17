@@ -84,6 +84,7 @@
 }
 .fs14 {
   font-size: 14.5px;
+  line-height: 20.5px;
 }
 .fs12 {
   font-size: 12px;
@@ -361,6 +362,7 @@ body::after {
 
 .btn-switch {
   font-size: 10px;
+  line-height: 14.5px;
   position: relative;
   display: inline-block;
 }
