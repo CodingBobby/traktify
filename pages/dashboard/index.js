@@ -266,23 +266,37 @@ function generateInfoCardDummy(stack, index) {
 }
 
 function generateInfoCardContent(updates) {
-  return `
-    <ul class="btns z4">
-      <li>
-        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
-          <img src="../../assets/icons/app/close.svg">
-        </div>
-      </li>
-    </ul>
-    <div class="cardcontent">
-      <div class="banner">
+  return`
+    <div class="infocard_child black_b z4">
+      <div class="infocard_banner">
         <img src="${updates.img}">
+        <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
+        <div class="infocard_nav">
+          <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">previous<img src="../../assets/icons/app/left.svg"></div>
+          <div id="infocard_right" class="fw600 white_t tu" onclick="moveCards(this, 'right')"><img src="../../assets/icons/app/right.svg">next</div>
+        </div>
       </div>
-      <div class="infosection white_t">
-        <h2>${updates.title}</h2>
-        <p class="white_t">${updates.description}</p>
+      <div class="black_d_b" style="position:absolute;width:100%;padding:10px 0 10px 0;height:55px;z-index: -1;"></div>
+      <div style="max-width: 920px;margin:auto;">
+        <div class="infocard_titles infocard_padding black_d_b tOverflow">
+          <div class="rating">
+            <img src="../../assets/icons/app/heart.svg">
+            <span class="white_t fs18 fw700">83%</span>
+          </div>
+          <div class="vertical_border"></div>
+          <div class="fs23 fw500 white_t" style="max-width:500px;">${updates.title}</div>  
+        </div>
+        <div class="infocard_poster z1">   
+          <img class="shadow_h" src="../../assets/grid.png">
+          <div class="beta_action_btns">
+            <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
+            <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
+            <div class="beta_action_btn watched"><img src="../../assets/icons/app/check.svg"></div>
+          </div>
+        </div>
+        <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
       </div>
-    </div>
+    </div> 
   `
 }
 

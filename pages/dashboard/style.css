@@ -24,10 +24,64 @@
   border-radius: 5px;
 }
 
-/*
---- INFOCARDS ---
-*/
+.action_btn,
+.action_btn > img {
+  display: inline-block;
+  width: 16px;
+  height: 19px;
+}
 
+.action_btn:first-child {
+  margin-left: 0;
+}
+.action_btn:last-child {
+  margin-right: 0;
+}
+
+.action_btn::before {
+  position: absolute;
+  transform: translateY(-15%) translateX(calc(-100% - 7px));
+  opacity: 0;
+  visibility: hidden;
+  padding: 3px 25px;
+  font-size: 14px;
+  white-space: nowrap;
+  font-weight: 200;
+  color: var(--white);
+  border-radius: 3px 0 0 3px;
+  transition: all 200ms ease;
+  z-index: 1;
+}
+
+.action_btn:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
+
+.action_btn.play {
+  background-color: #C61017;
+}
+.action_btn.play::before {
+  content: 'Play Now?';
+  background-color: rgb(153, 13, 17);
+}
+
+.action_btn.list {
+  background-color: #2B678F;
+}
+.action_btn.list:before {
+  content: 'Add to watchlist?';
+  background-color: rgb(25, 61, 85);
+}
+
+.action_btn.history {
+  background-color: #8E44AD;
+}
+.action_btn.history:before {
+  content: 'Add to history?';
+  background-color: rgb(106, 51, 129);
+}
+/*:::::::::::::::::::::::::::::::::::::::::::::::: CARDS :::::::::::::::::::::::::::::::::::::::::::::::*/
 #infocard_overlay {
   width: 100%;
   height: 100%;
@@ -141,63 +195,145 @@
   background: var(--accent_color);
 }
 
-/* POSTERS */
-.action_btn,
-.action_btn > img {
+
+
+
+
+
+
+
+
+/*----------------- NEW CARDS----------------*/
+.infocard_child {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  overflow-y: auto;
+  margin: auto;
+}
+
+.infocard_child::-webkit-scrollbar {
+  display: none;
+}
+
+.infocard_padding {
+  padding: 10px 20px 10px 250px;
+}
+
+.infocard_banner {
+  height: 200px;
+  width: 100%;
+  position: relative;
+}
+.infocard_banner img {
+  width:  100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(10%);
+}
+
+
+.infocard_nav, 
+#infocard_close {
+  position: absolute;
+  right: 30px;
+
+}
+.infocard_nav {
+  bottom: 20px;
+}
+
+#infocard_close {
+  top: 20px;
+  line-height: 0;
+  padding: 10px!important;
+  border-radius: 3px;
+}
+
+#infocard_right {
+  background-color: #ED1C24;
+  border-radius: 0 3px 3px 0;
+}
+#infocard_left,
+#infocard_close {
+  border-radius: 3px 0 0 3px;
+}
+#infocard_left,
+#infocard_right,
+#infocard_left *,
+#infocard_right *,
+#infocard_close {
   display: inline-block;
+  vertical-align: middle;
+}
+#infocard_left,
+#infocard_right,
+#infocard_close {
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+#infocard_left:hover,
+#infocard_right:hover,
+#infocard_close:hover {
+  opacity: 0.8;
+}
+
+#infocard_left img { 
+  margin-left: 10px;
+}
+#infocard_right img { 
+  margin-right: 10px;
+}
+#infocard_left img,
+#infocard_right img,
+#infocard_close img {
+  filter: invert(100%);  
   width: 16px;
   height: 19px;
 }
 
-.action_btn:first-child {
-  margin-left: 0;
+
+.infocard_titles {
+  height: 55px;
 }
-.action_btn:last-child {
-  margin-right: 0;
+.infocard_titles * {
+  display: inline-block;
+  vertical-align: middle;
 }
 
-.action_btn::before {
+.infocard_titles .vertical_border {
+  margin: 0 20px;
+}
+
+.infocard_titles .rating {
+  line-height: 24px;
+  width: 40px;
+  height: 55px;
+  text-align: center;
+  white-space: normal;
+}
+.infocard_titles .rating > img {
+  width: 30px;
+  height: auto;
+}
+
+.infocard_description {
+  opacity: 0.8;
+  margin: 0 0 0 2px;
+}
+
+.infocard_poster {
   position: absolute;
-  transform: translateY(-15%) translateX(calc(-100% - 7px));
-  opacity: 0;
-  visibility: hidden;
-  padding: 3px 25px;
-  font-size: 14px;
-  white-space: nowrap;
-  font-weight: 200;
-  color: var(--white);
-  border-radius: 3px 0 0 3px;
-  transition: all 200ms ease;
-  z-index: 1;
+  transform: translateX(30px) translateY(-180px);
+  width: 190px;
 }
-
-.action_btn:hover::before {
-  opacity: 1;
-  visibility: visible;
-}
-
-.action_btn.play {
-  background-color: #C61017;
-}
-.action_btn.play::before {
-  content: 'Play Now?';
-  background-color: rgb(153, 13, 17);
-}
-
-.action_btn.list {
-  background-color: #2B678F;
-}
-.action_btn.list:before {
-  content: 'Add to watchlist?';
-  background-color: rgb(25, 61, 85);
-}
-
-.action_btn.history {
-  background-color: #8E44AD;
-}
-.action_btn.history:before {
-  content: 'Add to history?';
-  background-color: rgb(106, 51, 129);
+.infocard_poster > img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 .titles {
@@ -371,7 +507,7 @@
 }
 
 .panel_header_gradient {
-  margin-top: calc(44px + 16px);
+  margin-top: calc(44px + 12px);
   height: 16px;
   background-image: linear-gradient(
     to bottom,

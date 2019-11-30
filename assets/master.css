@@ -201,12 +201,19 @@
 .red_d_b {
   background-color: var(--accent_color_d);
 }
-/*::::::::::::::::::::::::::::::::::::::::::::::: DROP-SHAWDOWS :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*::::::::::::::::::::::::::::::::::::::::::::::: ATTRIBUTES :::::::::::::::::::::::::::::::::::::::::::::::*/
 .shadow_h {
   box-shadow: 0px 0px 34px rgba(0, 0, 0, 0.3);
 }
 .shadow_b {
   box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
+}
+
+.vertical_border {
+  background-color: var(--white);
+  opacity: 0.06;
+  width: 1px;
+  height: 100%;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: COMPONENTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 body {
@@ -247,6 +254,7 @@ body::after {
   margin: auto;
 }
 /*::::::::::::::::::::::: LOADING :::::::::::::::::::::::*/
+
 .loading-animation {
   background: linear-gradient(to right, var(--accent_color), var(--accent_color_d), var(--accent_color));
   background-size: 600% 600%;
@@ -477,6 +485,57 @@ body::after {
 .poster, 
 .poster img {
   border-radius: 5px;
+}
+/*:::::::::::::::::::::::::::::::::::::::::::::::: ACTION-BUTTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
+.beta_action_btns {
+  margin: 30px 0;
+  width: 100%;
+}
+
+.beta_action_btn {
+  text-align: center;
+  padding: 5px 25px;
+  border-radius: 4px;
+  margin: 15px 0;
+  color: var(--white);
+  cursor: pointer;
+  transition: opacity 200ms ease;
+}
+
+.beta_action_btn:hover {
+  opacity: .8;
+}
+
+.beta_action_btn * {
+  vertical-align: middle;
+  display: inline-block;
+}
+
+.beta_action_btn > img {
+  width: 16px;
+  height: 19px;
+  margin-right: 10px;
+}
+
+.beta_action_btn.play {
+  background-color: #ED1C24;
+}
+.beta_action_btn.play::after {
+  content: 'Check in?'
+}
+
+.beta_action_btn.watchlist {
+  background-color: #3796D5;
+}
+.beta_action_btn.watchlist::after {
+  content: 'Watchlist'
+}
+
+.beta_action_btn.watched {
+  background-color: #BD57E8;
+}
+.beta_action_btn.watched::after {
+  content: 'Watched?'
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: ANIMATIONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .animation_slide_up {
