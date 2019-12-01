@@ -132,6 +132,7 @@ function moveCards(clickedButton, direction) {
             title: epData.title,
             description: epData.overview
           }, index)
+          updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
           updateInfoCard({
@@ -163,6 +164,7 @@ function moveCards(clickedButton, direction) {
             title: epData.title,
             description: epData.overview
           }, index)
+          updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
           updateInfoCard({
@@ -174,7 +176,6 @@ function moveCards(clickedButton, direction) {
       })
       break
   }
-  updateLeftRightButtons()
 }
 
 function getCardStacks() {
@@ -187,21 +188,21 @@ function getCardStacks() {
 
 function updateLeftRightButtons() {
   let stacks = getCardStacks()
-  let leftButton = document.getElementById('stack_left_button')
-  let rightButton = document.getElementById('stack_right_button')
+  let leftButton = document.getElementById('infocard_left')
+  let rightButton = document.getElementById('infocard_right')
 
   // check the left stack
   if(stacks.left.length === 0) {
     leftButton.style.display = 'none'
   } else {
-    leftButton.style.display = 'flex'
+    leftButton.style.display = 'inline-block'
   }
 
   // and now the right one
   if(stacks.right.length === 0) {
     rightButton.style.display = 'none'
   } else {
-    rightButton.style.display = 'flex'
+    rightButton.style.display = 'inline-block'
   }
 
   // update the position of the slider thumb
@@ -272,7 +273,7 @@ function generateInfoCardContent(updates) {
         <img src="${updates.img}">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
         <div class="infocard_nav">
-          <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">previous<img src="../../assets/icons/app/left.svg"></div>
+          <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">prev<img src="../../assets/icons/app/left.svg"></div>
           <div id="infocard_right" class="fw600 white_t tu" onclick="moveCards(this, 'right')"><img src="../../assets/icons/app/right.svg">next</div>
         </div>
       </div>
@@ -310,8 +311,8 @@ function generateStackSlider() {
   // Here, we could check if there are more than one items, but its okay to show a single red bar for now.
   // set the width of the thump to match the ratio
   let sliderWidth = slider.offsetWidth/totalSize
-  if(sliderWidth < 5) {
-    sliderWidth = 5 // fix width to height, so it stays visible
+  if(sliderWidth < 15) {
+    sliderWidth = 15 // fix width to height, so it stays visible
   }
 
   let styler = document.querySelector('[data="indicator"]')
@@ -1004,6 +1005,7 @@ function toggleAnimation(x, y, z) {
   x.classList.add(y)
 }
 
+// This is the first function thats being triggered when clicking on a poster
 function openInfoCard(poster) {
   // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
   let matcher = poster.getAttribute('data_matcher')
@@ -1039,7 +1041,6 @@ function openInfoCard(poster) {
           for(let j=1; j<=rightStackSize; j++) {
             addInfoCard('right', i+j)
           }
-          updateLeftRightButtons()
           generateStackSlider()
         },
         first: epData => { // onFirst
@@ -1050,6 +1051,7 @@ function openInfoCard(poster) {
             title: epData.title,
             description: epData.overview
           }, index)
+          updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
           updateInfoCard({

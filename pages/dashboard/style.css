@@ -177,7 +177,7 @@
 
 #indicator input {
   -webkit-appearance: none;
-  width: 35%;
+  width: 40%;
   height: 3px; /* has to be odd! */
   border-radius: 3px;
   background: var(--black);
@@ -248,16 +248,16 @@
   top: 20px;
   line-height: 0;
   padding: 10px!important;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 #infocard_right {
   background-color: #ED1C24;
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 4px 4px 0;
 }
 #infocard_left,
 #infocard_close {
-  border-radius: 3px 0 0 3px;
+  border-radius: 4px 0 0 4px;
 }
 #infocard_left,
 #infocard_right,
