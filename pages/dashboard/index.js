@@ -127,19 +127,14 @@ function moveCards(clickedButton, direction) {
         first: epData => { // onFirst
           // find index of the middle card
           let index = getCardStacks().left.length
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: epData.title,
-            description: epData.overview
-          }, index)
+          updateInfoCard(epData, index)
           updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: bufferData.title,
-            description: bufferData.overview
-          }, pos)
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
         }
       })
       break
@@ -159,19 +154,14 @@ function moveCards(clickedButton, direction) {
         first: epData => { // onFirst
           // find index of the middle card
           let index = getCardStacks().left.length
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: epData.title,
-            description: epData.overview
-          }, index)
+          updateInfoCard(epData, index)
           updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: bufferData.title,
-            description: bufferData.overview
-          }, pos)
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
         }
       })
       break
@@ -270,7 +260,7 @@ function generateInfoCardContent(updates) {
   return`
     <div class="infocard_child black_b z4">
       <div class="infocard_banner">
-        <img src="${updates.img}">
+        <img src="${updates.bannerUrl}">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
         <div class="infocard_nav">
           <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">prev<img src="../../assets/icons/app/left.svg"></div>
@@ -282,13 +272,15 @@ function generateInfoCardContent(updates) {
         <div class="infocard_titles infocard_padding black_d_b tOverflow">
           <div class="rating">
             <img src="../../assets/icons/app/heart.svg">
-            <span class="white_t fs18 fw700">83%</span>
+            <span class="white_t fs18 fw700">${updates.ratingPercent}%</span>
           </div>
           <div class="vertical_border"></div>
-          <div class="fs23 fw500 white_t" style="max-width:500px;">${updates.title}</div>  
+          <div class="fs23 fw500 white_t" style="max-width:500px;">
+            ${updates.seasonNumber}x${updates.episodeNumber} ${updates.episodeTitle}
+          </div>  
         </div>
         <div class="infocard_poster z1">   
-          <img class="shadow_h" src="../../assets/grid.png">
+          <img class="shadow_h" src="${updates.posterUrl}">
           <div class="beta_action_btns">
             <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
             <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
@@ -338,6 +330,29 @@ function updateInfoCard(itemUpdates, index) {
   } else {
     stacks.right[index - stacks.left.length-1].innerHTML = generateInfoCardContent(itemUpdates)
   }
+}
+
+function updateInfoCardImage(url, index) {
+  let stacks = getCardStacks()
+  debugLog('updating card images', index)
+
+  let card
+
+  if(index < stacks.left.length) {
+    card = stacks.left[index]
+  } else if(index == stacks.left.length) {
+    card = stacks.middle[0]    
+  } else {
+    card = stacks.right[index - stacks.left.length-1]
+  }
+
+  /** url:
+   *    banner
+   *    poster
+   *    actors[]
+   */
+  card.querySelector('.infocard_banner img').src = url.banner
+  card.querySelector('.infocard_poster img').src = url.poster
 }
 
 
@@ -1046,19 +1061,14 @@ function openInfoCard(poster) {
         first: epData => { // onFirst
           // find index of the middle card
           let index = getCardStacks().left.length
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: epData.title,
-            description: epData.overview
-          }, index)
+          updateInfoCard(epData, index)
           updateLeftRightButtons()
         },
         buffer: (bufferData, pos) => { // onBuffer
-          updateInfoCard({
-            img: 'https://fanart.tv/fanart/tv/75682/showbackground/bones-5009b3018d25e.jpg',
-            title: bufferData.title,
-            description: bufferData.overview
-          }, pos)
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
         }
       })
 

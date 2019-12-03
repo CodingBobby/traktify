@@ -372,9 +372,18 @@ function requestUserSettings() {
 // BUFFER
 //
 
+async function convertTraktToTvdb(id) {
+   return await getShowList().then(list => {
+      let trakt = list.map(s => s.show.ids.trakt)
+      let i = trakt.indexOf(Number(id))
+      return list[i].show.ids.tvdb
+   })
+}
+
 module.exports.showBuffer = class showBuffer {
    constructor(showId) {
       this.id = showId
+      this.tvdb = convertTraktToTvdb(this.id)
 
       this.show = {
          seasons: []
@@ -408,8 +417,8 @@ module.exports.showBuffer = class showBuffer {
     * @param {Function} on.first Callback when full data for the current episode is available
     * @param {Function} on.buffer Callback when one episode from the buffer area got requested. Will trigger once for each element.
     */
-   initAt(s, e, on) {
-      getEpisodeData(this.id, s, e).then(async d => {
+   async initAt(s, e, on) {
+      await getEpisodeData(this.id, s, e).then(async d => {
          // We first have to know the length of the season. With that information, we can add the required amount of cards to the stack—which will be done by the renderer receiving the callback.
          await getSeasonList(this.id).then(seasons => {
             this.show.seasons = seasons
@@ -434,11 +443,18 @@ module.exports.showBuffer = class showBuffer {
          })
          
          // Now, we can send the episode data back via the callback and save it to the local scope.
-         await on.first(d)
+         await on.first(this.formatUpdates(d))
          this.items[this.current-1] = d
 
          this.updateBuffer(this.current, on)
       })
+
+      on.images(await getShowImages(await this.tvdb).then(r => {
+         return {
+            banner: r.tvbanner[0].url,
+            poster: r.tvposter[0].url
+         }
+      }), this.current-1)
    }
 
    /**
@@ -493,11 +509,20 @@ module.exports.showBuffer = class showBuffer {
          // remove it and possible dublicates from the queue
          this.queue = this.queue.filter(q => q != reqPos)
 
+         let epData = this.formatUpdates(await this.requestEpisode(reqPos))
+
          if(reqPos == this.current) {
-            on.first(await this.requestEpisode(reqPos))
+            on.first(epData)
          } else {
-            on.buffer(await this.requestEpisode(reqPos), reqPos-1)
+            on.buffer(epData, reqPos-1)
          }
+
+         on.images(await getShowImages(await this.tvdb).then(r => {
+            return {
+               banner: r.tvbanner[0].url,
+               poster: r.tvposter[0].url
+            }
+         }), reqPos-1)
          
          // some time delay to allow flushing the quere
          setTimeout(() => {
@@ -541,6 +566,23 @@ module.exports.showBuffer = class showBuffer {
       } else {
          // item was already buffered before
          return Promise.resolve(this.items[pos-1])
+      }
+   }
+
+   formatUpdates(raw) {
+      return {
+         ratingPercent: ''+Math.round(raw.rating * 10),
+         episodeTitle: raw.title,
+         episodeNumber: (() => {
+            let num = ''+raw.number
+            if(num.length < 2) {
+               num = '0'+num
+            }
+            return num
+         })(),
+         seasonNumber: ''+raw.season,
+         absoluteNumber: ''+raw.number_abs,
+         description: raw.overview
       }
    }
 }
@@ -605,9 +647,7 @@ function getUnfinishedProgressList(n, update) {
 
 function getShowList(update) {
    if(update) {
-      let cache = new Cache('itemList')
-      cache.removeKey('shows')
-      cache.save()
+      flushCache('itemList', 'shows')
    }
 
    return cacheRequest('itemList', 'shows', () => {
@@ -617,9 +657,7 @@ function getShowList(update) {
 
 function getShowProgress(id, update) {
    if(update) {
-      let cache = new Cache('showProgress')
-      cache.removeKey(id)
-      cache.save()
+      flushCache('showProgress', id)
    }
 
    return cacheRequest('showProgress', id, () => {
@@ -629,9 +667,7 @@ function getShowProgress(id, update) {
 
 function getSeasonList(id, update) {
    if(update) {
-      let cache = new Cache('seasonList')
-      cache.removeKey(id)
-      cache.save()
+      flushCache('seasonList', id)
    }
 
    return cacheRequest('seasonList', id, () => {
@@ -643,13 +679,21 @@ function getEpisodeData(id, season, episode, update) {
    let cacheId = id+'_'+season+'_'+episode
 
    if(update) {
-      let cache = new Cache('episodeData')
-      cache.removeKey(cacheId)
-      cache.save()
+      flushCache('episodeData', cacheId)
    }
 
    return cacheRequest('episodeData', cacheId, () => {
       return requestEpisodeData(id, season, episode)
+   }, true)
+}
+
+function getShowImages(id, update) {
+   if(update) {
+      flushCache('images', id)
+   }
+
+   return cacheRequest('images', id, () => {
+      return requestShowImages(id)
    }, true)
 }
 
@@ -802,6 +846,17 @@ function requestEpisodeData(id, season, episode) {
 }
 
 
+function requestShowImages(id) {
+   // id is tvdb-id
+   debugLog('api request', 'fanart')
+   let requestTime = Date.now()
+   return fanart.shows.get(id).then(res => {
+      debugLog('requesting time', Date.now()-requestTime)
+      return res
+   })
+}
+
+
 //
 // MODIFIERS
 //
@@ -871,4 +926,10 @@ function cacheSave(cacheName) {
       action: 'saveKeys',
       name: cacheName
    })
+}
+
+function flushCache(cacheName, cacheId) {
+   let cache = new Cache(cacheName)
+   cache.removeKey(cacheId)
+   cache.save()
 }
