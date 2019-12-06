@@ -199,7 +199,7 @@ function updateLeftRightButtons() {
   generateStackSlider()
 }
 
-// opens and closes the info card
+// Closes the info card if already open. Currently, it is only opened by html onclick events. Opening it with this function could be done in future, possibly to speed up loading.
 function triggerInfoCardOverlay() {
   let infocard_overlay = document.getElementById('infocard_overlay')
   let dark_overlay = document.getElementById('info_overlay')
@@ -214,6 +214,8 @@ function triggerInfoCardOverlay() {
     infocard_overlay.style.display = 'none'
     document.getElementById('infocard_stack').innerHTML = ''
     dark_overlay.classList.remove('dark_overlay')
+
+    // Here, we could nullize the localBuffer so it is not falsely used by some other instance. When doing so, the whole instance would have to be initiated again when reopening the stacks. Because the user could reopen the same card-stack after closing without opening a different item before, we could instead keep the created instance and only overwrite the localBuffer when the opened item is not the same as before.
   }
 }
 
@@ -260,7 +262,7 @@ function generateInfoCardContent(updates) {
   return`
     <div class="infocard_child black_b z4">
       <div class="infocard_banner">
-        <img src="${updates.bannerUrl}">
+        <img src="">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
         <div class="infocard_nav">
           <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">prev<img src="../../assets/icons/app/left.svg"></div>
@@ -280,7 +282,7 @@ function generateInfoCardContent(updates) {
           </div>  
         </div>
         <div class="infocard_poster z1">   
-          <img class="shadow_h" src="${updates.posterUrl}">
+          <img class="shadow_h" src="../../assets/loading_placeholder.gif">
           <div class="beta_action_btns">
             <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
             <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
@@ -323,12 +325,20 @@ function updateInfoCard(itemUpdates, index) {
   let stacks = getCardStacks()
   debugLog('updating card', index)
 
+  let theStack
+
   if(index < stacks.left.length) {
-    stacks.left[index].innerHTML = generateInfoCardContent(itemUpdates)
+    theStack = stacks.left[index]
   } else if(index == stacks.left.length) {
-    stacks.middle[0].innerHTML = generateInfoCardContent(itemUpdates)
+    theStack = stacks.middle[0]
   } else {
-    stacks.right[index - stacks.left.length-1].innerHTML = generateInfoCardContent(itemUpdates)
+    theStack = stacks.right[index - stacks.left.length-1]
+  }
+
+  if(theStack !== undefined) {
+    theStack.innerHTML = generateInfoCardContent(itemUpdates)
+  } else {
+    debugLog('!updating card', 'failed, could not find element')
   }
 }
 
@@ -336,14 +346,14 @@ function updateInfoCardImage(url, index) {
   let stacks = getCardStacks()
   debugLog('updating card images', index)
 
-  let card
+  let theCard
 
   if(index < stacks.left.length) {
-    card = stacks.left[index]
+    theCard = stacks.left[index]
   } else if(index == stacks.left.length) {
-    card = stacks.middle[0]    
+    theCard = stacks.middle[0]    
   } else {
-    card = stacks.right[index - stacks.left.length-1]
+    theCard = stacks.right[index - stacks.left.length-1]
   }
 
   /** url:
@@ -351,8 +361,12 @@ function updateInfoCardImage(url, index) {
    *    poster
    *    actors[]
    */
-  card.querySelector('.infocard_banner img').src = url.banner
-  card.querySelector('.infocard_poster img').src = url.poster
+  if(theCard !== undefined) {
+    theCard.querySelector('.infocard_banner img').src = url.banner
+    theCard.querySelector('.infocard_poster img').src = url.poster
+  } else {
+    debugLog('!updating card', 'failed, could not find element')
+  }
 }
 
 
@@ -1033,11 +1047,8 @@ function openInfoCard(poster) {
     case 'e': { // episode
       let seasonNum = matcher[2]
       let episodeNum = matcher[3]
-      //addInfoCard('middle', 0)
 
-      localBuffer = new showBuffer(showId)
-
-      localBuffer.initAt(seasonNum, episodeNum, {
+      let onCallbacks = {
         size: epPosition => {
           // remove possibly existing dummies that were used as a loading indicator
           document.getElementById('infocard_stack').innerHTML = ''
@@ -1070,7 +1081,14 @@ function openInfoCard(poster) {
         images: (urls, pos) => { // onImage
           updateInfoCardImage(urls, pos)
         }
-      })
+      }
+
+      if(localBuffer instanceof showBuffer && localBuffer.id == showId) {
+        localBuffer.openAt(seasonNum, episodeNum, onCallbacks)
+      } else {
+        localBuffer = new showBuffer(showId)
+        localBuffer.initAt(seasonNum, episodeNum, onCallbacks)
+      }
 
       break
     }

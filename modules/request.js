@@ -382,6 +382,7 @@ async function convertTraktToTvdb(id) {
 
 module.exports.showBuffer = class showBuffer {
    constructor(showId) {
+      debugLog('buffer', 'creating new instance for '+showId)
       this.id = showId
       this.tvdb = convertTraktToTvdb(this.id)
 
@@ -397,6 +398,8 @@ module.exports.showBuffer = class showBuffer {
 
       // indices that are in queue to be requested
       this.queue = []
+
+      this.timer = 0
    }
 
    /**
@@ -410,6 +413,26 @@ module.exports.showBuffer = class showBuffer {
    }
 
    /**
+    * @param {Number} s Number of the season
+    * @param {Number} e Number of the episode
+    */
+   posToAbs(s, e) {
+      let abs = 0
+
+      // contains the episode counts of the seasons
+      this.tree.forEach((c, i) => {
+         if(i < s) {
+            // add all episodes on seasons below current
+            abs += c
+         }
+      })
+
+      // add pos inside current season
+      abs += e
+      return abs
+   }
+
+   /**
     * Initialize the buffer at a given point in the TV show.
     * @param {Number} s Number of the season
     * @param {Number} e Number of the episode
@@ -418,6 +441,11 @@ module.exports.showBuffer = class showBuffer {
     * @param {Function} on.buffer Callback when one episode from the buffer area got requested. Will trigger once for each element.
     */
    async initAt(s, e, on) {
+      s = Number(s) // prevent string addition
+      e = Number(e)
+      debugLog('!buffer', 'initializing new instance')
+      this.timer = Date.now()
+
       await getEpisodeData(this.id, s, e).then(async d => {
          // We first have to know the length of the season. With that information, we can add the required amount of cards to the stack—which will be done by the renderer receiving the callback.
          await getSeasonList(this.id).then(seasons => {
@@ -434,12 +462,13 @@ module.exports.showBuffer = class showBuffer {
 
             let size = {
                total: total,
-               current: d.number_abs
+               current: this.posToAbs(s, e)
             }
 
-            on.size(size)
-            this.applySize(size.total)
             this.current = size.current
+
+            on.size(size)
+            this.applySize(total)
          })
          
          // Now, we can send the episode data back via the callback and save it to the local scope.
@@ -458,13 +487,42 @@ module.exports.showBuffer = class showBuffer {
    }
 
    /**
+    * Restore the buffer at a given point in the TV show. Restoration is faster than initialization.
+    * @param {Number} s Number of the season
+    * @param {Number} e Number of the episode
+    * @param {Function} on.size Callback when the size of the entire show is known
+    * @param {Function} on.first Callback when full data for the current episode is available
+    * @param {Function} on.buffer Callback when one episode from the buffer area got requested. Will trigger once for each element.
+    */
+   async openAt(s, e, on) {
+      s = Number(s)
+      e = Number(e)
+      debugLog('!buffer', 'opening existing instance')
+      this.timer = Date.now()
+
+      this.current = this.posToAbs(s, e)
+
+      on.size({
+         total: this.tree.reduce((p, c) => p + c),
+         current: this.current
+      })
+
+      let firstData = await this.requestEpisode(this.current)
+      let firstRes = this.formatUpdates(firstData)
+      on.first(firstRes)
+
+      this.updateBuffer(this.current, on)
+   }
+
+   /**
     * Moving through the buffer by a certain amount. To prevent buffer piling, this function has to be called in delay with the total movement happened during that delay.
     * @param {Number} dir The amount of episodes to move, negative to move backwards.
     * @param {Function} on.first Callback for the data of the seen item.
     * @param {Function} on.buffer Callback for the buffered items.
     */
    move(dir, on) {
-      debugLog('cards', `moving ${dir>0 ? 'right' : 'left'}`)
+      debugLog('!buffer', `moving ${dir>0 ? 'right' : 'left'}`)
+      this.timer = Date.now()
       let newPos = this.current + dir
 
       // The new buffer position would be out of range. I hope this will never happen but in case it does, we'll clip it to the max or min.
@@ -528,6 +586,9 @@ module.exports.showBuffer = class showBuffer {
          setTimeout(() => {
             this.nextInQueue(on)
          }, 200)
+      } else {
+         // stop timer
+         debugLog('!buffer', Date.now()-this.timer + 'ms')
       }
    }
 
@@ -537,8 +598,8 @@ module.exports.showBuffer = class showBuffer {
    }
 
    /**
-    * Sends back data for a given episode number.
-    * @param {Number} pos Absolute index of the episode
+    * Sends back data for a given episode number. It will automatically check for available buffer and cache data. Only if nothing is saved already, the API will be used to get the data.
+    * @param {Number} pos Absolute position of the episode
     */
    requestEpisode(pos) {
       if(this.items[pos-1] == null) {
@@ -565,6 +626,7 @@ module.exports.showBuffer = class showBuffer {
          })
       } else {
          // item was already buffered before
+         debugLog('!buffer', `restoring item ${pos-1}`)
          return Promise.resolve(this.items[pos-1])
       }
    }
