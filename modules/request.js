@@ -473,17 +473,12 @@ module.exports.showBuffer = class showBuffer {
          
          // Now, we can send the episode data back via the callback and save it to the local scope.
          await on.first(this.formatUpdates(d))
-         this.items[this.current-1] = d
+         this.items[this.current-1] = { data: d, images: null }
 
          this.updateBuffer(this.current, on)
       })
 
-      on.images(await getShowImages(await this.tvdb).then(r => {
-         return {
-            banner: r.tvbanner[0].url,
-            poster: r.tvposter[0].url
-         }
-      }), this.current-1)
+      on.images(await this.requestImages(this.current), this.current-1)
    }
 
    /**
@@ -575,12 +570,7 @@ module.exports.showBuffer = class showBuffer {
             on.buffer(epData, reqPos-1)
          }
 
-         on.images(await getShowImages(await this.tvdb).then(r => {
-            return {
-               banner: r.tvbanner[0].url,
-               poster: r.tvposter[0].url
-            }
-         }), reqPos-1)
+         on.images(await this.requestImages(reqPos), reqPos-1)
          
          // some time delay to allow flushing the quere
          setTimeout(() => {
@@ -621,13 +611,33 @@ module.exports.showBuffer = class showBuffer {
 
          let id = this.id
          return getEpisodeData(id, seasonIndex, episodeIndex).then(epData => {
-            this.items[pos-1] = epData
+            this.items[pos-1] = { data: epData }
             return epData
          })
       } else {
          // item was already buffered before
          debugLog('!buffer', `restoring item ${pos-1}`)
-         return Promise.resolve(this.items[pos-1])
+         return Promise.resolve(this.items[pos-1].data)
+      }
+   }
+
+   /**
+    * 
+    * @param {Number} pos Absolute position of the episode
+    */
+   async requestImages(pos) {
+      if(this.items[pos-1].images == null) {
+         // no images buffered
+         return getShowImages(await this.tvdb).then(r => {
+            this.items[pos-1].images = {
+               banner: r.tvbanner[0].url,
+               poster: r.tvposter[0].url
+            }
+            return this.items[pos-1].images
+         })
+      } else {
+         // images were buffered before
+         return Promise.resolve(this.items[pos-1].images)
       }
    }
 
