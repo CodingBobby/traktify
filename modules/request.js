@@ -380,6 +380,14 @@ async function convertTraktToTvdb(id) {
    })
 }
 
+/**
+ * This buffer instance handles the traffic between API, Cache and renderer.
+ * It is mainly used for the card slider which openes when clicked on a episode poster.
+ * Inside this slider the user is able to move back and forth through every episode of the tv show. Loading the data for all episodes at once would take first of all way too much time and secondly it would stress the APIs too much which would lead to rate limiting.
+ * The buffer is meant to reduce these load times and stresses to make the user experice fluid and snappy.
+ * 
+ * A buffer instance is unique to one show. To buffer another show, the instance would have to be either overwritten or a new one must be created.
+ */
 module.exports.showBuffer = class showBuffer {
    constructor(showId) {
       debugLog('buffer', 'creating new instance for '+showId)
@@ -589,7 +597,7 @@ module.exports.showBuffer = class showBuffer {
 
    /**
     * Sends back data for a given episode number. It will automatically check for available buffer and cache data. Only if nothing is saved already, the API will be used to get the data.
-    * @param {Number} pos Absolute position of the episode
+    * @param {Number} pos Absolute position of the episode in the show.
     */
    requestEpisode(pos) {
       if(this.items[pos-1] == null) {
@@ -622,8 +630,8 @@ module.exports.showBuffer = class showBuffer {
    }
 
    /**
-    * 
-    * @param {Number} pos Absolute position of the episode
+    * Send back object of image URLs for a given item in the buffer. Through a getter function the API and Cache load will be balanced automatically. Result is in form of a promise.
+    * @param {Number} pos Absolute position of the episode in the show.
     */
    async requestImages(pos) {
       if(this.items[pos-1].images == null) {
@@ -664,7 +672,8 @@ module.exports.showBuffer = class showBuffer {
 // GET WRAPPERS
 //
 
-/** Gets an array of n shows and it's progress that are not finished yet. If argument update is true, the updated items are re-requested instead of directly restored from cache.
+/** 
+ * Gets an array of n shows and it's progress that are not finished yet. If argument update is true, the updated items are re-requested instead of directly restored from cache.
  * @param {Number} n Number of sequential shows with unseen episodes to get
  * @param {Boolean} update If cached data should be checked against possible updates
  */
