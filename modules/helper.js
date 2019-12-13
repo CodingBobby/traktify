@@ -72,6 +72,7 @@ function debugLog(...args) {
          ? '0'+date.getSeconds() : date.getSeconds()
    }`
 
+   // TODO: Do the actual logging in from a different function than the saving, so the logs can be first send to the ipcMain which then does the logging. Otherwise it can happen that this function is binded in the renderer which would log it to the dev console instead of the actual terminal.
    if(process.env.NODE_ENV !== 'production') {
       if(args[0] == 'err' || args[0] == 'error') {
          console.log(`\x1b[41m\x1b[37m${time} -> ${args[0]}:\x1b[0m`, args[1])

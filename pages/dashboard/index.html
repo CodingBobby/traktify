@@ -16,11 +16,12 @@
       searchRequestHelper,
       getUserStats,
       getSeasonPoster,
-      getUnfinishedProgressList,
       reloadAllItems,
       showBuffer
     } = require('../../modules/request.js');
-    const request = require('../../modules/request.js');
+    const {
+      getUnfinishedProgressList
+    } = require('../../modules/api/getters.js');
     const rpc = require('../../modules/rpc.js');
   </script>
   <title>Traktify | Dashboard</title>

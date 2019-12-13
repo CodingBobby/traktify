@@ -10,13 +10,15 @@
    <script>
       const {
          remote,
-         // ipcRenderer
+         ipcRenderer
       } = require('electron');
       const Cache = require('../../modules/cache.js');
       const {
-         newActivitiesAvailable,
-         getUnfinishedProgressList
+         newActivitiesAvailable
       } = require('../../modules/request.js');
+      const {
+         getUnfinishedProgressList
+      } = require('../../modules/api/getters.js');
    </script>
 </head>
 <body>

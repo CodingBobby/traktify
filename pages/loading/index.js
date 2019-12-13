@@ -2,8 +2,6 @@
 const trakt = remote.getGlobal('trakt')
 const relaunchApp = remote.getGlobal('relaunchApp')
 
-const { ipcRenderer } = require('electron')
-
 
 let loadingTime = Date.now()
 
