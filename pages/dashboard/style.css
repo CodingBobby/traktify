@@ -177,7 +177,7 @@
 
 #indicator input {
   -webkit-appearance: none;
-  width: 40%;
+  width: 35%;
   height: 3px; /* has to be odd! */
   border-radius: 3px;
   background: var(--black);
@@ -233,61 +233,25 @@
   filter: grayscale(10%);
 }
 
-
-.infocard_nav, 
 #infocard_close {
   position: absolute;
-  right: 30px;
-
-}
-.infocard_nav {
-  bottom: 20px;
-}
-
-#infocard_close {
-  top: 20px;
+  right: 12px;
+  top: 12px;
+  width: 18px; /*visually more appealing that the actual 19px*/
   line-height: 0;
-  padding: 10px!important;
-  border-radius: 4px;
-}
-
-#infocard_right {
-  background-color: #ED1C24;
-  border-radius: 0 4px 4px 0;
-}
-#infocard_left,
-#infocard_close {
-  border-radius: 4px 0 0 4px;
-}
-#infocard_left,
-#infocard_right,
-#infocard_left *,
-#infocard_right *,
-#infocard_close {
+  padding: 5px;
+  border-radius: 5px;
   display: inline-block;
+  text-align: center;
   vertical-align: middle;
-}
-#infocard_left,
-#infocard_right,
-#infocard_close {
-  padding: 10px 15px;
   cursor: pointer;
   transition: opacity 200ms ease;
 }
-#infocard_left:hover,
-#infocard_right:hover,
+
 #infocard_close:hover {
   opacity: 0.8;
 }
 
-#infocard_left img { 
-  margin-left: 10px;
-}
-#infocard_right img { 
-  margin-right: 10px;
-}
-#infocard_left img,
-#infocard_right img,
 #infocard_close img {
   filter: invert(100%);  
   width: 16px;

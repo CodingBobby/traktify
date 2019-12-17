@@ -166,6 +166,7 @@ function moveCards(clickedButton, direction) {
       })
       break
   }
+  updateLeftRightButtons()
 }
 
 function getCardStacks() {
@@ -178,21 +179,21 @@ function getCardStacks() {
 
 function updateLeftRightButtons() {
   let stacks = getCardStacks()
-  let leftButton = document.getElementById('infocard_left')
-  let rightButton = document.getElementById('infocard_right')
+  let leftButton = document.getElementById('stack_left_button')
+  let rightButton = document.getElementById('stack_right_button')
 
   // check the left stack
   if(stacks.left.length === 0) {
     leftButton.style.display = 'none'
   } else {
-    leftButton.style.display = 'inline-block'
+    leftButton.style.display = 'flex'
   }
 
   // and now the right one
   if(stacks.right.length === 0) {
     rightButton.style.display = 'none'
   } else {
-    rightButton.style.display = 'inline-block'
+    rightButton.style.display = 'flex'
   }
 
   // update the position of the slider thumb
@@ -264,10 +265,6 @@ function generateInfoCardContent(updates) {
       <div class="infocard_banner">
         <img src="">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
-        <div class="infocard_nav">
-          <div id="infocard_left" class="black_d_b fw600 white_t tu" onclick="moveCards(this, 'left')">prev<img src="../../assets/icons/app/left.svg"></div>
-          <div id="infocard_right" class="fw600 white_t tu" onclick="moveCards(this, 'right')"><img src="../../assets/icons/app/right.svg">next</div>
-        </div>
       </div>
       <div class="black_d_b" style="position:absolute;width:100%;padding:10px 0 10px 0;height:55px;z-index: -1;"></div>
       <div style="max-width: 920px;margin:auto;">
@@ -1034,7 +1031,6 @@ function toggleAnimation(x, y, z) {
   x.classList.add(y)
 }
 
-// This is the first function thats being triggered when clicking on a poster
 function openInfoCard(poster) {
   // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
   let matcher = poster.getAttribute('data_matcher')
@@ -1067,6 +1063,7 @@ function openInfoCard(poster) {
           for(let j=1; j<=rightStackSize; j++) {
             addInfoCard('right', i+j)
           }
+          updateLeftRightButtons()
           generateStackSlider()
         },
         first: epData => { // onFirst
