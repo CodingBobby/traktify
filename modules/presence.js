@@ -13,7 +13,6 @@ module.exports = function(clientId) {
   const instance = new class RP extends EventEmitter {
     updatePresence(d) {
       if(connected) {
-        // FIXME: Disable rpc temporarily and show warning that it could not be created.
         rpc.setActivity(d).catch(err => debugLog('error', '', new Error().stack))
       } else {
         activityCache = d
@@ -36,7 +35,7 @@ module.exports = function(clientId) {
         .catch(err => debugLog('error', '', new Error().stack))
       activityCache = null
     }
-  }).catch(err => debugLog('error', '', new Error().stack))
+  }).catch(err => debugLog('error', 'rpc login', new Error().stack))
 
   return instance
 }

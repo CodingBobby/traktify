@@ -13,10 +13,10 @@ window.onload = function() {
   debugLog('window', 'dashboard loading')
   updateApp() // update settings
   generatePosterSection() // show the up next to watch posters
-  updateRpc() // show rpc on discord
+  updateRpc() // show rpc on discord, handling the on/off setting is done within this function and doesn't have to be done here!
 }
 
-// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet.
+// This guy waits for messages on the 'modify-root' channel. The messages contain setting objects that then get applied to the 'master.css' style sheet. It is used to change the look of the app.
 ipcRenderer.on('modify-root', (event, data) => {
   let variables = document.styleSheets[0]
     .cssRules[0].style.cssText.split(';')
@@ -33,26 +33,51 @@ ipcRenderer.on('modify-root', (event, data) => {
   document.documentElement.style.setProperty(keys[keys.indexOf(data.name)], data.value)
 })
 
+// Identifies the currently open panel. Makes it easier to check against closed panels, as this would require each of them to check on their own.
+let openedPanel = null
+/**
+ * sidebar,
+ * cards
+ */
+
 // Here, dashboard-wide shortcuts are defined. The 'meta' key represents CMD on macOS and Ctrl on Windows
 document.onkeydown = function() {
   if(event.metaKey && event.keyCode === 83) { // meta + S
     debugLog('shortcut', 'Meta + S')
-    show(document.getElementById('search_button_side'))
-    triggerSidePanel('search')
+    if(openedPanel !== 'cards') {
+      show(document.getElementById('search_button_side'))
+      triggerSidePanel('search')
+    }
     return false
   } else if(event.metaKey && event.keyCode === 188) { // meta + ,
     debugLog('shortcut', 'Meta + ,')
-    show(document.getElementById('settings_button_side'))
-    triggerSidePanel('settings')
+    if(openedPanel !== 'cards') {
+      show(document.getElementById('settings_button_side'))
+      triggerSidePanel('settings')
+    }
     return false
   } else if(event.keyCode === 27) { // ESC
     debugLog('shortcut', 'ESC')
     // close the currently open panel
-    try {
+    if(openedPanel == 'sidebar') {
       triggerSidePanel(sideBar.status)
-    } catch(err) {
-      debugLog('error', 'no side panel available to close')
+    } else if(openedPanel == 'cards') {
+      triggerInfoCardOverlay()
     }
+  } else if(event.keyCode === 39) { // arrow right
+    debugLog('shortcut', 'ArrowRight')
+    if(openedPanel == 'cards') {
+      moveCards(null, 'right')
+    }
+  } else if(event.keyCode === 37) { // arrow left
+    debugLog('shortcut', 'ArrowLeft')
+    if(openedPanel == 'cards') {
+      moveCards(null, 'left')
+    }
+  } else if(event.keyCode === 38) { // arrow up
+
+  } else if(event.keyCode === 40) { // arrow down
+
   }
 }
 
@@ -67,6 +92,278 @@ function show(x) {
       element.children[0].classList.remove('selected')
     }
   })
+}
+
+function rotate(x) {
+  if(x.classList.contains('rotating')) {
+    x.classList.remove('rotating')
+  } else {
+    x.classList.add('rotating')
+  }
+}
+
+//:::: INFOCARD ::::\\
+
+// This variable can be overwritten by different new <>Buffer() classes.
+let localBuffer
+
+// moves in one direction through the stacks
+function moveCards(clickedButton, direction) {
+  let stacks = getCardStacks()
+  switch(direction) {
+    case 'right':
+      if(stacks.right.length !== 0) {
+        let midCard = stacks.middle[0]
+        midCard.classList.remove('middle_stack')
+        midCard.classList.add('left_stack')
+        // get the bottom right one
+        let rigCard = stacks.right[0]
+        rigCard.classList.remove('right_stack')
+        rigCard.classList.add('middle_stack')
+      }
+
+      // TODO: Logging is only temporary, use results for actual rendering.
+      localBuffer.move(1, {
+        first: epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard(epData, index)
+          updateLeftRightButtons()
+        },
+        buffer: (bufferData, pos) => { // onBuffer
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
+        }
+      })
+      break
+    case 'left':
+      if(stacks.left.length !== 0) {
+        // move the middle one
+        let midCard = stacks.middle[0]
+        midCard.classList.remove('middle_stack')
+        midCard.classList.add('right_stack')
+        // get the top left one
+        let lefCard = stacks.left[stacks.left.length-1]
+        lefCard.classList.remove('left_stack')
+        lefCard.classList.add('middle_stack')
+      }
+
+      localBuffer.move(-1, {
+        first: epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard(epData, index)
+          updateLeftRightButtons()
+        },
+        buffer: (bufferData, pos) => { // onBuffer
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
+        }
+      })
+      break
+  }
+  updateLeftRightButtons()
+}
+
+function getCardStacks() {
+  return {
+    left: document.getElementsByClassName('left_stack'),
+    middle: document.getElementsByClassName('middle_stack'),
+    right: document.getElementsByClassName('right_stack')
+  }
+}
+
+function updateLeftRightButtons() {
+  let stacks = getCardStacks()
+  let leftButton = document.getElementById('stack_left_button')
+  let rightButton = document.getElementById('stack_right_button')
+
+  // check the left stack
+  if(stacks.left.length === 0) {
+    leftButton.style.display = 'none'
+  } else {
+    leftButton.style.display = 'flex'
+  }
+
+  // and now the right one
+  if(stacks.right.length === 0) {
+    rightButton.style.display = 'none'
+  } else {
+    rightButton.style.display = 'flex'
+  }
+
+  // update the position of the slider thumb
+  generateStackSlider()
+}
+
+// Closes the info card if already open. Currently, it is only opened by html onclick events. Opening it with this function could be done in future, possibly to speed up loading.
+function triggerInfoCardOverlay() {
+  let infocard_overlay = document.getElementById('infocard_overlay')
+  let dark_overlay = document.getElementById('info_overlay')
+  if(infocard_overlay.style.display === 'none') {
+    // open it
+    openedPanel = 'cards'
+    infocard_overlay.style.display = 'flex'
+    dark_overlay.classList.add('dark_overlay')
+  } else {
+    // close it
+    openedPanel = null
+    infocard_overlay.style.display = 'none'
+    document.getElementById('infocard_stack').innerHTML = ''
+    dark_overlay.classList.remove('dark_overlay')
+
+    // Here, we could nullize the localBuffer so it is not falsely used by some other instance. When doing so, the whole instance would have to be initiated again when reopening the stacks. Because the user could reopen the same card-stack after closing without opening a different item before, we could instead keep the created instance and only overwrite the localBuffer when the opened item is not the same as before.
+  }
+}
+
+
+function addInfoCard(position, index) {
+  let stack
+  switch(position) {
+    case 'left':
+      stack = 'left_stack'
+      break
+    case 'middle':
+      stack = 'middle_stack'
+      break
+    case 'right':
+      stack = 'right_stack'
+      break
+  }
+  let infocard_stack = document.getElementById('infocard_stack')
+  infocard_stack.appendChild(generateInfoCardDummy(stack, index))
+}
+
+function generateInfoCardDummy(stack, index) {
+  let infocard = document.createElement('div')
+  infocard.classList = 'infocard shadow_b '+stack
+  infocard.id = 'card_'+index
+  infocard.innerHTML = `
+    <ul class="btns z4">
+      <li>
+        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
+          <img src="../../assets/icons/app/close.svg">
+        </div>
+      </li>
+    </ul>
+    <div class="cardcontent">
+      <div class="center">
+        <img class="logo gray-animation" style="height: 200px" src="../../assets/icons/traktify/512x512.png">
+      </div>
+    </div>
+  `
+  return infocard
+}
+
+function generateInfoCardContent(updates) {
+  return`
+    <div class="infocard_child black_b z4">
+      <div class="infocard_banner">
+        <img src="">
+        <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
+      </div>
+      <div class="black_d_b" style="position:absolute;width:100%;padding:10px 0 10px 0;height:55px;z-index: -1;"></div>
+      <div style="max-width: 920px;margin:auto;">
+        <div class="infocard_titles infocard_padding black_d_b tOverflow">
+          <div class="rating">
+            <img src="../../assets/icons/app/heart.svg">
+            <span class="white_t fs18 fw700">${updates.ratingPercent}%</span>
+          </div>
+          <div class="vertical_border"></div>
+          <div class="fs23 fw500 white_t" style="max-width:500px;">
+            ${updates.seasonNumber}x${updates.episodeNumber} ${updates.episodeTitle}
+          </div>  
+        </div>
+        <div class="infocard_poster z1">   
+          <img class="shadow_h" src="../../assets/loading_placeholder.gif">
+          <div class="beta_action_btns">
+            <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
+            <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
+            <div class="beta_action_btn watched"><img src="../../assets/icons/app/check.svg"></div>
+          </div>
+        </div>
+        <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
+      </div>
+    </div> 
+  `
+}
+
+function generateStackSlider() {
+  let slider = document.getElementById('indicator_slider')
+  let stacks = getCardStacks()
+  let totalSize = stacks.left.length
+    + stacks.middle.length // will always be 1, this makes it understandable
+    + stacks.right.length
+
+  // Here, we could check if there are more than one items, but its okay to show a single red bar for now.
+  // set the width of the thump to match the ratio
+  let sliderWidth = slider.offsetWidth/totalSize
+  if(sliderWidth < 15) {
+    sliderWidth = 15 // fix width to height, so it stays visible
+  }
+
+  let styler = document.querySelector('[data="indicator"]')
+  styler.innerHTML = `
+    #indicator input::-webkit-slider-thumb {
+      width: ${sliderWidth}px !important;
+    }
+  `
+  // set position of the thumb
+  slider.min = 1;
+  slider.max = totalSize
+  slider.value = stacks.left.length+1
+}
+
+function updateInfoCard(itemUpdates, index) {
+  let stacks = getCardStacks()
+  debugLog('updating card', index)
+
+  let theStack
+
+  if(index < stacks.left.length) {
+    theStack = stacks.left[index]
+  } else if(index == stacks.left.length) {
+    theStack = stacks.middle[0]
+  } else {
+    theStack = stacks.right[index - stacks.left.length-1]
+  }
+
+  if(theStack !== undefined) {
+    theStack.innerHTML = generateInfoCardContent(itemUpdates)
+  } else {
+    debugLog('!updating card', 'failed, could not find element')
+  }
+}
+
+function updateInfoCardImage(url, index) {
+  let stacks = getCardStacks()
+  debugLog('updating card images', index)
+
+  let theCard
+
+  if(index < stacks.left.length) {
+    theCard = stacks.left[index]
+  } else if(index == stacks.left.length) {
+    theCard = stacks.middle[0]    
+  } else {
+    theCard = stacks.right[index - stacks.left.length-1]
+  }
+
+  /** url:
+   *    banner
+   *    poster
+   *    actors[]
+   */
+  if(theCard !== undefined) {
+    theCard.querySelector('.infocard_banner img').src = url.banner
+    theCard.querySelector('.infocard_poster img').src = url.poster
+  } else {
+    debugLog('!updating card', 'failed, could not find element')
+  }
 }
 
 
@@ -228,6 +525,7 @@ function triggerSidePanel(panelName) {
 
   if(sideBar.status == 'none') {
     sideBar.status = panelName
+    openedPanel = 'sidebar'
 
     // fading out the background
     overlay.classList.add('show')
@@ -247,6 +545,7 @@ function triggerSidePanel(panelName) {
       removeSearchResults()
     }
     sideBar.status = 'none'
+    openedPanel = null
 
     // removing the settings panel
     side_panel.classList.remove('side_panel_animate_in')
@@ -523,7 +822,6 @@ async function search(text) {
   debugLog('time taken', Date.now()-requestTime+'ms')
 }
 
-
 // This function generates a html element for one search result and adds it to the sidebar.
 function addSearchResult(result) {
   let panel = document.getElementById('results')
@@ -578,7 +876,6 @@ function addSearchResult(result) {
   panel.appendChild(panel_box)
 }
 
-
 // Removes all elements from the search panel in the sidebar
 function removeSearchResults() {
   let panel = document.getElementById('results')
@@ -591,10 +888,17 @@ function removeSearchResults() {
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 // This gets fired when the dashboard is loaded
-async function generatePosterSection() {
+async function generatePosterSection(update) {
   let requestTime = Date.now()
 
-  let data = await getUnfinishedProgressList(5)
+  let data = await getUnfinishedProgressList(5, update)
+
+  if(update) {
+    // clear dashboard
+    document.querySelector('#dash').innerHTML = `
+      <div class="titles" id="poster_title"></div>
+      <ul class="posters" id="posters"></ul>`
+  }
 
   data.forEach((item, index) => {
     debugLog('item to add', item.show.show.title)
@@ -614,7 +918,8 @@ async function generatePosterSection() {
       subtitle: subtitle,
       rating: next.rating,
       id: item.show.show.ids.tvdb,
-      season: next.season
+      season: next.season,
+      matcher: `${item.show.show.ids.trakt}_e_${next.season}_${next.number}`
     })
   })
 
@@ -625,10 +930,16 @@ async function generatePosterSection() {
 async function createPoster(itemToAdd) {
   let li = document.createElement('li')
   li.classList.add('poster', 'poster-dashboard', 'shadow_h')
+  // This is the most important one, as it will tell the rest of the app what item the poster shows. It will be used to provide information when the user clicks on this item.
+  li.setAttribute('data_matcher', itemToAdd.matcher)
+
   li.setAttribute('data_title', itemToAdd.title)
   li.setAttribute('data_subtitle', itemToAdd.subtitle)
+
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
+
+  li.setAttribute('onclick', 'openInfoCard(this)')
 
   let poster_content = document.createElement('div')
   poster_content.classList.add('poster-content')
@@ -718,6 +1029,69 @@ function toggleAnimation(x, y, z) {
   void x.offsetWidth
   x.innerText = z
   x.classList.add(y)
+}
+
+function openInfoCard(poster) {
+  // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
+  let matcher = poster.getAttribute('data_matcher')
+  debugLog('info card', matcher)
+  matcher = matcher.split('_')
+
+  let showId = matcher[0]
+
+  switch(matcher[1]) {
+    case 'e': { // episode
+      let seasonNum = matcher[2]
+      let episodeNum = matcher[3]
+
+      let onCallbacks = {
+        size: epPosition => {
+          // remove possibly existing dummies that were used as a loading indicator
+          document.getElementById('infocard_stack').innerHTML = ''
+
+          let leftStackSize = epPosition.current - 1
+          let rightStackSize = epPosition.total - epPosition.current
+
+          let i = 0
+
+          for(i; i<leftStackSize; i++) {
+            addInfoCard('left', i)
+          }
+
+          addInfoCard('middle', i)
+
+          for(let j=1; j<=rightStackSize; j++) {
+            addInfoCard('right', i+j)
+          }
+          updateLeftRightButtons()
+          generateStackSlider()
+        },
+        first: epData => { // onFirst
+          // find index of the middle card
+          let index = getCardStacks().left.length
+          updateInfoCard(epData, index)
+          updateLeftRightButtons()
+        },
+        buffer: (bufferData, pos) => { // onBuffer
+          updateInfoCard(bufferData, pos)
+        },
+        images: (urls, pos) => { // onImage
+          updateInfoCardImage(urls, pos)
+        }
+      }
+
+      if(localBuffer instanceof showBuffer && localBuffer.id == showId) {
+        localBuffer.openAt(seasonNum, episodeNum, onCallbacks)
+      } else {
+        localBuffer = new showBuffer(showId)
+        localBuffer.initAt(seasonNum, episodeNum, onCallbacks)
+      }
+
+      break
+    }
+  }
+
+  triggerInfoCardOverlay()
 }
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/

@@ -41,7 +41,7 @@ const TmDB = require('moviedb-promise')
 const request = require('request')
 
 const {
-  debugLog, inRange, shadeHexColor, clone
+  debugLog, inRange, shadeHexColor, clone, ipcChannels
 } = require('./modules/helper.js')
 global.debugLog = debugLog
 
@@ -288,6 +288,7 @@ function launchApp() {
 }
 
 function tryLogin() {
+  // First, we show the loading screen to tell the user that something is happening. Eventually, when all loading processes are finished, it will be closed again to reveal the dashboard.
   loadLoadingScreen()
 
   // wait until loading screen is fully loaded
@@ -602,4 +603,15 @@ ipcMain.on('cache', (event, details) => {
       break
     }
   }
+})
+
+
+//:::: LOG LISTENER ::::\\
+ipcMain.on('log', (event, details) => {
+  /** details:
+   *    action,
+   *    log
+   */
+  // using the helper here to make calls from the main possible as well
+  ipcChannels['log'](details)
 })
