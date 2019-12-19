@@ -9,5 +9,33 @@ jobs:
     steps:
       - checkout
 
-      - run: npm install
-      - run: npm test
+      - run: 
+        name: Install npm dependencies
+        command: |
+          npm install
+
+      - run: 
+        name: Run tests
+        command: |
+          npm test
+
+      - run:
+        name: Build for MacOS
+        command: |
+          npm run package-mac
+          npm rum installer-mac
+
+      - run:
+        name: Build for Windows
+        command: |
+          npm run package-win
+          npm rum installer-win
+
+      - deploy:
+        name: Deploy builds
+        command: |
+          git config credential.helper 'cache --timeout=120'
+          git config user.email "bob.walter@outlook.de"
+          git config user.name "Deployment Bob"
+          git commit --allow-empty -m "Deploy builds"
+          git push -q https://${github_token}@github.com/CodingBobby/traktify development
