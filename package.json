@@ -1,9 +1,10 @@
 {
   "name": "traktify",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
+    "test": "jest",
     "start": "electron .",
     "clearCache": "rm -f -r ./.cache/",
     "package-mac": "electron-packager . --overwrite --asar --platform=darwin --arch=x64 --icon=assets/icons/trakt/trakt.icns --prune=true --out=release-builds/packages",
@@ -31,7 +32,8 @@
     "electron": "^4.2.8",
     "electron-installer-dmg": "^3.0.0",
     "electron-packager": "^14.0.4",
-    "electron-winstaller": "^4.0.0"
+    "electron-winstaller": "^4.0.0",
+    "jest": "^24.9.0"
   },
   "dependencies": {
     "background": "^0.3.3",
@@ -43,7 +45,9 @@
     "moviedb-promise": "^1.4.1",
     "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
+    "register-scheme": "0.0.2",
     "request": "^2.88.0",
+    "rimraf": "^3.0.0",
     "trakt.tv": "^7.2.0"
   }
 }

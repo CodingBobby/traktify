@@ -1,5 +1,9 @@
-'use strict'
-const client = require('./presence.js')(process.env.discord_key)
+let config = remote.getGlobal('config')
+let on = config.client.settings.app['discord rpc'].status
+
+let client = require('./presence.js')
+
+if(on) client = client(process.env.discord_key)
 
 module.exports = {
    update: update
