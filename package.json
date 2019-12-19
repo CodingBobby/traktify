@@ -4,6 +4,7 @@
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
+    "test": "jest",
     "start": "electron .",
     "clearCache": "rm -f -r ./.cache/"
   },
@@ -23,7 +24,8 @@
   },
   "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
-    "electron": "^4.2.8"
+    "electron": "^4.2.8",
+    "jest": "^24.9.0"
   },
   "dependencies": {
     "background": "^0.3.3",
