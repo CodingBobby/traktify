@@ -1,41 +1,51 @@
-version: 2
-jobs:
-  build:
+version: 2.1
+
+executors:
+  docker-ex:
     docker:
       - image: circleci/node:10.10.0
-    
-    working-directory: ~/repo
 
+jobs:
+  build:
+    executor: docker-ex
+    working_directory: ~/traktify
     steps:
       - checkout
 
+      - run:
+          name: Update npm
+          command: |
+            sudo npm install -g npm@latest
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
       - run: 
-        name: Install npm dependencies
-        command: |
-          npm install
+          name: Install npm dependencies
+          command: |
+            npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
 
       - run: 
-        name: Run tests
-        command: |
-          npm test
+          name: Run tests
+          command: |
+            npm test
 
       - run:
-        name: Build for MacOS
-        command: |
-          npm run package-mac
-          npm rum installer-mac
-
-      - run:
-        name: Build for Windows
-        command: |
-          npm run package-win
-          npm rum installer-win
+          name: Build for MacOS
+          command: |
+            npm run package-mac
+      # - run:
+      #     name: Build for Windows
+      #     command: |
+      #       npm run package-win
 
       - deploy:
-        name: Deploy builds
-        command: |
-          git config credential.helper 'cache --timeout=120'
-          git config user.email "bob.walter@outlook.de"
-          git config user.name "Deployment Bob"
-          git commit --allow-empty -m "Deploy builds"
-          git push -q https://${github_token}@github.com/CodingBobby/traktify development
+          name: Deploy builds
+          command: |
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "bob.walter@outlook.de"
+            git config user.name "Deployment Bob"
+            git commit --allow-empty -m "Deploy builds"
+            git push -q https://${github_token}@github.com/CodingBobby/traktify development
