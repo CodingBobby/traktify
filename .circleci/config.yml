@@ -1,0 +1,33 @@
+version: 2.1
+
+executors:
+  docker-ex:
+    docker:
+      - image: circleci/node:10.10.0
+
+jobs:
+  build:
+    executor: docker-ex
+    working_directory: ~/traktify
+    steps:
+      - checkout
+
+      - run:
+          name: Update npm
+          command: |
+            sudo npm install -g npm@latest
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+      - run: 
+          name: Install npm dependencies
+          command: |
+            npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+
+      - run: 
+          name: Run tests
+          command: |
+            npm test
