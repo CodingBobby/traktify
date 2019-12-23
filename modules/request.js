@@ -582,15 +582,17 @@ module.exports.showBuffer = class showBuffer {
 
          let epData = this.formatUpdates(await this.requestEpisode(reqPos))
 
+         // first item is passed to a separate callback
          if(reqPos == this.current) {
             on.first(epData)
          } else {
             on.buffer(epData, reqPos-1)
          }
 
+         // this hopefully doesn't take ages to resolve
          on.images(await this.requestImages(reqPos), reqPos-1)
          
-         // some time delay to allow flushing the quere
+         // some time delay to allow manual flushing (would otherwise constantly block thread)
          setTimeout(() => {
             this.nextInQueue(on)
          }, 200)
@@ -598,6 +600,7 @@ module.exports.showBuffer = class showBuffer {
          // stop timer
          debugLog('!buffer', Date.now()-this.timer + 'ms')
       }
+      
    }
 
    flushQueue() {

@@ -1,5 +1,5 @@
 const {
-   inRange, clone
+   inRange, clone, shadeHexColor
 } = require('./../modules/helper.js')
 
 
@@ -20,4 +20,11 @@ test('clone function', () => {
    foo.var += 10
    expect(foo.var).toBe(1010)
    expect(bar.var).toBe(1000)
+})
+
+
+test('shadeHexColor Function', () => {
+   expect(shadeHexColor('#fff111', 30)).toBe('#ffff16')
+   expect(shadeHexColor('#2b2b11', 30)).toBe('#373716')
+   expect(shadeHexColor('#553355', 'string')).toBe('#ffffff')
 })
