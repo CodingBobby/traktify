@@ -1,5 +1,5 @@
 module.exports = class Queue {
-   constructor(options) {
+   constructor(options, mergeCallback) {
       // options: { ?frequency, ?reverse }
       options = options || {}
 
@@ -12,6 +12,8 @@ module.exports = class Queue {
       this._reverse = options.reverse
 
       this._taskList = []
+
+      this._mergeCallback = typeof mergeCallback == 'function' ? mergeCallback : false
    }
  
    add(callback, options) {
@@ -20,7 +22,21 @@ module.exports = class Queue {
       let job = new Task(options.args, callback)
    
       if(options.overwrite) {
-         let duplicates = this._duplicates(job)
+         let mergeWanted = this._mergeCallback !== false
+         let duplicates = this._duplicates(job, mergeWanted)
+
+         if(mergeWanted) {
+            let argList = duplicates.map(j => {
+               return this._taskList[j].args
+            })
+            
+            argList.push(job.args)
+
+            // overwrite arguments of new job with merged list which contains its own original args along with the args of all other enqueued jobs
+            job.args = this._mergeCallback(argList)
+         }
+
+         // previously found jobs that are identical to the new one can be removed now
          duplicates.forEach(i => {
             this._taskList.splice(i, 1)
          })
@@ -62,6 +78,7 @@ module.exports = class Queue {
       } else {
          // ticking
          let job = this._taskList[jobIndex]
+         console.log('ticking', job.args)
          let result = job.run()
             .then(r => r)
             .catch(e => e)
@@ -76,13 +93,16 @@ module.exports = class Queue {
       }
    }
  
-   _duplicates(j) {
+   /**
+    * Returns the index positions of jobs that look identical to the given one.
+    * @param {Task} j The newly added job
+    * @param {Boolean} onlyCallback Only compare the callbacks and not the passed arguments
+    */
+   _duplicates(j, onlyCallback) {
       let indices = []
       this._taskList.forEach((t, index) => {
-         if(
-            String(j.args) == String(t.args)
-            && String(j.callback) == String(t.callback)
-         ) {
+         if((onlyCallback ? true : String(j.args) == String(t.args))
+         && String(j.callback) == String(t.callback)) {
             // found duplicate
             indices.push(index)
          }
