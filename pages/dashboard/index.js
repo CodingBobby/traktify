@@ -221,7 +221,7 @@ function triggerInfoCardOverlay() {
 }
 
 
-function addInfoCard(position, index) {
+function addInfoCard(position, index, traktId) {
   let stack
   switch(position) {
     case 'left':
@@ -235,13 +235,14 @@ function addInfoCard(position, index) {
       break
   }
   let infocard_stack = document.getElementById('infocard_stack')
-  infocard_stack.appendChild(generateInfoCardDummy(stack, index))
+  infocard_stack.appendChild(generateInfoCardDummy(stack, index, traktId))
 }
 
-function generateInfoCardDummy(stack, index) {
+function generateInfoCardDummy(stack, index, traktId) {
   let infocard = document.createElement('div')
   infocard.classList = 'infocard shadow_b '+stack
   infocard.id = 'card_'+index
+  infocard.dataset.trakt_id = traktId
   infocard.innerHTML = `
     <ul class="btns z4">
       <li>
@@ -283,7 +284,7 @@ function generateInfoCardContent(updates) {
           <div class="beta_action_btns">
             <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
             <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
-            <div class="beta_action_btn watched"><img src="../../assets/icons/app/check.svg"></div>
+            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${updates.seasonNumber},episode:${updates.episodeNumber}})"><img src="../../assets/icons/app/check.svg"></div>
           </div>
         </div>
         <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
@@ -1055,13 +1056,13 @@ function openInfoCard(poster) {
           let i = 0
 
           for(i; i<leftStackSize; i++) {
-            addInfoCard('left', i)
+            addInfoCard('left', i, showId)
           }
 
-          addInfoCard('middle', i)
+          addInfoCard('middle', i, showId)
 
           for(let j=1; j<=rightStackSize; j++) {
-            addInfoCard('right', i+j)
+            addInfoCard('right', i+j, showId)
           }
           updateLeftRightButtons()
           generateStackSlider()

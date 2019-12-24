@@ -119,8 +119,13 @@ function inRange(value, range) {
    return value >= min && value <= max
 }
  
-// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
-// function mainly used to generate dark version of the accent colors
+/**
+ * Takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color.
+ * The function is mainly used to generate dark version of the accent colors
+ * @param {String} hex Hexadecimal color code with the format #xxxxxx
+ * @param {Number} percent Value between -100 and 100
+ * @returns {String} Hexadecimal color code
+ */
 function shadeHexColor(hex, percent) {
    // convert hex to decimal
    let R = parseInt(hex.substring(1,3), 16)
@@ -145,22 +150,42 @@ function shadeHexColor(hex, percent) {
    return '#'+RR+GG+BB
 }
  
-// Simple helper to clone objects which prevents cross-linking.
-function clone(object) {
-   if(null == object || "object" != typeof object) return object
+/**
+ * Simple helper to clone objects which prevents cross-linking.
+ * @param {} sheep Object to clone
+ * @returns {} Cloned object
+ */
+function clone(sheep) {
+   if(null == sheep || "object" != typeof sheep) return sheep
    // create new blank object of same type
-   let copy = object.constructor()
+   let copy = sheep.constructor()
  
    // copy all attributes into it
-   for(let attr in object) {
-      if(object.hasOwnProperty(attr)) {
-         copy[attr] = object[attr]
+   for(let attr in sheep) {
+      if(sheep.hasOwnProperty(attr)) {
+         copy[attr] = sheep[attr]
       }
    }
    return copy
 }
 
+/**
+ * Counts n times up the DOM tree and returns it's parent
+ * @param {HTMLElement} that 
+ * @param {Number} n 
+ * @returns {HTMLElement} nth-parent's element
+ */
+function nthParent(that, n) {
+   let parent = that
+   for(let i=0; i<n; i++) {
+      parent = parent.parentElement
+   }
+   return parent
+}
+
 
 module.exports = {
-   config, printLog, debugLog, inRange, shadeHexColor, clone, ipcChannels, ipcParallel
+   config, printLog, debugLog,
+   inRange, shadeHexColor, clone,
+   ipcChannels, ipcParallel, nthParent
 }
