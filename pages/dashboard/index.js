@@ -788,13 +788,7 @@ async function search(text) {
     return false
   }
 
-  let cacheContent = searchHistoryCache.getKey(text)
-  if(cacheContent !== undefined) {
-    // add cached search results
-  }
-
   let data = await searchRequestHelper(text).then(res => res)
-  debugLog('request finished', data.date)
 
   data.result.forEach(item => {
     debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)

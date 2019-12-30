@@ -163,9 +163,8 @@ function requestSeasonPoster(showId, season) {
 }
 
 //:::: SEARCH ::::\\
-let searchQueryCache = new Cache('searchQuery')
-
 function searchRequestHelper(text) {
+   let searchQueryCache = new Cache('searchQuery')
    let cacheContent = searchQueryCache.getKey(text)
    // check if text was searched already, send earlier results if so
    if(cacheContent !== undefined) {
@@ -234,7 +233,7 @@ function searchRequestHelper(text) {
             })
 
             ipcRenderer.send('cache', {
-               action: 'save', 
+               action: 'saveKeys', 
                name: 'searchQuery'
             })
 

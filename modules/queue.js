@@ -78,7 +78,8 @@ module.exports = class Queue {
       } else {
          // ticking
          let job = this._taskList[jobIndex]
-         console.log('ticking', job.args)
+         // console.log('ticking', job.description)
+         // TODO: add .description to all job enqueuerings that can be shown in the log
          let result = job.run()
             .then(r => r)
             .catch(e => e)
