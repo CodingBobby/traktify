@@ -67,12 +67,12 @@ document.onkeydown = function() {
   } else if(event.keyCode === 39) { // arrow right
     debugLog('shortcut', 'ArrowRight')
     if(openedPanel == 'cards') {
-      moveCards(null, 'right')
+      moveCards('right')
     }
   } else if(event.keyCode === 37) { // arrow left
     debugLog('shortcut', 'ArrowLeft')
     if(openedPanel == 'cards') {
-      moveCards(null, 'left')
+      moveCards('left')
     }
   } else if(event.keyCode === 38) { // arrow up
 
@@ -108,7 +108,7 @@ function rotate(x) {
 let localBuffer
 
 // moves in one direction through the stacks
-function moveCards(clickedButton, direction) {
+function moveCards(direction) {
   let stacks = getCardStacks()
   switch(direction) {
     case 'right':
@@ -122,7 +122,6 @@ function moveCards(clickedButton, direction) {
         rigCard.classList.add('middle_stack')
       }
 
-      // TODO: Logging is only temporary, use results for actual rendering.
       localBuffer.move(1, {
         first: epData => { // onFirst
           // find index of the middle card
@@ -261,7 +260,7 @@ function generateInfoCardDummy(stack, index, traktId) {
 }
 
 function generateInfoCardContent(updates) {
-  return`
+  let html = ` 
     <div class="infocard_child black_b z4">
       <div class="infocard_banner">
         <img src="">
@@ -284,13 +283,14 @@ function generateInfoCardContent(updates) {
           <div class="beta_action_btns">
             <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
             <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
-            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${updates.seasonNumber},episode:${updates.episodeNumber}})"><img src="../../assets/icons/app/check.svg"></div>
+            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${updates.seasonNumber},episode:${updates.episodeNumber}});moveCards('right')"><img src="../../assets/icons/app/check.svg"></div>
           </div>
         </div>
         <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
       </div>
     </div> 
   `
+  return html
 }
 
 function generateStackSlider() {
