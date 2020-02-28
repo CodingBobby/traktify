@@ -21,6 +21,7 @@ function alertChecker() {
 
 alertChecker()
 
+let loadingBar = new ldBar('#loading_bar')
 
 new Promise((resolve, rej) => {
    resolve(ipcRenderer.sendSync('loading-screen', 'loaded'))
@@ -30,15 +31,18 @@ new Promise((resolve, rej) => {
       
       debugLog('loading', 'activities')
       let activities = await newActivitiesAvailable()
+      loadingBar.set(20)
+      debugLog('loading', 20+'%')
    
       debugLog('loading', 'up next to watch')
-      let upNext = await getUnfinishedProgressList(5)
+      let upNext = await getUnfinishedProgressList(5, true, percent => {
+         debugLog('loading', Math.round(20+80*percent)+'%')
+         loadingBar.set(20+80*percent)
+      })
       
       debugLog('loading', 'done')
-      setTimeout(() => {
-         // telling the app to move on, we need this to trigger the opening of the dashboard page
-         ipcRenderer.send('loading-screen', 'done')
-      }, 33.3) // giving some small extra timeout
+      // telling the app to move on, we need this to trigger the opening of the dashboard page
+      ipcRenderer.send('loading-screen', 'done')
    } else {
       debugLog('error', res, new Error().stack)
    }

@@ -20,12 +20,36 @@
   width: 100vw;
   display: flex;
   justify-content: center;
-  top: 60%;
+  top: 80%;
   animation: fly_in_alert 0.6s;
 }
 
 .alert_box span {
   cursor: pointer;
+}
+
+#bar_holder {
+  width: 100vw;
+  position: absolute;
+  top: 70%;
+  display: flex;
+  justify-content: center;
+}
+
+.ldBar {
+  width: 250px !important;
+  height: 40px !important;
+}
+.ldBar path.mainline {
+  stroke: #ED1C24 !important;
+  stroke-linecap: round;
+}
+.ldBar path.baseline {
+  stroke: #242424 !important;
+  stroke-linecap: round;
+}
+.ldBar-label {
+  display: none !important;
 }
 
 @keyframes fly_in_alert {
