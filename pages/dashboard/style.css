@@ -3,6 +3,7 @@
   --side_panel_width: 450px;
   --panel_padding: 40px;
   --search_result_height: 205px;
+  --infocard_stripe_height: 55px;
 }
 
 .wrapper.dashboard {
@@ -194,15 +195,6 @@
   border-radius: 5px;
   background: var(--accent_color);
 }
-
-
-
-
-
-
-
-
-
 /*----------------- NEW CARDS----------------*/
 .infocard_child {
   position: relative;
@@ -218,7 +210,7 @@
 }
 
 .infocard_padding {
-  padding: 10px 20px 10px 250px;
+  padding: 10px 20px 10px 240px;
 }
 
 .infocard_banner {
@@ -245,11 +237,11 @@
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
-  transition: opacity 200ms ease;
+  transition: all 200ms ease;
 }
 
 #infocard_close:hover {
-  opacity: 0.8;
+  background-color: #000;
 }
 
 #infocard_close img {
@@ -258,9 +250,16 @@
   height: 19px;
 }
 
+.infocard_stripe {
+  position: absolute;
+  width: 100%;
+  padding: 10px 0 10px 0;
+  height: var(--infocard_stripe_height);
+  z-index: -1;
+}
 
 .infocard_titles {
-  height: 55px;
+  height: var(--infocard_stripe_height);
 }
 .infocard_titles * {
   display: inline-block;
@@ -271,16 +270,14 @@
   margin: 0 20px;
 }
 
-.infocard_titles .rating {
-  line-height: 24px;
-  width: 40px;
-  height: 55px;
-  text-align: center;
-  white-space: normal;
-}
 .infocard_titles .rating > img {
   width: 30px;
   height: auto;
+}
+
+.infocard_titles div:last-child {
+  font-size: 23px;
+  max-width: 500px;
 }
 
 .infocard_description {
@@ -298,6 +295,38 @@
   height: 250px;
   object-fit: cover;
   border-radius: 4px;
+}
+
+@media screen and (max-width: 1280px) {
+  :root {
+    --infocard_stripe_height: 40px;
+  }
+  .infocard_poster {
+    transform: translateX(30px) translateY(-150px);
+  }
+  .infocard_titles .rating > img {
+    width: 25px;
+  }
+  .infocard_titles div:last-child {
+    font-size: 18px;
+    max-width: 234px;
+  }
+  .infocard_padding {
+    padding: 10px 20px 10px 190px;
+  }
+  .infocard_poster {
+    width: 140px;
+  }
+  .infocard_poster > img {
+    height: 190px;
+  }
+  .infocard_poster > .beta_action_btns {
+    font-size: 13px;
+  }
+  .infocard_poster > .beta_action_btns > .beta_action_btn > img {
+    width: 14px;
+    height: 17px;
+  }
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 .titles {
@@ -318,94 +347,113 @@
   line-height: 39px;
 }
 
-.poster-dashboard:nth-child(n+6) {
+
+.poster_dashboard > img {
+  position: relative;
+  z-index: 1;
+  transition: all 500ms ease;
+  cursor: pointer;
+}
+.poster_tile {
+  height: 97%;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  width: 100%;
+  z-index: 0;
+  position: absolute;
+  background-color: var(--black);
+  background-image: url("../../assets/poster_tile.png");
+  background-size: cover;
+  transition: all 500ms ease;
+  border-radius: 5px;
+}
+
+.poster_dashboard .poster_rating {
+  position: absolute;
+  right: 38px;
+  top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.poster_dashboard:first-child .poster_rating {
+  right: 40px;
+  top: 40px;
+}
+
+.poster_dashboard .poster_rating > img {
+  width: 26px;
+  height: auto;
+}
+.poster_dashboard:first-child .poster_rating > img {
+  width: 38px;
+}
+
+.poster_dashboard .poster_rating > span {
+  font-size: 16px;
+}
+.poster_dashboard:first-child .poster_rating > span {
+  font-size: 23px;
+}
+
+.poster_dashboard .beta_action_btns {
+  width: 110px;
+  position: absolute;
+  right: 0px;
+  bottom: 5px;
+  font-size: 12px;
+  transition: all 400ms ease;
+}
+.poster_dashboard:first-child .beta_action_btns {
+  bottom: 10px;
+  width: 130px;
+}
+
+.poster_dashboard .beta_action_btns .beta_action_btn {
+  padding: 5px 5px;
+  margin: 7px 0;
+}
+.poster_dashboard:first-child .beta_action_btns .beta_action_btn {
+  padding: 5px 10px;
+}
+
+.poster_dashboard .beta_action_btns .beta_action_btn  img {
+  width: 14px;
+  height: 17px;
+}
+
+.poster_dashboard:hover {
+  position: relative;
+  z-index: 2;
+}
+
+.poster_dashboard:hover > img {
+  transform: translateX(-80%);
+}
+.poster_dashboard:first-child:hover > img {
+  transform: translateX(-55%);
+}
+
+.poster_dashboard:hover .beta_action_btns {
+  right: -10px;
+}
+
+.poster_dashboard:nth-child(n+6) {
   display: none;
 }
-.poster-dashboard:first-child {
+.poster_dashboard:first-child {
   width: 236px;
   height: 337px;
 }
-.poster-dashboard:last-child {
+.poster_dashboard:last-child {
   margin-right: 0;
 }
-.poster-dashboard::before {
-  content: '';
-  display: block;
-  position: absolute;
-  border-radius: 0 0 5px 5px;
-  height: 0%;
-  width: 100%;
-  bottom: 0;
-  transition: height 400ms ease;
-  background-image: linear-gradient(
-    to bottom, 
-    rgba(255, 255, 255, 0) 0, #000000e0 80%
-  );
-}
-.poster-dashboard:hover::before {
-  height: 60%;
-}
-
-.poster-content {
-  position: absolute;
-  bottom: 0;
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 12px;
-  opacity: 0;
-  width: calc(100% - 24px);
-  flex-direction: column;
-  align-items: center;
-  transition: all 400ms ease;
-}
-.poster-dashboard:first-child > .poster-content {
-  flex-direction: row;
-}
-.poster-dashboard:hover > .poster-content {
-  opacity: 1;
-}
-
-.poster-content-left,
-.poster-content-right {
-  display: inline-block;
-  vertical-align: middle;
-}
-.poster-content-left img,
-.poster-content-left span {
-  vertical-align: middle;
-}
-.poster-content-right {
-  cursor: pointer;
-  letter-spacing: 0.5px;
-}
-.poster-content-left img {
-  width: 25px;
-  height: auto;
-  margin-right: 4px;
-}
-
+/*:::::::::::::::::::::::::::::::::::::::::::::::: OVERLAYS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .dark_overlay {
   display: block !important;
   animation: blend_in 0.15s !important;
   animation-fill-mode: forwards !important;
-}
-
-#dash_overlay {
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  display: none;
-
-  position: absolute;
-  overflow: hidden;
-  z-index: 2;
-  background-color: rgb(20, 20, 20);
-
-  opacity: 0.75;
-  backdrop-filter: blur(8px);
-  animation: blend_out 0.15s;
-  animation-fill-mode: forwards;
 }
 
 #info_overlay {
@@ -417,7 +465,6 @@
 
   position: absolute;
   overflow: hidden;
-  z-index: 6;
   background-color: rgb(20, 20, 20);
 
   opacity: 0.75;
@@ -425,7 +472,6 @@
   animation: blend_out 0.15s;
   animation-fill-mode: forwards;
 }
-
 /*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 .side_panel {
   display: block;
@@ -604,6 +650,37 @@
 #results .action_btn > img {
   width: 6px;
 }
+
+.poster-content {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  opacity: 0;
+  width: calc(100% - 24px);
+  flex-direction: column;
+  align-items: center;
+  transition: all 400ms ease;
+}
+.poster-content-left,
+.poster-content-right {
+  display: inline-block;
+  vertical-align: middle;
+}
+.poster-content-left img,
+.poster-content-left span {
+  vertical-align: middle;
+}
+.poster-content-right {
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+.poster-content-left img {
+  width: 25px;
+  height: auto;
+  margin-right: 4px;
+}
 /*::::::::::::::::::::::: SETTINGS-COMPONENTS :::::::::::::::::::::::*/
 .panel_box.setting > h3 {
   margin: 0 0 10px 0;
@@ -693,10 +770,10 @@
     line-height: 34px;
   }
 
-  .poster-dashboard:nth-child(4) {
+  .poster_dashboard:nth-child(4) {
     margin-right: 0;
   }
-  .poster-dashboard:nth-child(5) {
+  .poster_dashboard:nth-child(5) {
     display: none;
   }
 

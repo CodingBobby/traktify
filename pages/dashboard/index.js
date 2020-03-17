@@ -207,13 +207,13 @@ function triggerInfoCardOverlay() {
     // open it
     openedPanel = 'cards'
     infocard_overlay.style.display = 'flex'
-    dark_overlay.classList.add('dark_overlay')
+    dark_overlay.classList.add('dark_overlay', 'z6')
   } else {
     // close it
     openedPanel = null
     infocard_overlay.style.display = 'none'
     document.getElementById('infocard_stack').innerHTML = ''
-    dark_overlay.classList.remove('dark_overlay')
+    dark_overlay.classList.remove('dark_overlay', 'z6')
 
     // Here, we could nullize the localBuffer so it is not falsely used by some other instance. When doing so, the whole instance would have to be initiated again when reopening the stacks. Because the user could reopen the same card-stack after closing without opening a different item before, we could instead keep the created instance and only overwrite the localBuffer when the opened item is not the same as before.
   }
@@ -266,7 +266,7 @@ function generateInfoCardContent(updates) {
         <img src="">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
       </div>
-      <div class="black_d_b" style="position:absolute;width:100%;padding:10px 0 10px 0;height:55px;z-index: -1;"></div>
+      <div class="infocard_stripe black_d_b"></div>
       <div style="max-width: 920px;margin:auto;">
         <div class="infocard_titles infocard_padding black_d_b tOverflow">
           <div class="rating">
@@ -274,7 +274,7 @@ function generateInfoCardContent(updates) {
             <span class="white_t fs18 fw700">${updates.ratingPercent}%</span>
           </div>
           <div class="vertical_border"></div>
-          <div class="fs23 fw500 white_t" style="max-width:500px;">
+          <div class="fw500 white_t tOverflow">
             ${updates.seasonNumber}x${updates.episodeNumber} ${updates.episodeTitle}
           </div>  
         </div>
@@ -922,55 +922,38 @@ async function generatePosterSection(update) {
 }
 
 
-async function createPoster(itemToAdd) {
+async function createPoster(item) {
   let li = document.createElement('li')
-  li.classList.add('poster', 'poster-dashboard', 'shadow_h')
 
-  // stuff for the title above the posters
-  li.setAttribute('data_title', itemToAdd.title)
-  li.setAttribute('data_subtitle', itemToAdd.subtitle)
+  li.classList.add('poster', 'poster_dashboard')
+  li.setAttribute('data_title', item.title)
+  li.setAttribute('data_subtitle', item.subtitle)
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
-
-  let poster_content = document.createElement('div')
-  poster_content.classList.add('poster-content')
-
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList.add('poster-content-left', 'fs14', 'white_t', 'fw700')
-
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let rate = document.createElement('span')
-  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(rate)
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right')
-  poster_content_right.append(...createActionButtons(itemToAdd.id))
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  li.appendChild(poster_content)
   
+  li.innerHTML = `<div class="poster_tile shadow_h">
+    <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
+    <div class="beta_action_btns">
+      <div class="beta_action_btn play" onclick="playNow(${item.id})"><img src="../../assets/icons/app/play.svg"></div>
+      <div class="beta_action_btn watchlist" onclick="addToWatchlist(${item.id})"><img src="../../assets/icons/app/list.svg"></div>
+      <div class="beta_action_btn watched" onclick="addToHistory(${item.id})"><img src="../../assets/icons/app/check.svg"></div>
+    </div>
+  </div>`
+
   requestAndLoadImage({
     parent: li,
     use: 'poster',
     type: 'season',
-    itemId: itemToAdd.id,
-    reference: itemToAdd.season,
+    itemId: item.id,
+    reference: item.season,
+    classes: ['shadow_h', 'z1'],
     attributes: {
-      // openInfoCards uses the matcher to know which episode to show
       'onclick': 'openInfoCard(this)',
-      'data_matcher': itemToAdd.matcher
+      'data_matcher': item.matcher
     }
   })
 
-  let posters = document.getElementById('posters')
-  posters.appendChild(li);
+  document.getElementById('posters').appendChild(li);
 }
 
 function createTitle(itemToAdd) {
