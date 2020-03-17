@@ -925,16 +925,12 @@ async function generatePosterSection(update) {
 async function createPoster(itemToAdd) {
   let li = document.createElement('li')
   li.classList.add('poster', 'poster-dashboard', 'shadow_h')
-  // This is the most important one, as it will tell the rest of the app what item the poster shows. It will be used to provide information when the user clicks on this item.
-  li.setAttribute('data_matcher', itemToAdd.matcher)
 
+  // stuff for the title above the posters
   li.setAttribute('data_title', itemToAdd.title)
   li.setAttribute('data_subtitle', itemToAdd.subtitle)
-
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
-
-  li.setAttribute('onclick', 'openInfoCard(this)')
 
   let poster_content = document.createElement('div')
   poster_content.classList.add('poster-content')
@@ -965,7 +961,12 @@ async function createPoster(itemToAdd) {
     use: 'poster',
     type: 'season',
     itemId: itemToAdd.id,
-    reference: itemToAdd.season
+    reference: itemToAdd.season,
+    attributes: {
+      // openInfoCards uses the matcher to know which episode to show
+      'onclick': 'openInfoCard(this)',
+      'data_matcher': itemToAdd.matcher
+    }
   })
 
   let posters = document.getElementById('posters')

@@ -111,15 +111,18 @@ function loadImage(parent, src, loadingSrc) {
 }
 
 /**
+ * This function can be called whenever you want to place an image element into some HTML context. It first shows a loading animation but as soon as the requested image is ready, it will take the placeholder's place.
  * @param {object} options 
- * @param options.parent dom element the image should be appended to
+ * @param {HTMLElement} options.parent dom element the image should be appended to
  * @param {'poster'} options.use in what type of element the image will be used
  * @param {'season'} options.type type the item belongs to
  * @param {number} options.itemId tvdb id of the item
  * @param {any} options.reference some reference we can use
+ * @param {object} options.attributes additional attributes, only the final image should get
+ * @param {string[]} options.classes CSS classes the final image should have
  */
-
 async function requestAndLoadImage(options) {
+  // placeholder element
   let loading_img = document.createElement('img')
   // the actual image, the placeholder gets updated to
   let img = document.createElement('img')
@@ -132,17 +135,25 @@ async function requestAndLoadImage(options) {
       switch(options.type) {
         case 'season': {
           img.src = await getSeasonPoster(options.itemId, options.reference)
-  
-          img.onload = function() {
-            setTimeout(() => {
-              options.parent.removeChild(loading_img)
-              options.parent.appendChild(img)
-            }, 3*33.3) // some extra animation and framerate buffer
-          }
           break
         }
       }
       break
     }
+  }
+
+  if(options.classes) img.classList = options.classes.join(' ')
+
+  for(let name in options.attributes) {
+    if(options.attributes.hasOwnProperty(name)) {
+      img.setAttribute(name, options.attributes[name])
+    }
+  }
+
+  img.onload = function() {
+    setTimeout(() => {
+      options.parent.removeChild(loading_img)
+      options.parent.appendChild(img)
+    }, 3*33.3) // some extra animation and framerate buffer
   }
 }
