@@ -120,11 +120,12 @@ function loadImage(parent, src, loadingSrc) {
  * @param {any} options.reference some reference we can use
  * @param {object} options.attributes additional attributes, only the final image should get
  * @param {string[]} options.classes CSS classes the final image should have
+ * @param {Function} onLoad callback to execute after loading is fully complete
  */
-async function requestAndLoadImage(options) {
+async function requestAndLoadImage(options, onLoad) {
   // placeholder element
   let loading_img = document.createElement('img')
-  // the actual image, the placeholder gets updated to
+  // the actual image, the placeholder will be updated to
   let img = document.createElement('img')
 
   switch(options.use) {
@@ -142,6 +143,7 @@ async function requestAndLoadImage(options) {
     }
   }
 
+  // adding properties to the final image
   if(options.classes) img.classList = options.classes.join(' ')
 
   for(let name in options.attributes) {
@@ -150,10 +152,14 @@ async function requestAndLoadImage(options) {
     }
   }
 
+  // after desired image is preloaded whilst remaining invisible
   img.onload = function() {
+    options.parent.appendChild(img)
+    options.parent.removeChild(loading_img)
+    
     setTimeout(() => {
-      options.parent.removeChild(loading_img)
-      options.parent.appendChild(img)
-    }, 3*33.3) // some extra animation and framerate buffer
+      // ensures that the callback is definitely fired after the images are visible
+      onLoad()
+    }, 250)
   }
 }

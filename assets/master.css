@@ -20,6 +20,10 @@
 *:focus {
   outline: none;
 }
+
+.hidden {
+  display: none !important;
+}
 /*::::::::::::::::::::::::::::::::::::::::::::::: FONTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 @font-face {
   font-family: 'manrope';

@@ -922,6 +922,7 @@ async function generatePosterSection(update) {
 }
 
 
+// this is fired for each poster separately
 async function createPoster(item) {
   let li = document.createElement('li')
 
@@ -930,8 +931,11 @@ async function createPoster(item) {
   li.setAttribute('data_subtitle', item.subtitle)
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
-  
-  li.innerHTML = `<div class="poster_tile shadow_h">
+
+  let posterTile = document.createElement('div')
+  posterTile.classList.add('hidden')
+
+  posterTile.innerHTML = `<div class="poster_tile shadow_h">
     <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
     <div class="beta_action_btns">
       <div class="beta_action_btn play" onclick="playNow(${item.id})"><img src="../../assets/icons/app/play.svg"></div>
@@ -939,6 +943,8 @@ async function createPoster(item) {
       <div class="beta_action_btn watched" onclick="addToHistory(${item.id})"><img src="../../assets/icons/app/check.svg"></div>
     </div>
   </div>`
+
+  li.appendChild(posterTile)
 
   requestAndLoadImage({
     parent: li,
@@ -951,6 +957,8 @@ async function createPoster(item) {
       'onclick': 'openInfoCard(this)',
       'data_matcher': item.matcher
     }
+  }, () => {
+    posterTile.classList.remove('hidden')
   })
 
   document.getElementById('posters').appendChild(li);
