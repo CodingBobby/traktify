@@ -20,10 +20,6 @@
 *:focus {
   outline: none;
 }
-
-.hidden {
-  display: none !important;
-}
 /*::::::::::::::::::::::::::::::::::::::::::::::: FONTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 @font-face {
   font-family: 'manrope';
@@ -221,6 +217,10 @@
   opacity: 0.06;
   width: 1px;
   height: 100%;
+}
+
+.hidden {
+  display: none !important;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: COMPONENTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 body {
