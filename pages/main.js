@@ -162,4 +162,18 @@ async function requestAndLoadImage(options, onLoad) {
       onLoad()
     }, 250)
   }
+
+  img.onerror = function(event) {
+    // event does not contain error codes wtf
+    debugLog('error', `loading image from ${img.src}`)
+
+    img.src = '../../assets/placeholder.png'
+
+    options.parent.appendChild(img)
+    options.parent.removeChild(loading_img)
+
+    setTimeout(() => {
+      onLoad()
+    }, 250)
+  }
 }
