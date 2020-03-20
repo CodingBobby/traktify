@@ -439,7 +439,7 @@ module.exports.showBuffer = class showBuffer {
 
       // contains the episode counts of the seasons
       this.tree.forEach((c, i) => {
-         if(i < s) {
+         if(i < s-1) {
             // add all episodes on seasons below current
             abs += c
          }
