@@ -152,18 +152,18 @@ function shadeHexColor(hex, percent) {
  
 /**
  * Simple helper to clone objects which prevents cross-linking.
- * @param {} sheep Object to clone
- * @returns {} Cloned object
+ * @param dolly Object to clone
+ * @returns Cloned object
  */
-function clone(sheep) {
-   if(null == sheep || "object" != typeof sheep) return sheep
+function clone(dolly) {
+   if(null == dolly || "object" != typeof dolly) return dolly
    // create new blank object of same type
-   let copy = sheep.constructor()
+   let copy = dolly.constructor()
  
    // copy all attributes into it
-   for(let attr in sheep) {
-      if(sheep.hasOwnProperty(attr)) {
-         copy[attr] = sheep[attr]
+   for(let attr in dolly) {
+      if(dolly.hasOwnProperty(attr)) {
+         copy[attr] = dolly[attr]
       }
    }
    return copy

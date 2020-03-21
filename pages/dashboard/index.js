@@ -1018,8 +1018,12 @@ function toggleAnimation(x, y, z) {
   x.classList.add(y)
 }
 
+/**
+ * First function to trigger when a poster is clicked.
+ * @param {HTMLElement} poster Image which got clicked on
+ */
 function openInfoCard(poster) {
-  // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
+  // matcher layout: <show_id>_<m,t,s,e,p,l>_[season]_[episode]
   let matcher = poster.getAttribute('data_matcher')
   debugLog('info card', matcher)
   matcher = matcher.split('_')
