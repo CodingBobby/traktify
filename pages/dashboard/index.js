@@ -385,8 +385,8 @@ let sideBar = {
       panel.classList.add('panel')
 
       let search_field = document.createElement('input')
-      search_field.classList.add('panel_header', 'search', 'fs23', 'fw500', 'white_t', 'black_d_b', 'z4')
-      search_field.type = 'text'
+      search_field.classList.add('panel_header', 'search', 'fs18', 'fw500', 'white_t', 'black_d_b', 'z4')
+      search_field.type = 'search'
       search_field.onkeydown = function() {
         if(event.keyCode === 13) { // ENTER
           search(search_field.value)
@@ -954,6 +954,7 @@ async function createPoster(item) {
     reference: item.season,
     classes: ['shadow_h', 'z1'],
     attributes: {
+      'style': 'cursor:pointer',
       'onclick': 'openInfoCard(this)',
       'data_matcher': item.matcher
     }
@@ -985,28 +986,30 @@ function createTitle(itemToAdd) {
 }
 
 function animateText(textBox, onenter) {
-  let container = document.getElementById('poster_title')
-  let container_title = container.children[1]
-  let container_subtitle = container.children[2]
+  if(!textBox.children[0].classList.contains('hidden')){
+    let container = document.getElementById('poster_title')
+    let container_title = container.children[1]
+    let container_subtitle = container.children[2]
 
-  let title = textBox.getAttribute('data_title')
-  let subtitle = textBox.getAttribute('data_subtitle')
+    let title = textBox.getAttribute('data_title')
+    let subtitle = textBox.getAttribute('data_subtitle')
 
-  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+    if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+      if(onenter) {
+        toggleAnimation(container_title, 'animation_slide_up', title)
+        toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+      }
     }
-  }
 
-  let poster = document.getElementById('posters').firstChild
-  let poster_title = poster.getAttribute('data_title')
-  let poster_subtitle = poster.getAttribute('data_subtitle')
+    let poster = document.getElementById('posters').firstChild
+    let poster_title = poster.getAttribute('data_title')
+    let poster_subtitle = poster.getAttribute('data_subtitle')
 
-  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(!onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', poster_title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+    if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+      if(!onenter) {
+        toggleAnimation(container_title, 'animation_slide_up', poster_title)
+        toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+      }
     }
   }
 }
