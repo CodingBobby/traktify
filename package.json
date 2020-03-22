@@ -1,6 +1,6 @@
 {
   "name": "traktify",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "multi platform desktop app for trakt.tv",
   "main": "app.js",
   "scripts": {
@@ -11,7 +11,8 @@
     "package-win": "electron-packager . --overwrite --asar --platform=win32 --arch=ia32 --icon=assets/icons/trakt/trakt.ico --prune=true --out=release-builds/packages --version-string.CompanyName=CE --version-string.FileDescription=CE --version-string.ProductName=\"Traktify\"",
     "package-linux": "electron-packager . --overwrite --asar --platform=linux --arch=x64 --icon=assets/icons/trakt/512x512.png --prune=true --out=release-builds/packages",
     "installer-mac": "electron-installer-dmg ./release-builds/packages/traktify-darwin-x64/traktify.app Setup --out=release-builds/installers/darwin --overwrite --icon=assets/icons/trakt/trakt.icns",
-    "installer-win": "node installers/windowsInstaller.js"
+    "installer-win": "node installers/windowsInstaller.js",
+    "build-docs": "jsdoc -c jsdoc-config.json"
   },
   "repository": {
     "type": "git",
@@ -29,25 +30,27 @@
   },
   "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
-    "electron": "^4.2.8",
+    "electron": "^4.2.12",
+    "electron-builder": "^21.2.0",
     "electron-installer-dmg": "^3.0.0",
-    "electron-packager": "^14.0.4",
+    "electron-packager": "^14.2.1",
     "electron-winstaller": "^4.0.0",
-    "jest": "^24.9.0"
+    "jest": "^24.9.0",
+    "jsdoc": "^3.6.3",
+    "tidy-jsdoc": "^1.2.2"
   },
   "dependencies": {
     "background": "^0.3.3",
-    "discord-rpc": "^3.0.2",
+    "discord-rpc": "^3.1.0",
     "electron-window-state": "^5.0.3",
     "fanart.tv": "^2.1.0",
     "flat-cache": "^2.0.1",
     "fs": "0.0.1-security",
-    "moviedb-promise": "^1.4.1",
+    "moviedb-promise": "^1.5.0",
     "node-tvdb": "^4.1.0",
     "path": "^0.12.7",
-    "register-scheme": "0.0.2",
-    "request": "^2.88.0",
-    "rimraf": "^3.0.0",
+    "request": "^2.88.2",
+    "rimraf": "^3.0.2",
     "trakt.tv": "^7.2.0"
   }
 }

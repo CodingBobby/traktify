@@ -13,7 +13,9 @@ module.exports = {
 }
 
 
-function requestShowList() {
+function requestShowList(progressCallback) {
+   progressCallback = progressCallback || function(n) {}
+   
    function filterAndSortShows(a, h) {
       /**
        * Pay attention as the order in which the shows are sorted is by the date of last interaction. This interaction is not always a newly added episode but might also be a comment, rating or anything else unrelated to the watching history. Thus, it is not guaranteed that the order in which they appear in this list is the order of watching. */
@@ -53,8 +55,11 @@ function requestShowList() {
     */
    return new Promise(async (resolve, rej) => {
       let all = await requestWatchedShows()
+      progressCallback(1/3)
       let hidden = await requestHiddenItems()
+      progressCallback(2/3)
       let visible = filterAndSortShows(all, hidden)
+      progressCallback(3/3)
 
       resolve(visible)
    })

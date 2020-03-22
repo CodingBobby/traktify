@@ -67,12 +67,12 @@ document.onkeydown = function() {
   } else if(event.keyCode === 39) { // arrow right
     debugLog('shortcut', 'ArrowRight')
     if(openedPanel == 'cards') {
-      moveCards(null, 'right')
+      moveCards('right')
     }
   } else if(event.keyCode === 37) { // arrow left
     debugLog('shortcut', 'ArrowLeft')
     if(openedPanel == 'cards') {
-      moveCards(null, 'left')
+      moveCards('left')
     }
   } else if(event.keyCode === 38) { // arrow up
 
@@ -108,7 +108,7 @@ function rotate(x) {
 let localBuffer
 
 // moves in one direction through the stacks
-function moveCards(clickedButton, direction) {
+function moveCards(direction) {
   let stacks = getCardStacks()
   switch(direction) {
     case 'right':
@@ -122,7 +122,6 @@ function moveCards(clickedButton, direction) {
         rigCard.classList.add('middle_stack')
       }
 
-      // TODO: Logging is only temporary, use results for actual rendering.
       localBuffer.move(1, {
         first: epData => { // onFirst
           // find index of the middle card
@@ -208,20 +207,20 @@ function triggerInfoCardOverlay() {
     // open it
     openedPanel = 'cards'
     infocard_overlay.style.display = 'flex'
-    dark_overlay.classList.add('dark_overlay')
+    dark_overlay.classList.add('dark_overlay', 'z6')
   } else {
     // close it
     openedPanel = null
     infocard_overlay.style.display = 'none'
     document.getElementById('infocard_stack').innerHTML = ''
-    dark_overlay.classList.remove('dark_overlay')
+    dark_overlay.classList.remove('dark_overlay', 'z6')
 
     // Here, we could nullize the localBuffer so it is not falsely used by some other instance. When doing so, the whole instance would have to be initiated again when reopening the stacks. Because the user could reopen the same card-stack after closing without opening a different item before, we could instead keep the created instance and only overwrite the localBuffer when the opened item is not the same as before.
   }
 }
 
 
-function addInfoCard(position, index) {
+function addInfoCard(position, index, traktId) {
   let stack
   switch(position) {
     case 'left':
@@ -235,13 +234,14 @@ function addInfoCard(position, index) {
       break
   }
   let infocard_stack = document.getElementById('infocard_stack')
-  infocard_stack.appendChild(generateInfoCardDummy(stack, index))
+  infocard_stack.appendChild(generateInfoCardDummy(stack, index, traktId))
 }
 
-function generateInfoCardDummy(stack, index) {
+function generateInfoCardDummy(stack, index, traktId) {
   let infocard = document.createElement('div')
   infocard.classList = 'infocard shadow_b '+stack
   infocard.id = 'card_'+index
+  infocard.dataset.trakt_id = traktId
   infocard.innerHTML = `
     <ul class="btns z4">
       <li>
@@ -260,13 +260,13 @@ function generateInfoCardDummy(stack, index) {
 }
 
 function generateInfoCardContent(updates) {
-  return`
+  let html = ` 
     <div class="infocard_child black_b z4">
       <div class="infocard_banner">
         <img src="">
         <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
       </div>
-      <div class="black_d_b" style="position:absolute;width:100%;padding:10px 0 10px 0;height:55px;z-index: -1;"></div>
+      <div class="infocard_stripe black_d_b"></div>
       <div style="max-width: 920px;margin:auto;">
         <div class="infocard_titles infocard_padding black_d_b tOverflow">
           <div class="rating">
@@ -274,7 +274,7 @@ function generateInfoCardContent(updates) {
             <span class="white_t fs18 fw700">${updates.ratingPercent}%</span>
           </div>
           <div class="vertical_border"></div>
-          <div class="fs23 fw500 white_t" style="max-width:500px;">
+          <div class="fw500 white_t tOverflow">
             ${updates.seasonNumber}x${updates.episodeNumber} ${updates.episodeTitle}
           </div>  
         </div>
@@ -283,13 +283,14 @@ function generateInfoCardContent(updates) {
           <div class="beta_action_btns">
             <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
             <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
-            <div class="beta_action_btn watched"><img src="../../assets/icons/app/check.svg"></div>
+            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${updates.seasonNumber},episode:${updates.episodeNumber}});moveCards('right')"><img src="../../assets/icons/app/check.svg"></div>
           </div>
         </div>
         <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
       </div>
     </div> 
   `
+  return html
 }
 
 function generateStackSlider() {
@@ -787,13 +788,7 @@ async function search(text) {
     return false
   }
 
-  let cacheContent = searchHistoryCache.getKey(text)
-  if(cacheContent !== undefined) {
-    // add cached search results
-  }
-
   let data = await searchRequestHelper(text).then(res => res)
-  debugLog('request finished', data.date)
 
   data.result.forEach(item => {
     debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
@@ -927,54 +922,46 @@ async function generatePosterSection(update) {
 }
 
 
-async function createPoster(itemToAdd) {
+// this is fired for each poster separately
+async function createPoster(item) {
   let li = document.createElement('li')
-  li.classList.add('poster', 'poster-dashboard', 'shadow_h')
-  // This is the most important one, as it will tell the rest of the app what item the poster shows. It will be used to provide information when the user clicks on this item.
-  li.setAttribute('data_matcher', itemToAdd.matcher)
 
-  li.setAttribute('data_title', itemToAdd.title)
-  li.setAttribute('data_subtitle', itemToAdd.subtitle)
-
+  li.classList.add('poster', 'poster_dashboard')
+  li.setAttribute('data_title', item.title)
+  li.setAttribute('data_subtitle', item.subtitle)
   li.setAttribute('onmouseover', 'animateText(this, true)')
   li.setAttribute('onmouseleave', 'animateText(this, false)')
 
-  li.setAttribute('onclick', 'openInfoCard(this)')
+  let posterTile = document.createElement('div')
+  posterTile.classList.add('hidden')
 
-  let poster_content = document.createElement('div')
-  poster_content.classList.add('poster-content')
+  posterTile.innerHTML = `<div class="poster_tile shadow_h">
+    <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
+    <div class="beta_action_btns">
+      <div class="beta_action_btn play" onclick="playNow(${item.id})"><img src="../../assets/icons/app/play.svg"></div>
+      <div class="beta_action_btn watchlist" onclick="addToWatchlist(${item.id})"><img src="../../assets/icons/app/list.svg"></div>
+      <div class="beta_action_btn watched" onclick="addToHistory(${item.id})"><img src="../../assets/icons/app/check.svg"></div>
+    </div>
+  </div>`
 
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList.add('poster-content-left', 'fs14', 'white_t', 'fw700')
+  li.appendChild(posterTile)
 
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let rate = document.createElement('span')
-  rate.innerText = `${Math.round(itemToAdd.rating * 10)}%`
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(rate)
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right')
-  poster_content_right.append(...createActionButtons(itemToAdd.id))
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  li.appendChild(poster_content)
-  
   requestAndLoadImage({
     parent: li,
     use: 'poster',
     type: 'season',
-    itemId: itemToAdd.id,
-    reference: itemToAdd.season
+    itemId: item.id,
+    reference: item.season,
+    classes: ['shadow_h', 'z1'],
+    attributes: {
+      'onclick': 'openInfoCard(this)',
+      'data_matcher': item.matcher
+    }
+  }, () => {
+    posterTile.classList.remove('hidden')
   })
 
-  let posters = document.getElementById('posters')
-  posters.appendChild(li);
+  document.getElementById('posters').appendChild(li);
 }
 
 function createTitle(itemToAdd) {
@@ -1031,8 +1018,12 @@ function toggleAnimation(x, y, z) {
   x.classList.add(y)
 }
 
+/**
+ * First function to trigger when a poster is clicked.
+ * @param {HTMLElement} poster Image which got clicked on
+ */
 function openInfoCard(poster) {
-  // <show_id>_<m,t,s,e,p,l>_[season]_[episode]
+  // matcher layout: <show_id>_<m,t,s,e,p,l>_[season]_[episode]
   let matcher = poster.getAttribute('data_matcher')
   debugLog('info card', matcher)
   matcher = matcher.split('_')
@@ -1055,13 +1046,13 @@ function openInfoCard(poster) {
           let i = 0
 
           for(i; i<leftStackSize; i++) {
-            addInfoCard('left', i)
+            addInfoCard('left', i, showId)
           }
 
-          addInfoCard('middle', i)
+          addInfoCard('middle', i, showId)
 
           for(let j=1; j<=rightStackSize; j++) {
-            addInfoCard('right', i+j)
+            addInfoCard('right', i+j, showId)
           }
           updateLeftRightButtons()
           generateStackSlider()

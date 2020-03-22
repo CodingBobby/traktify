@@ -1,0 +1,25 @@
+{
+   "source": {
+      "include": ["README.md", "app.js", "pages", "modules"],
+      "includePattern": ".+\\.js(doc|x)?$",
+      "excludePattern": "(^|\\/|\\\\)_"
+   },
+   "opts": {
+      "template": "node_modules/tidy-jsdoc",
+      "encoding": "utf8",
+      "destination": "./out/docs/",
+      "recurse": true,
+      "prism-theme": "prism-custom"
+   },
+   "plugins": [
+      "plugins/markdown",
+      "plugins/summarize"
+   ],
+   "templates": {
+      "monospaceLinks": true
+   },
+   "metadata": {
+      "title": "Traktify API Documentation",
+      "logo": "https://raw.githubusercontent.com/CodingBobby/traktify/master/assets/icons/traktify/512x512.png"
+   }
+}

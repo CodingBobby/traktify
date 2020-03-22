@@ -163,6 +163,9 @@
 .z4 {
   z-index: 4;
 }
+.z6 {
+  z-index: 6;
+}
 /*::::::::::::::::::::::::::::::::::::::::::::::: COLORS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .black_t {
   color: var(--black);
@@ -214,6 +217,10 @@
   opacity: 0.06;
   width: 1px;
   height: 100%;
+}
+
+.hidden {
+  display: none !important;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: COMPONENTS :::::::::::::::::::::::::::::::::::::::::::::::*/
 body {
@@ -483,12 +490,11 @@ body::after {
 }
 
 .poster, 
-.poster img {
+.poster > img {
   border-radius: 5px;
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: ACTION-BUTTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .beta_action_btns {
-  margin: 30px 0;
   width: 100%;
 }
 
@@ -515,6 +521,11 @@ body::after {
   width: 16px;
   height: 19px;
   margin-right: 10px;
+}
+
+.beta_action_btn > img,
+.beta_action_btn::after  {
+  vertical-align: middle;
 }
 
 .beta_action_btn.play {

@@ -6,7 +6,8 @@ module.exports = {
    searchRequestHelper,
    getUserStats,
    getSeasonPoster,
-   reloadAllItems
+   reloadAllItems,
+   requestHistoryUpdatePosting
 }
 
 const {
@@ -162,9 +163,8 @@ function requestSeasonPoster(showId, season) {
 }
 
 //:::: SEARCH ::::\\
-let searchQueryCache = new Cache('searchQuery')
-
 function searchRequestHelper(text) {
+   let searchQueryCache = new Cache('searchQuery')
    let cacheContent = searchQueryCache.getKey(text)
    // check if text was searched already, send earlier results if so
    if(cacheContent !== undefined) {
@@ -233,7 +233,7 @@ function searchRequestHelper(text) {
             })
 
             ipcRenderer.send('cache', {
-               action: 'save', 
+               action: 'saveKeys', 
                name: 'searchQuery'
             })
 
@@ -439,7 +439,7 @@ module.exports.showBuffer = class showBuffer {
 
       // contains the episode counts of the seasons
       this.tree.forEach((c, i) => {
-         if(i < s) {
+         if(i < s-1) {
             // add all episodes on seasons below current
             abs += c
          }
@@ -678,4 +678,50 @@ module.exports.showBuffer = class showBuffer {
          description: raw.overview
       }
    }
+}
+
+//
+// POSTINGS
+//
+
+const {
+   addHistoryUpdates
+} = require('./api/posters.js')
+
+/**
+ * @param {Number} id trakt-id of the item
+ * @param {({type:'movie'}|{type:'episode',season:Number,episode:Number})} item type of the item, absolute season and episode number required if the item is an episode
+ * @param {Date} [date] defaults to the date of this function call
+ */
+function requestHistoryUpdatePosting(id, item, date) {
+   let update = {
+      movies: [],
+      shows: []
+   }
+
+   // should not be able to be anything else than these both
+   if(item.type == 'movie') {
+      update.movies.push({
+         watched_at: date || new Date(),
+         ids: {
+            trakt: id
+         }
+      })
+   } else if(item.type == "episode") {
+      update.shows.push({
+         ids: {
+            trakt: id
+         },
+         seasons: [{
+            number: item.season,
+            episodes: [{
+               watched_at: date || new Date(),
+               number: item.episode
+            }]
+         }]
+      })
+   }
+
+   debugLog('sync', `updating watch status of ${id}`)
+   addHistoryUpdates(update)
 }
