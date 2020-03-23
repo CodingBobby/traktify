@@ -82,8 +82,8 @@
             "expires": 0
         },
         "placeholder": {
-            "poster": "placeholder.png",
-            "search": "placeholder_nobg.png"
+            "poster": "notfound.png",
+            "search": "notfound.png"
         },
         "rpc": {
             "states": [
