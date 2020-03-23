@@ -2,7 +2,7 @@
   "name": "traktify",
   "version": "0.1.10",
   "description": "multi platform desktop app for trakt.tv",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
     "test": "jest",
     "start": "electron .",

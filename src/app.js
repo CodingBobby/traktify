@@ -49,7 +49,7 @@ global.debugLog = debugLog
 // important checks regarding required files
 let fatalError = false
 
-fs.exists('./config.json', ex => {
+fs.exists(__dirname+'/config.json', ex => {
   if(!ex) {
     debugLog('error', 'config does not exist', new Error().stack)
     fatalError = true
@@ -72,7 +72,7 @@ function envErr() {
 // configuration and boolean checks that we need frequently
 // the config file will be used to save preferences the user can change
 // (like darkmode, behavior etc.)
-global.config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
+global.config = JSON.parse(fs.readFileSync(__dirname+"/config.json", "utf8"))
 let user = global.config.user
 
 // defining global variables that can be accessed from other scripts
@@ -396,13 +396,13 @@ function deleteCacheFolder() {
 
 // These functions do nothing but load a render page
 function loadLogin() {
-  window.loadFile('pages/login/index.html')
+  window.loadFile(__dirname+'/pages/login/index.html')
 }
 function loadDashboard() {
-  window.loadFile('pages/dashboard/index.html')
+  window.loadFile(__dirname+'/pages/dashboard/index.html')
 }
 function loadLoadingScreen() {
-  window.loadFile('pages/loading/index.html')
+  window.loadFile(__dirname+'/pages/loading/index.html')
 }
 
 function loadingHandler() {
