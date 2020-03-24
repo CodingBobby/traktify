@@ -14,7 +14,7 @@
 /bin
 /out
 /target
-/release-builds
+/dist
 
 # node stuff
 /node_modules
@@ -31,9 +31,6 @@ pids
 *.pid.lock
 .npm
 
-# secrets
-*.real.*
+# keys
+*.secret.*
 .env
-
-# cache
-/**/.cache

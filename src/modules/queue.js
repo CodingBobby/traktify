@@ -1,18 +1,25 @@
 module.exports = class Queue {
+   /**
+    * @param {Object} [options] Optional settings for the queue
+    * @param {Number} [options.frequency] Ticks per second
+    * @param {Boolean} [options.reverse] Set to true to always run the latest task first
+    * @param {Function} [mergeCallback] 
+    */
    constructor(options, mergeCallback) {
-      // options: { ?frequency, ?reverse }
       options = options || {}
+
+      /** @private */
+      this._timeOut = 1e3
 
       if(options.frequency) {
          this._timeOut = 1e3/options.frequency
-      } else {
-         this._timeOut = 1e3
       }
 
+      /** @private */
       this._reverse = options.reverse
-
+      /** @private */
       this._taskList = []
-
+      /** @private */
       this._mergeCallback = typeof mergeCallback == 'function' ? mergeCallback : false
    }
  

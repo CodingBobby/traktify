@@ -1,6 +1,7 @@
-const fs = require('fs')
+const fs = require('fs-extra')
+const { PATHS } = require('./app/files.js')
 
-const config = JSON.parse(fs.readFileSync(__dirname+"/../config.json", "utf8"))
+const config = JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
 
 const LogQueue = new(require(__dirname+'/queue.js'))({
    frequency: 5,
@@ -13,15 +14,14 @@ class IPCChannels {
    log(details) {
       switch(details.action) {
          case 'save': {
-            let logPath = './.log'
             LogQueue.add(function() {
-               fs.stat(logPath, function(err, stat) {
+               fs.stat(PATHS.log, function(err, stat) {
                   if(err == null) {
-                     let currentLog = fs.readFileSync(logPath)
-                     fs.writeFileSync(logPath, currentLog+'\n'+details.log)
+                     let currentLog = fs.readFileSync(PATHS.log)
+                     fs.writeFileSync(PATHS.log, currentLog+'\n'+details.log)
                   } else if(err.code == 'ENOENT') {
                      // file does not exist yet
-                     fs.writeFileSync(logPath, 'TRAKTIFY LOG\n'+details.log)
+                     fs.writeFileSync(PATHS.log, 'TRAKTIFY LOG\n'+details.log)
                   } else {
                      console.log('Error occured while saving log: ', err.code)
                   }
