@@ -1,6 +1,9 @@
-const fs = require('fs')
+const fs = require('fs-extra')
+const { PATHS } = require('./app/files.js')
 
-const config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
+if(fs.existsSync(PATHS.config)) {
+   module.exports.config = JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
+}
 
 const LogQueue = new(require(__dirname+'/queue.js'))({
    frequency: 5,
@@ -13,15 +16,14 @@ class IPCChannels {
    log(details) {
       switch(details.action) {
          case 'save': {
-            let logPath = './.log'
             LogQueue.add(function() {
-               fs.stat(logPath, function(err, stat) {
+               fs.stat(PATHS.log, function(err, stat) {
                   if(err == null) {
-                     let currentLog = fs.readFileSync(logPath)
-                     fs.writeFileSync(logPath, currentLog+'\n'+details.log)
+                     let currentLog = fs.readFileSync(PATHS.log)
+                     fs.writeFileSync(PATHS.log, currentLog+'\n'+details.log)
                   } else if(err.code == 'ENOENT') {
                      // file does not exist yet
-                     fs.writeFileSync(logPath, 'TRAKTIFY LOG\n'+details.log)
+                     fs.writeFileSync(PATHS.log, 'TRAKTIFY LOG\n'+details.log)
                   } else {
                      console.log('Error occured while saving log: ', err.code)
                   }
@@ -152,18 +154,18 @@ function shadeHexColor(hex, percent) {
  
 /**
  * Simple helper to clone objects which prevents cross-linking.
- * @param {} sheep Object to clone
- * @returns {} Cloned object
+ * @param {*} dolly Object to clone
+ * @returns {*} Cloned object
  */
-function clone(sheep) {
-   if(null == sheep || "object" != typeof sheep) return sheep
+function clone(dolly) {
+   if(null == dolly || "object" != typeof dolly) return dolly
    // create new blank object of same type
-   let copy = sheep.constructor()
+   let copy = dolly.constructor()
  
    // copy all attributes into it
-   for(let attr in sheep) {
-      if(sheep.hasOwnProperty(attr)) {
-         copy[attr] = sheep[attr]
+   for(let attr in dolly) {
+      if(dolly.hasOwnProperty(attr)) {
+         copy[attr] = dolly[attr]
       }
    }
    return copy
@@ -185,7 +187,7 @@ function nthParent(that, n) {
 
 
 module.exports = {
-   config, printLog, debugLog,
+   printLog, debugLog,
    inRange, shadeHexColor, clone,
    ipcChannels, ipcParallel, nthParent
 }
