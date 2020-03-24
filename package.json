@@ -10,7 +10,7 @@
     "installer-win": "node installers/windowsInstaller.js",
     "build-docs": "jsdoc -c jsdoc-config.json",
     "pack": "npm run clean && electron-builder --dir",
-    "dist": "npm run clean && electron-builder --publish onTag"
+    "dist": "npm run clean && electron-builder"
   },
   "build": {
     "productName": "Traktify",
@@ -23,16 +23,22 @@
     "mac": {
       "category": "public.app-category.video",
       "icon": "src/assets/icons/traktify/traktify.icns",
-      "publish": [ "github" ]
+      "publish": [
+        "github"
+      ]
     },
     "win": {
       "icon": "src/assets/icons/traktify/traktify.ico",
-      "publish": [ "github" ]
+      "publish": [
+        "github"
+      ]
     },
     "linux": {
       "category": "Video",
       "icon": "src/assets/icons/traktify/128x128.png",
-      "publish": [ "github" ]
+      "publish": [
+        "github"
+      ]
     }
   },
   "repository": {
@@ -55,8 +61,7 @@
     "electron-builder": "^21.2.0",
     "electron-winstaller": "^4.0.0",
     "jest": "^24.9.0",
-    "jsdoc": "^3.6.3",
-    "tidy-jsdoc": "^1.2.2"
+    "jsdoc": "^3.6.3"
   },
   "dependencies": {
     "background": "^0.3.3",

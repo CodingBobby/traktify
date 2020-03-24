@@ -1,5 +1,3 @@
-# Cache
-
 ## Workflow
 The standard procedure of getting API data. Before starting time intensive API requests, we check if the cache already holds what we want.
 
