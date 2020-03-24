@@ -4,10 +4,10 @@ const { debugLog } = require('./helper.js')
 const { PATHS } = require('./app/files.js')
 
 
-module.exports = class Cache {
+class Cache {
    /**
     * @param {String} name Identifier of the Cache instance
-    * @param {Number} [cacheTime] Time to keep data, defaults to 0 which represents infinity
+    * @param {Number} [cacheTime] Time to keep data, 0 for never expire
     */
    constructor(name, cacheTime=0) {
       this.name = name
@@ -19,7 +19,7 @@ module.exports = class Cache {
    /**
     * Retrieve data saved under given key.
     * @param {String} key Key which will be read
-    * @returns Stored data
+    * @returns {*} Stored data
     */
    getKey(key) {
       let now = new Date().getTime()
@@ -69,3 +69,6 @@ module.exports = class Cache {
       flatCache.clearCacheById(this.name, this.path)
    }
 }
+
+
+module.exports = Cache

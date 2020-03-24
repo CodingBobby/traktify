@@ -1,4 +1,4 @@
-module.exports = class Queue {
+class Queue {
    /**
     * @param {Object} [options] Optional settings for the queue
     * @param {Number} [options.frequency] Ticks per second
@@ -141,3 +141,6 @@ class Task {
       })
    }
 }
+
+
+module.exports = Queue
