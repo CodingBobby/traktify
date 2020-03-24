@@ -36,6 +36,8 @@ jobs:
       - restore_cache:
           keys:
             - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
 
       - run: 
           name: Run tests
@@ -50,6 +52,8 @@ jobs:
       - restore_cache:
           keys:
             - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
 
       - run:
           name: Build jsdoc
