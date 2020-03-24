@@ -33,36 +33,34 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Install test engine
-          command: |
-            npm i jest -g
+      - restore_cache:
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
 
       - run: 
           name: Run tests
           command: |
             npm run test
 
-  build-docs:
+  build-deploy-docs:
     executor: docker-ex
     steps:
       - checkout
 
-      - run:
-          name: Install docs engine
-          command: |
-            npm i jsdoc -g
+      - restore_cache:
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
 
       - run:
           name: Build jsdoc
           command: |
             npm run build-docs
-  
-  deploy-docs:
-    executor: docker-ex
-    steps:
-      - checkout
 
+      - run:
+          name: Clone docs target repo
+          command: |
+            git clone --depth 1 https://${DOCS_GITHUB_TOKEN}@github.com/CodingBobby/codingbobby.github.io.git
+      
       - run:
           name: Deploy documentation
           command: |
@@ -84,11 +82,6 @@ workflows:
           requires:
             - install
 
-      - build-docs:
+      - build-deploy-docs:
           requires:
             - install
-
-      - deploy-docs:
-          requires:
-            - install
-            - build-docs

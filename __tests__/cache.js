@@ -1,4 +1,4 @@
-const Cache = require('./../modules/cache.js')
+const Cache = require('./../src/modules/cache.js')
 
 
 test('Cache class', async () => {

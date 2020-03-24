@@ -1,6 +1,6 @@
 const {
    inRange, clone, shadeHexColor
-} = require('./../modules/helper.js')
+} = require('./../src/modules/helper.js')
 
 
 test('inRange function', () => {

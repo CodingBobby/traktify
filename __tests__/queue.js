@@ -1,4 +1,4 @@
-const Queue = require('./../modules/queue.js')
+const Queue = require('./../src/modules/queue.js')
 
 
 test('Queue class', () => {

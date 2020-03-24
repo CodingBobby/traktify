@@ -12,7 +12,6 @@
 
 # build folders
 /bin
-/out
 /target
 /dist
 
