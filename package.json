@@ -21,8 +21,18 @@
       "keys.secret.json"
     ],
     "mac": {
-      "category": "public.app-category.entertainment",
-      "icon": "src/assets/icons/traktify/traktify.icns"
+      "category": "public.app-category.video",
+      "icon": "src/assets/icons/traktify/traktify.icns",
+      "publish": [ "github" ]
+    },
+    "win": {
+      "icon": "src/assets/icons/traktify/traktify.ico",
+      "publish": [ "github" ]
+    },
+    "linux": {
+      "category": "Video",
+      "icon": "src/assets/icons/traktify/128x128.png",
+      "publish": [ "github" ]
     }
   },
   "repository": {
