@@ -62,7 +62,7 @@ jobs:
             cd out
             git clone https://github.com/CodingBobby/codingbobby.github.io.git
             mkdir codingbobby.github.io/traktify
-            mv docs codingbobby.github.io/traktify/{{ .Branch }}
+            mv docs codingbobby.github.io/traktify/${CIRCLE_BRANCH}
             cd codingbobby.github.io
             git config credential.helper 'cache --timeout=120'
             git config user.email "bob.walter@outlook.de"
