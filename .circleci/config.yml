@@ -42,6 +42,39 @@ jobs:
           command: |
             npm run test
 
+  build-deploy-docs:
+    executor: docker-ex
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+
+      - run:
+          name: Build jsdoc
+          command: |
+            npm run build-docs
+
+      - run:
+          name: Clone docs target repo
+          command: |
+            cd out
+            git clone https://github.com/CodingBobby/codingbobby.github.io.git
+      
+      - run:
+          name: Deploy documentation
+          command: |
+            mkdir codingbobby.github.io/traktify
+            mv docs codingbobby.github.io/traktify/{{ .Branch }}
+            cd codingbobby.github.io
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "bob.walter@outlook.de"
+            git config user.name "Deployment Bot"
+            git add .
+            git commit --allow-empty -m "Traktify Docs deployment"
+            git push -q https://${DOCS_GITHUB_TOKEN}@github.com/CodingBobby/codingbobby.github.io.git master
+
 workflows:
   version: 2.1
   build-test-deploy:
@@ -49,5 +82,9 @@ workflows:
       - install
 
       - test:
+          requires:
+            - install
+
+      - build-deploy-docs:
           requires:
             - install
