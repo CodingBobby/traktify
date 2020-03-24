@@ -4,11 +4,11 @@ executors:
   docker-ex:
     docker:
       - image: circleci/node:10.10.0
+    working_directory: ~/traktify
 
 jobs:
   install:
     executor: docker-ex
-    working_directory: ~/traktify
     steps:
       - checkout
 
@@ -30,17 +30,29 @@ jobs:
     
   test:
     executor: docker-ex
-    working_directory: ~/traktify
     steps:
+      - checkout
+
+      - run:
+          name: Install test engine
+          command: |
+            npm i jest -g
+
       - run: 
           name: Run tests
           command: |
-            npm tests
+            npm run test
 
   build-docs:
     executor: docker-ex
-    working_directory: ~/traktify
     steps:
+      - checkout
+
+      - run:
+          name: Install docs engine
+          command: |
+            npm i jsdoc -g
+
       - run:
           name: Build jsdoc
           command: |
@@ -48,11 +60,13 @@ jobs:
   
   deploy-docs:
     executor: docker-ex
-    working_directory: ~/traktify/out
     steps:
+      - checkout
+
       - run:
           name: Deploy documentation
           command: |
+            cd out
             git config credential.helper 'cache --timeout=120'
             git config user.email "bob.walter@outlook.de"
             git config user.name "Deployment Bot"
@@ -65,9 +79,16 @@ workflows:
   build-test-deploy:
     jobs:
       - install
+
       - test:
           requires:
             - install
+
       - build-docs:
           requires:
             - install
+
+      - deploy-docs:
+          requires:
+            - install
+            - build-docs
