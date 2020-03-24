@@ -152,8 +152,8 @@ function shadeHexColor(hex, percent) {
  
 /**
  * Simple helper to clone objects which prevents cross-linking.
- * @param dolly Object to clone
- * @returns Cloned object
+ * @param {*} dolly Object to clone
+ * @returns {*} Cloned object
  */
 function clone(dolly) {
    if(null == dolly || "object" != typeof dolly) return dolly

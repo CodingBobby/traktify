@@ -8,7 +8,7 @@
     "start": "electron .",
     "clean": "rimraf dist out",
     "installer-win": "node installers/windowsInstaller.js",
-    "build-docs": "jsdoc -c jsdoc-config.json",
+    "build-docs": "rimraf out/docs && jsdoc -c jsdoc-config.json",
     "pack": "npm run clean && electron-builder --dir",
     "dist": "npm run clean && electron-builder"
   },
