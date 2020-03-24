@@ -1,8 +1,7 @@
 {
    "source": {
-      "include": ["README.md", "app.js", "pages", "modules"],
-      "includePattern": ".+\\.js(doc|x)?$",
-      "excludePattern": "(^|\\/|\\\\)_"
+      "include": ["README.md", "src"],
+      "includePattern": ".+\\.js$"
    },
    "opts": {
       "template": "node_modules/tidy-jsdoc",
@@ -20,6 +19,6 @@
    },
    "metadata": {
       "title": "Traktify API Documentation",
-      "logo": "https://raw.githubusercontent.com/CodingBobby/traktify/master/assets/icons/traktify/512x512.png"
+      "logo": "https://i.imgur.com/Y5rSPSm.png"
    }
 }
