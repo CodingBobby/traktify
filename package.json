@@ -8,9 +8,9 @@
     "start": "electron .",
     "clean": "rimraf dist out",
     "installer-win": "node installers/windowsInstaller.js",
-    "build-docs": "rimraf out/docs && jsdoc -c jsdoc-config.json",
+    "build-docs": "jsdoc -c jsdoc-config.json",
     "pack": "npm run clean && electron-builder --dir",
-    "dist": "npm run clean && electron-builder"
+    "dist": "npm run clean && electron-builder --publish onTag"
   },
   "build": {
     "productName": "Traktify",
