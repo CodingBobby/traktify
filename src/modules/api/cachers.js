@@ -13,11 +13,11 @@ const Cache = require('./../cache.js')
 
 
 /**
- * Returns the data saved in the cache as the given key and requests it if nothing was saved. The data will be temporarily stored to make processing request arrays easier. To permanently save the results to the cache, use cacheSave().
+ * Returns the data which was saved in the cache with the given key and requests it if nothing was saved. The data will be temporarily stored to make processing request arrays easier. To permanently save the results to the cache, use {@link cacheSave}.
  * @param {String} cacheName Name of the cache data will be saved to
- * @param {String} cacheKey Key under which the data is acessed
+ * @param {String} cacheKey Key under which the data is accessed
  * @param {Promise} request API request which gets the data in case it wasn't cached before
- * @param {Boolean} saveRightAfter Save the data to cache after requesting it
+ * @param {Boolean} saveRightAfter=false Save the data to cache after requesting it
  */
 function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
    debugLog('cache', `requesting ${cacheKey} from ${cacheName}`)
@@ -42,13 +42,17 @@ function cacheRequest(cacheName, cacheKey, request, saveRightAfter) {
          return result
       })
    } else {
-      // In this case, everything that was cached is uptodate
+      // In this case, everything that was cached is up-to-date
       debugLog('cache', `restoring ${cacheKey}`)
       // Returning a resolved Promise, so it will have the same type as the case above. That way it can be used with a .then() later in the caller without needing to know if the result comes from cache or an API request.
       return Promise.resolve(cacheContent)
    }
 }
 
+/**
+ * Saves all temporarily stored values to disk.
+ * @param {String} cacheName Name of the cache
+ */
 function cacheSave(cacheName) {
    ipcRenderer.send('cache', {
       action: 'saveKeys',

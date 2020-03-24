@@ -4,30 +4,83 @@ executors:
   docker-ex:
     docker:
       - image: circleci/node:10.10.0
+    working_directory: ~/traktify
 
 jobs:
-  build:
+  install:
     executor: docker-ex
-    working_directory: ~/traktify
     steps:
       - checkout
 
-      - run:
-          name: Update npm
-          command: |
-            sudo npm install -g npm@latest
       - restore_cache:
-          key: dependency-cache-{{ checksum "package-lock.json" }}
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - node-v1-{{ .Branch }}-
+            - node-v1-
+
       - run: 
           name: Install npm dependencies
           command: |
             npm install
+
       - save_cache:
-          key: dependency-cache-{{ checksum "package-lock.json" }}
           paths:
             - ./node_modules
+          key: node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+    
+  test:
+    executor: docker-ex
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
 
       - run: 
           name: Run tests
           command: |
-            npm test
+            npm run test
+
+  build-deploy-docs:
+    executor: docker-ex
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - node-v1-{{ .Branch }}-{{ checksum "package-lock.json" }}
+
+      - run:
+          name: Build jsdoc
+          command: |
+            npm run build-docs
+
+      - run:
+          name: Deploy docs to codingbobby.xyz
+          command: |
+            cd out
+            git clone https://github.com/CodingBobby/codingbobby.github.io.git
+            mkdir codingbobby.github.io/traktify
+            mv docs codingbobby.github.io/traktify/${CIRCLE_BRANCH}
+            cd codingbobby.github.io
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "bob.walter@outlook.de"
+            git config user.name "Deployment Bot"
+            git add .
+            git commit --allow-empty -m "Traktify Docs deployment"
+            git push -q https://${DOCS_GITHUB_TOKEN}@github.com/CodingBobby/codingbobby.github.io.git master
+
+workflows:
+  version: 2.1
+  build-test-deploy:
+    jobs:
+      - install
+
+      - test:
+          requires:
+            - install
+
+      - build-deploy-docs:
+          requires:
+            - install

@@ -17,15 +17,19 @@
       getUserStats,
       getSeasonPoster,
       reloadAllItems,
-      showBuffer
+      showBuffer,
+      requestHistoryUpdatePosting
     } = require('../../modules/request.js');
     const {
       getUnfinishedProgressList
     } = require('../../modules/api/getters.js');
     const rpc = require('../../modules/rpc.js');
     const {
-      addHistoryUpdates, testHistoryUpdates
+      testHistoryUpdates
     } = require('../../modules/api/posters.js');
+    const {
+      nthParent
+    } = require('../../modules/helper.js');
   </script>
   <title>Traktify | Dashboard</title>
 </head>
@@ -36,12 +40,12 @@
     <div id="infocard_overlay" style="display: none;" class="white_t">
       <ul class="btns z4" style="top: -22px; position: relative">
         <li>
-          <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards(this, 'left')">
+          <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards('left')">
             <img src="../../assets/icons/app/left.svg">
           </div>
         </li>
         <li>
-          <div id="stack_right_button" class="btn small icon red_b shadow_b right" onclick="moveCards(this, 'right')">
+          <div id="stack_right_button" class="btn small icon red_b shadow_b right" onclick="moveCards('right')">
             <img src="../../assets/icons/app/right.svg">
           </div>
         </li>

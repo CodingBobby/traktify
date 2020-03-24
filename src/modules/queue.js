@@ -1,18 +1,25 @@
-module.exports = class Queue {
+class Queue {
+   /**
+    * @param {Object} [options] Optional settings for the queue
+    * @param {Number} [options.frequency] Ticks per second
+    * @param {Boolean} [options.reverse] Set to true to always run the latest task first
+    * @param {Function} [mergeCallback] 
+    */
    constructor(options, mergeCallback) {
-      // options: { ?frequency, ?reverse }
       options = options || {}
+
+      /** @private */
+      this._timeOut = 1e3
 
       if(options.frequency) {
          this._timeOut = 1e3/options.frequency
-      } else {
-         this._timeOut = 1e3
       }
 
+      /** @private */
       this._reverse = options.reverse
-
+      /** @private */
       this._taskList = []
-
+      /** @private */
       this._mergeCallback = typeof mergeCallback == 'function' ? mergeCallback : false
    }
  
@@ -78,7 +85,8 @@ module.exports = class Queue {
       } else {
          // ticking
          let job = this._taskList[jobIndex]
-         console.log('ticking', job.args)
+         // console.log('ticking', job.description)
+         // TODO: add .description to all job enqueuerings that can be shown in the log
          let result = job.run()
             .then(r => r)
             .catch(e => e)
@@ -133,3 +141,6 @@ class Task {
       })
    }
 }
+
+
+module.exports = Queue

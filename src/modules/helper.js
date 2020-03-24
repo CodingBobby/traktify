@@ -1,6 +1,7 @@
-const fs = require('fs')
+const fs = require('fs-extra')
+const { PATHS } = require('./app/files.js')
 
-const config = JSON.parse(fs.readFileSync("./config.json", "utf8"))
+const config = JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
 
 const LogQueue = new(require(__dirname+'/queue.js'))({
    frequency: 5,
@@ -13,15 +14,14 @@ class IPCChannels {
    log(details) {
       switch(details.action) {
          case 'save': {
-            let logPath = './.log'
             LogQueue.add(function() {
-               fs.stat(logPath, function(err, stat) {
+               fs.stat(PATHS.log, function(err, stat) {
                   if(err == null) {
-                     let currentLog = fs.readFileSync(logPath)
-                     fs.writeFileSync(logPath, currentLog+'\n'+details.log)
+                     let currentLog = fs.readFileSync(PATHS.log)
+                     fs.writeFileSync(PATHS.log, currentLog+'\n'+details.log)
                   } else if(err.code == 'ENOENT') {
                      // file does not exist yet
-                     fs.writeFileSync(logPath, 'TRAKTIFY LOG\n'+details.log)
+                     fs.writeFileSync(PATHS.log, 'TRAKTIFY LOG\n'+details.log)
                   } else {
                      console.log('Error occured while saving log: ', err.code)
                   }
@@ -119,8 +119,13 @@ function inRange(value, range) {
    return value >= min && value <= max
 }
  
-// takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color. Percentages are taken in range from 0 to 100 (not 0 to 1!).
-// function mainly used to generate dark version of the accent colors
+/**
+ * Takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color.
+ * The function is mainly used to generate dark version of the accent colors
+ * @param {String} hex Hexadecimal color code with the format #xxxxxx
+ * @param {Number} percent Value between -100 and 100
+ * @returns {String} Hexadecimal color code
+ */
 function shadeHexColor(hex, percent) {
    // convert hex to decimal
    let R = parseInt(hex.substring(1,3), 16)
@@ -145,22 +150,42 @@ function shadeHexColor(hex, percent) {
    return '#'+RR+GG+BB
 }
  
-// Simple helper to clone objects which prevents cross-linking.
-function clone(object) {
-   if(null == object || "object" != typeof object) return object
+/**
+ * Simple helper to clone objects which prevents cross-linking.
+ * @param {*} dolly Object to clone
+ * @returns {*} Cloned object
+ */
+function clone(dolly) {
+   if(null == dolly || "object" != typeof dolly) return dolly
    // create new blank object of same type
-   let copy = object.constructor()
+   let copy = dolly.constructor()
  
    // copy all attributes into it
-   for(let attr in object) {
-      if(object.hasOwnProperty(attr)) {
-         copy[attr] = object[attr]
+   for(let attr in dolly) {
+      if(dolly.hasOwnProperty(attr)) {
+         copy[attr] = dolly[attr]
       }
    }
    return copy
 }
 
+/**
+ * Counts n times up the DOM tree and returns it's parent
+ * @param {HTMLElement} that 
+ * @param {Number} n 
+ * @returns {HTMLElement} nth-parent's element
+ */
+function nthParent(that, n) {
+   let parent = that
+   for(let i=0; i<n; i++) {
+      parent = parent.parentElement
+   }
+   return parent
+}
+
 
 module.exports = {
-   config, printLog, debugLog, inRange, shadeHexColor, clone, ipcChannels, ipcParallel
+   config, printLog, debugLog,
+   inRange, shadeHexColor, clone,
+   ipcChannels, ipcParallel, nthParent
 }

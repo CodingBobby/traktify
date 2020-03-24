@@ -1,0 +1,24 @@
+{
+   "source": {
+      "include": ["README.md", "src"],
+      "includePattern": ".+\\.js$"
+   },
+   "opts": {
+      "template": "node_modules/tidy-jsdoc",
+      "encoding": "utf8",
+      "destination": "./out/docs/",
+      "recurse": true,
+      "prism-theme": "prism-custom"
+   },
+   "plugins": [
+      "plugins/markdown",
+      "plugins/summarize"
+   ],
+   "templates": {
+      "monospaceLinks": true
+   },
+   "metadata": {
+      "title": "Traktify API Documentation",
+      "logo": "https://i.imgur.com/Y5rSPSm.png"
+   }
+}

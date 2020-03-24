@@ -111,17 +111,21 @@ function loadImage(parent, src, loadingSrc) {
 }
 
 /**
+ * This function can be called whenever you want to place an image element into some HTML context. It first shows a loading animation but as soon as the requested image is ready, it will take the placeholder's place.
  * @param {object} options 
- * @param options.parent dom element the image should be appended to
+ * @param {HTMLElement} options.parent dom element the image should be appended to
  * @param {'poster'} options.use in what type of element the image will be used
  * @param {'season'} options.type type the item belongs to
  * @param {number} options.itemId tvdb id of the item
  * @param {any} options.reference some reference we can use
+ * @param {object} options.attributes additional attributes, only the final image should get
+ * @param {string[]} options.classes CSS classes the final image should have
+ * @param {Function} onLoad callback to execute after loading is fully complete
  */
-
-async function requestAndLoadImage(options) {
+async function requestAndLoadImage(options, onLoad) {
+  // placeholder element
   let loading_img = document.createElement('img')
-  // the actual image, the placeholder gets updated to
+  // the actual image, the placeholder will be updated to
   let img = document.createElement('img')
 
   switch(options.use) {
@@ -132,17 +136,44 @@ async function requestAndLoadImage(options) {
       switch(options.type) {
         case 'season': {
           img.src = await getSeasonPoster(options.itemId, options.reference)
-  
-          img.onload = function() {
-            setTimeout(() => {
-              options.parent.removeChild(loading_img)
-              options.parent.appendChild(img)
-            }, 3*33.3) // some extra animation and framerate buffer
-          }
           break
         }
       }
       break
     }
+  }
+
+  // adding properties to the final image
+  if(options.classes) img.classList = options.classes.join(' ')
+
+  for(let name in options.attributes) {
+    if(options.attributes.hasOwnProperty(name)) {
+      img.setAttribute(name, options.attributes[name])
+    }
+  }
+
+  // after desired image is preloaded whilst remaining invisible
+  img.onload = function() {
+    options.parent.appendChild(img)
+    options.parent.removeChild(loading_img)
+    
+    setTimeout(() => {
+      // ensures that the callback is definitely fired after the images are visible
+      onLoad()
+    }, 250)
+  }
+
+  img.onerror = function(event) {
+    // event does not contain error codes wtf
+    debugLog('error', `loading image from ${img.src}`)
+
+    img.src = '../../assets/placeholder.png'
+
+    options.parent.appendChild(img)
+    options.parent.removeChild(loading_img)
+
+    setTimeout(() => {
+      onLoad()
+    }, 250)
   }
 }

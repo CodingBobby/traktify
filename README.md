@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icons/traktify/512x512.png" width="128"/>
+  <img src="https://i.imgur.com/Y5rSPSm.png" width="128"/>
 </p>
 
 <h1 align="center"> <a href="https://codingbobby.xyz/traktify">Traktify</a> </h1>

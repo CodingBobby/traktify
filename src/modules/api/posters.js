@@ -13,7 +13,7 @@ const postingQueue = new Queue({
    }
 
    for(let arg in argList) {
-      // arg itself looks like combined but with less items in the arrays
+      // `arg` itself looks like `merged` but with less items in the arrays
       for(let type in argList[arg]) {
          for(let item in argList[arg][type]) {
             merged[type].push(argList[arg][type][item])
@@ -30,7 +30,12 @@ module.exports = {
    addHistoryUpdates, testHistoryUpdates
 }
 
-
+/** 
+ * Pushes updates to the update-posting queue which collects following pushes and posts them together in a single api connection rather than one for each update.
+ * @param {Object} smallChanges
+ * @param {Object[]} [smallChanges.movies]
+ * @param {Object[]} [smallChanges.shows]
+ */
 function addHistoryUpdates(smallChanges) {
    console.log('pushing', smallChanges)
    postingQueue.add(function(singleChange) {
@@ -41,20 +46,14 @@ function addHistoryUpdates(smallChanges) {
    })
 }
 
-
+/** 
+ * Posts updates to the trakt.tv api.
+ * @param {Object} bigChanges
+ * @param {Object[]} [bigChanges.movies]
+ * @param {Object[]} [bigChanges.shows]
+ * @returns {Promise} Resolves a summary of what has been added and what not
+ */
 function postHistoryUpdates(bigChanges) {
-   /** Minimum requirement for the posted object
-    * bigChanges: {
-    *    movies | shows | episodes: [
-    *       {
-    *          watched_at: Date,
-    *          ids: {
-    *             trakt: Number
-    *          }
-    *       }
-    *    ]
-    * }
-    */
    debugLog('api post', 'trakt')
    let postTime = Date.now()
    return trakt.sync.history.add(bigChanges).then(res => {

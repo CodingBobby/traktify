@@ -7,6 +7,8 @@
    <title>Loading...</title>
    <link rel="stylesheet" href="../../assets/master.css">
    <link rel="stylesheet" href="style.css">
+   <link rel="stylesheet" type="text/css" href="../../modules/loading/loading-bar.min.css"/>
+   <script type="text/javascript" src="../../modules/loading/loading-bar.min.js"></script>
    <script>
       const {
          remote,
@@ -25,6 +27,11 @@
    <div class="absolute">
       <img class="logo gray-animation" src="../../assets/icons/traktify/512x512.png">
    </div>
+
+   <div id="bar_holder">
+      <div id="loading_bar"></div>
+   </div>
+
    <script src="../main.js"></script>
    <script src="./index.js"></script>
 </body>
