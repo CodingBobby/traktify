@@ -93,7 +93,7 @@ h4.name {
   border-top: 1px solid #d3d3d3;
   border-bottom: 1px solid #d3d3d3;
   margin: 1.5em 0 0.5em;
-  padding: .75em 0 .75em 10px;
+  padding: 13.5px 13.5px 13px 13.5px;
 }
 
 h4.name a {
@@ -181,7 +181,7 @@ tt, code, kbd, samp {
 
 #main {
   float: right;
-  width: calc(100% - 240px);
+  width: calc(100% - 300px);
 }
 
 header {
@@ -208,11 +208,13 @@ section {
 nav {
   float: left;
   display: block;
-  width: 250px;
+  width: 300px;
   background: #fff;
   overflow: auto;
   position: fixed;
   height: 100%;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 nav #nav-search{
@@ -231,10 +233,10 @@ nav.wrap a{
 }
 
 nav h3 {
-  margin-top: 12px;
-  font-size: 13px;
+  margin-top: 14px;
+  font-size: 16px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   font-weight: 700;
   line-height: 24px;
   margin: 15px 0 10px;
@@ -254,10 +256,11 @@ nav ul {
 nav ul a,
 nav ul a:active {
   font-family: 'Montserrat', sans-serif;
-  line-height: 18px;
+  line-height: 20px;
   padding: 0;
   display: block;
-  font-size: 12px;
+  font-size: 14px;
+  letter-spacing: 1px;
 }
 
 nav a:hover,
@@ -276,16 +279,17 @@ nav > ul > li > a {
 
 nav ul ul a {
   color: hsl(207, 1%, 60%);
-  border-left: 1px solid hsl(207, 10%, 86%);
+  border-left: 2px solid hsl(207, 10%, 86%);
+  margin-left: 5px
 }
 
 nav ul ul a,
 nav ul ul a:active {
-  padding-left: 20px
+  padding-left: 10px
 }
 
 nav h2 {
-   font-size: 13px;
+   font-size: 16px;
    margin: 10px 0 0 0;
    padding: 0;
 }
@@ -297,7 +301,7 @@ nav > h2 > a {
 
 footer {
   color: hsl(0, 0%, 28%);
-  margin-left: 250px;
+  margin-left: 300px;
   display: block;
   padding: 15px;
   font-style: italic;
