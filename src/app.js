@@ -63,7 +63,7 @@ const {
 
   // api keys
   let keyFile = (process.env.NODE_ENV === 'production'
-    && fs.existsSync('keys.secret.json'))
+    || fs.existsSync('keys.secret.json'))
     ? 'keys.secret.json'
     : 'keys.dev.json'
 
