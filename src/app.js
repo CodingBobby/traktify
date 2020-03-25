@@ -6,8 +6,8 @@
 |*|   in an electron framework
 \*/
 
-// Comment this line out for development!
-process.env.NODE_ENV = 'production'
+// Uncomment this line for deployment!
+// process.env.NODE_ENV = 'production'
 
 let initTime = Date.now()
 
@@ -62,11 +62,14 @@ const {
 
 
   // api keys
-  if(process.env.NODE_ENV === 'production') {
-    let envs = JSON.parse(fs.readFileSync(relP('../keys.secret.json'), 'utf8'))
-    for(let e in envs) {
-      process.env[e] = envs[e]
-    }
+  let keyFile = (process.env.NODE_ENV === 'production'
+    || fs.existsSync('keys.secret.json'))
+    ? 'keys.secret.json'
+    : 'keys.dev.json'
+
+  let envs = JSON.parse(fs.readFileSync(relP(keyFile), 'utf8'))
+  for(let e in envs) {
+    process.env[e] = envs[e]
   }
 
 

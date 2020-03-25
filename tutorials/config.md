@@ -1,5 +1,15 @@
-# Configuration
-The configuration file has the following structure:
+Traktify has to store user specific data across sessions. To make this possible, the app will generate a folder inside the user's home directory at launch and load data from there during the following launches.
+
+This folder will be initialized at `$HOME/.traktify` and contains these files:
+```cson
+.traktify:
+   .cache:
+      # cache files are placed here
+   .log
+   config.json
+```
+
+The configuration file `config.json` has the following structure:
 ```cson
 config:
    client:
@@ -13,7 +23,7 @@ config:
 ```
 
 ## Settings
-There are two different scopes available: `app` and `user`.
+There are two different scopes inside `config.client.settings`: `app` and `user`.
 
 ### App
 The `app` scope contains settings of different types. All types share these properties:
@@ -60,4 +70,4 @@ setting:
 ```
 
 ### User
-This scope is not in use yet.
+This scope is used to store temporary tokens for user logins.

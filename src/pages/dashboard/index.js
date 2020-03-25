@@ -385,8 +385,8 @@ let sideBar = {
       panel.classList.add('panel')
 
       let search_field = document.createElement('input')
-      search_field.classList.add('panel_header', 'search', 'fs23', 'fw500', 'white_t', 'black_d_b', 'z4')
-      search_field.type = 'text'
+      search_field.classList.add('panel_header', 'search', 'fs18', 'fw500', 'white_t', 'black_d_b', 'z4')
+      search_field.type = 'search'
       search_field.onkeydown = function() {
         if(event.keyCode === 13) { // ENTER
           search(search_field.value)
@@ -935,12 +935,24 @@ async function createPoster(item) {
   let posterTile = document.createElement('div')
   posterTile.classList.add('hidden')
 
+  // as values in onclicks will be added without formatting, we have to wrap them in quotes manually
+  let q = "'"
+
   posterTile.innerHTML = `<div class="poster_tile shadow_h">
     <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
     <div class="beta_action_btns">
-      <div class="beta_action_btn play" onclick="playNow(${item.id})"><img src="../../assets/icons/app/play.svg"></div>
-      <div class="beta_action_btn watchlist" onclick="addToWatchlist(${item.id})"><img src="../../assets/icons/app/list.svg"></div>
-      <div class="beta_action_btn watched" onclick="addToHistory(${item.id})"><img src="../../assets/icons/app/check.svg"></div>
+      <div class="beta_action_btn play"
+        onclick="playNow(${q+item.matcher+q})">
+        <img src="../../assets/icons/app/play.svg">
+      </div>
+      <div class="beta_action_btn watchlist"
+        onclick="addToWatchlist(${q+item.matcher+q})">
+        <img src="../../assets/icons/app/list.svg">
+      </div>
+      <div class="beta_action_btn watched"
+        onclick="addToHistory(${q+item.matcher+q})">
+        <img src="../../assets/icons/app/check.svg">
+      </div>
     </div>
   </div>`
 
@@ -954,6 +966,7 @@ async function createPoster(item) {
     reference: item.season,
     classes: ['shadow_h', 'z1'],
     attributes: {
+      'style': 'cursor:pointer',
       'onclick': 'openInfoCard(this)',
       'data_matcher': item.matcher
     }
@@ -985,28 +998,30 @@ function createTitle(itemToAdd) {
 }
 
 function animateText(textBox, onenter) {
-  let container = document.getElementById('poster_title')
-  let container_title = container.children[1]
-  let container_subtitle = container.children[2]
+  if(!textBox.children[0].classList.contains('hidden')){
+    let container = document.getElementById('poster_title')
+    let container_title = container.children[1]
+    let container_subtitle = container.children[2]
 
-  let title = textBox.getAttribute('data_title')
-  let subtitle = textBox.getAttribute('data_subtitle')
+    let title = textBox.getAttribute('data_title')
+    let subtitle = textBox.getAttribute('data_subtitle')
 
-  if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+    if(title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+      if(onenter) {
+        toggleAnimation(container_title, 'animation_slide_up', title)
+        toggleAnimation(container_subtitle, 'animation_slide_up', subtitle)
+      }
     }
-  }
 
-  let poster = document.getElementById('posters').firstChild
-  let poster_title = poster.getAttribute('data_title')
-  let poster_subtitle = poster.getAttribute('data_subtitle')
+    let poster = document.getElementById('posters').firstChild
+    let poster_title = poster.getAttribute('data_title')
+    let poster_subtitle = poster.getAttribute('data_subtitle')
 
-  if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
-    if(!onenter) {
-      toggleAnimation(container_title, 'animation_slide_up', poster_title)
-      toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+    if(poster_title.toLowerCase() !== container_title.innerText.toLowerCase()) {
+      if(!onenter) {
+        toggleAnimation(container_title, 'animation_slide_up', poster_title)
+        toggleAnimation(container_subtitle, 'animation_slide_up', poster_subtitle)
+      }
     }
   }
 }
@@ -1111,6 +1126,7 @@ async function createRpcContent() {
 
 /*::::::::::::::::::::::::::::::::::::::::::::::: ACTION BUTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 function createActionButtons(item) {
+  // TODO: change `item` to matcher so it includes more info
   let playNow = document.createElement('div')
   playNow.classList.add('action_btn', 'play')
   playNow.innerHTML = '<img src="../../assets/icons/app/play.svg">'
@@ -1129,14 +1145,45 @@ function createActionButtons(item) {
   return [playNow, addToList, addToHistory];
 }
 
-function playNow(item) {
+
+// functions that get called when clicking on action buttons
+
+function playNow(matcher) {
   alert('playing now!')
 }
 
-function addToHistory(item) {
+function addToWatchlist(matcher) {
   alert('added to history!')
 }
 
-function addToWatchlist(item) {
-  alert('added to watchlist!')
+function addToHistory(matcher) {
+  let [id, type, se, ep] = matcher.split('_')
+
+  showAlertBoxAndWait({/*options*/}, proceed => {
+    if(proceed) {
+      requestHistoryUpdatePosting(id, {
+        type: type == 'e' ? 'episode' : 'movie',
+        season: type == 'e' ? Number(se) : null,
+        episode: type == 'e' ? Number(ep) : null
+      })
+    } else {
+      debugLog('declined', `history update for ${id}`)
+    }
+  })
+}
+
+
+/**
+ * This triggers an alert box where the user can accept or decline his recently performed action. It will be reusable across the whole app.
+ * @param {Object} options Individual settings for the popup
+ * @param {Function} proceed Callback sending sending back status
+ */
+function showAlertBoxAndWait(options, proceed) {
+  // the `options` object could have properties like
+  // { title, description, acceptButtonText, declineButtonText }
+
+  // call this to decline the action
+  proceed(false)
+  // call this to accept
+  proceed(true)
 }

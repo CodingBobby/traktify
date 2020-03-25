@@ -167,7 +167,7 @@ async function requestAndLoadImage(options, onLoad) {
     // event does not contain error codes wtf
     debugLog('error', `loading image from ${img.src}`)
 
-    img.src = '../../assets/placeholder.png'
+    img.src = '../../assets/'+config.client.placeholder.poster
 
     options.parent.appendChild(img)
     options.parent.removeChild(loading_img)

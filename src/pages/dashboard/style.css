@@ -245,8 +245,8 @@
 }
 
 #infocard_close img {
-  filter: invert(100%);  
-  width: 16px;
+  filter: invert(1);  
+  width: auto;
   height: 19px;
 }
 
@@ -347,14 +347,13 @@
   line-height: 39px;
 }
 
-
 .poster_dashboard > img {
   position: relative;
   z-index: 1;
   transition: all 500ms ease;
-  cursor: pointer;
   background-color: var(--black);
 }
+
 .poster_tile {
   height: 97%;
   top: 0;
@@ -435,6 +434,15 @@
 }
 .poster_dashboard:first-child:hover > img {
   transform: translateX(-58%) scale(1.04);
+}
+
+.poster_dashboard:hover > .hidden ~ img {
+  cursor: default;
+  transform: translateX(0) scale(1)!important;
+  box-shadow: 0 0 0 0 transparent!important;
+}
+.poster_dashboard:hover > .hidden .beta_action_btns {
+  right: 0;
 }
 
 .poster_dashboard:hover .beta_action_btns {
@@ -595,10 +603,23 @@
   border-radius: 0 5px 5px 0;
   height: 44px;
   left: 0;
-  padding: 0 20px 0 var(--panel_padding);
+  padding: 0 0 0 var(--panel_padding);
+  font-family: 'manrope';
   width: calc(
-    var(--side_panel_width) - (2*var(--panel_padding)) - 20px
+    var(--side_panel_width) - var(--panel_padding)
   );
+}
+
+.panel_header::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  height: 18px;
+  width: calc(18px / 0.687526316);
+  display: block;
+  cursor: pointer;
+  margin-left: 5px;
+  background-image: url('../../assets/icons/app/close.svg');
+  background-repeat: no-repeat;
+  filter: invert(1);
 }
 
 .panel_box.search { 

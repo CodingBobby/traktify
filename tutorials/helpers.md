@@ -1,5 +1,3 @@
-# Helper Methods
-
 ## Debugging
 For debugging purposes in development mode, the following methods are provided.
 

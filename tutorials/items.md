@@ -1,6 +1,4 @@
-# Episodes
-
-## Request Structure
+## Episode Request Structure
 Fetching a list of all episodes a show contains requires some workflow as it can't be done in one single step. This first seems like a problem but later helps to improve the requesting-caching-system.
 
 In the following, the request tree is shown. You can see that retrieving extended data is possible when requesting a list of seasons but not for a list of episodes, where a separate request for each episode is required.
