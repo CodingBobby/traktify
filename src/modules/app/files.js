@@ -5,6 +5,7 @@ const dirTree = require('directory-tree')
 const storeDir = path.join(process.env.HOME, '.traktify')
 
 /**
+ * Paths of system files that are saved outside the app.
  * @typedef SystemPaths
  * @property {String} cache
  * @property {String} log
@@ -12,7 +13,8 @@ const storeDir = path.join(process.env.HOME, '.traktify')
  */
 
 /**
- * 
+ * Initializes a directory tree that is used for system files.
+ * It detects existing files and does not overwrite them to keep custom settings.
  * @returns {Promise.<SystemPaths>} Resolves paths of system files
  */
 function initFileStructure() {
@@ -33,7 +35,7 @@ function initFileStructure() {
       // add missing files
       let firstChildren = storeDirStructure.children.map(c => c.name)
       let desired = ['.cache', '.log', 'config.json']
-      // TODO: This will only work if the default file structure does not consist of multiple directory levels. Create helper funcion to make this possible if a more structured default tree is required.
+      // TODO: This will only work if the default file structure does not consist of multiple directory levels. Create helper function to make this possible if a more structured default tree is required.
 
       desired.map(d => {
          if(!firstChildren.includes(d)) return d
@@ -67,8 +69,62 @@ function initFileStructure() {
 }
 
 
+/**
+ * Keys, secrets and tokens used for API requests.
+ * @typedef APIKeys
+ * @property {String} trakt_id
+ * @property {String} trakt_secret
+ * @property {String} fanart_key
+ */
+
+/**
+ * Searches for existing keyfiles and returns the contents.
+ * If a secret version exists and is complete, it will be used over dev keys.
+ * Useful to automate keys in different environment setups.
+ * @returns {APIKeys} Object with API keys
+ */
+function getAPIKeys() {
+   const onDev = process.env.NODE_ENV !== 'production'
+   const appPath = process.env.APP_PATH
+   const secretPath = path.join(appPath, 'keys.secret.json')
+   const devPath = path.join(appPath, 'keys.dev.json')
+
+   const requiredKeys = ['trakt_id', 'trakt_secret', 'fanart_key']
+
+   let hasSecret = fs.existsSync(secretPath)
+   
+   if(hasSecret) {
+      /** @type {APIKeys} */
+      let secretKeys = fs.readJSONSync(secretPath)
+      let fulfills = requiredKeys.map(k => Object.keys(secretKeys).includes(k))
+      
+      if(!fulfills.includes(false)) {
+         return secretKeys
+      } else if(!onDEV) {
+         throw new Error('keyfile is missing keys')
+      }
+   }
+
+   let hasDev = fs.existsSync(devPath)
+
+   if(onDev && hasDev) {
+      /** @type {APIKeys} */
+      let devKeys = fs.readJSONSync(devPath)
+      let fulfills = requiredKeys.map(k => Object.keys(devKeys).includes(k))
+      
+      if(!fulfills.includes(false)) {
+         return devKeys
+      } else {
+         throw new Error('no usable keyfile found')
+      }
+   }
+}
+
+
 module.exports = {
-   initFileStructure,
+   initFileStructure, getAPIKeys,
+
+   /** @type {SystemPaths} */
    PATHS: {
       cache: path.join(storeDir, '.cache'),
       log: path.join(storeDir, '.log'),

@@ -16,6 +16,8 @@ const fs = require('fs-extra')
 const path = require('path')
 const rimraf = fs.removeSync
 
+// path to /src/ that is used as base paths in other files
+process.env.APP_PATH = __dirname
 
 // electron stuff
 const electron = require('electron')
@@ -52,7 +54,7 @@ function relP(p) {
 
 // file setup
 const {
-  initFileStructure
+  initFileStructure, getAPIKeys
 } = require('./modules/app/files.js')
 
 ;(async () => {
@@ -60,17 +62,15 @@ const {
 
   global.debugLog = debugLog
 
+  let apiKeys
 
-  // api keys
-  let keyFile = (process.env.NODE_ENV === 'production'
-    || fs.existsSync('keys.secret.json'))
-    ? 'keys.secret.json'
-    : 'keys.dev.json'
-
-  let envs = JSON.parse(fs.readFileSync(relP(keyFile), 'utf8'))
-  for(let e in envs) {
-    process.env[e] = envs[e]
+  try {
+    apiKeys = getAPIKeys()
+  } catch(err) {
+    debugLog('error', 'could not get API keys', err)
   }
+
+  const API_KEYS = clone(apiKeys)
 
 
   // configuration and boolean checks that we need frequently
@@ -96,8 +96,8 @@ const {
   let window = null
 
   const traktOptions = {
-    client_id: process.env.trakt_id,
-    client_secret: process.env.trakt_secret
+    client_id: API_KEYS.trakt_id,
+    client_secret: API_KEYS.trakt_secret
   }
 
   if(process.env.NODE_ENV !== 'production') {
@@ -220,21 +220,21 @@ const {
 
     try {
       debugLog('api', 'creating fanart instance')
-      global.fanart = new Fanart(process.env.fanart_key)
+      global.fanart = new Fanart(API_KEYS.fanart_key)
     } catch(err) {
       debugLog('error', 'fanart authentication', new Error().stack)
     }
 
     try {
       debugLog('api', 'creating tvdb instance')
-      global.tvdb = new TvDB(process.env.tvdb_key)
+      global.tvdb = new TvDB(API_KEYS.tvdb_key)
     } catch(err) {
       debugLog('error', 'tvdb authentication', new Error().stack)
     }
 
     try {
       debugLog('api', 'creating tmdb instance')
-      global.tmdb = new TmDB(process.env.tmdb_key)
+      global.tmdb = new TmDB(API_KEYS.tmdb_key)
     } catch(err) {
       debugLog('error', 'tmdb authentication', new Error().stack)
     }
