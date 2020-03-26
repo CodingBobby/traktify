@@ -33,11 +33,17 @@ function initFileStructure() {
       // add missing files
       let firstChildren = storeDirStructure.children.map(c => c.name)
       let desired = ['.cache', '.log', 'config.json']
+      // TODO: This will only work if the default file structure does not consist of multiple directory levels. Create helper funcion to make this possible if a more structured default tree is required.
 
       desired.map(d => {
          if(!firstChildren.includes(d)) return d
       }).filter(n => n).forEach(m => {
-         fs.outputFileSync(path.join(storeDir, m), defaults[m])
+         if(typeof defaults[m] == 'object') {
+            // in this case, the missing element was a directory
+            fs.ensureDirSync(path.join(storeDir, m))
+         } else {
+            fs.outputFileSync(path.join(storeDir, m), defaults[m])
+         }
       })
 
       // fix config file if necessary
