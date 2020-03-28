@@ -54,7 +54,7 @@ function relP(p) {
 
 // file setup
 const {
-  initFileStructure, getAPIKeys
+  initFileStructure, getAPIKeys, saveConfig, readConfig
 } = require('./modules/app/files.js')
 
 ;(async () => {
@@ -76,7 +76,7 @@ const {
   // configuration and boolean checks that we need frequently
   // the config file will be used to save preferences the user can change
   // (like darkmode, behavior etc.)
-  global.config = JSON.parse(fs.readFileSync(DIRS.config, 'utf8'))
+  global.config = readConfig()
   let user = global.config.user
 
   // defining global variables that can be accessed from other scripts
@@ -300,7 +300,7 @@ const {
           global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
             user.trakt.auth = newAuth
             user.trakt.status = true
-            saveConfig()
+            saveConfig(global.config)
             debugLog('login', 'success')
       
             // track user stats for traktify analytics
@@ -322,7 +322,7 @@ const {
             if(err) {
               user.trakt.auth = false
               user.trakt.status = false
-              saveConfig()
+              saveConfig(global.config)
               debugLog('login failed', err)
               deleteCacheFolder()
               loadLogin()
@@ -349,7 +349,7 @@ const {
 
       user.trakt.auth = auth
       user.trakt.status = true
-      saveConfig()
+      saveConfig(global.config)
 
       // going back to the app and heading into dashboard
       window.focus()
@@ -362,7 +362,7 @@ const {
         debugLog('error', 'login failed')
         user.trakt.auth = false
         user.trakt.status = false
-        saveConfig()
+        saveConfig(global.config)
 
         window.focus()
         loadLogin()
@@ -376,18 +376,17 @@ const {
     user.trakt.auth = false
     user.trakt.status = false
     defaultAll('app')
-    saveConfig()
+    saveConfig(global.config)
     deleteCacheFolder()
     loadLogin()
   }
   global.disconnect = disconnect
 
   function deleteCacheFolder() {
-    fs.exists(DIRS.cache, ex => {
+    fs.exists(DIRS.cache, async ex => {
       if(ex) {
-        rimraf(DIRS.cache, () => {
-          debugLog('cache', 'removed all files')
-        })
+        await rimraf(DIRS.cache)
+        debugLog('cache', 'removed all files')
       } else {
         debugLog('cache', 'not available')
       }
@@ -419,13 +418,6 @@ const {
     })
   }
 
-  // this function can be called to save changes in the config file
-  function saveConfig() {
-    fs.writeFile(DIRS.config, JSON.stringify(global.config), err => {
-      if(err) console.error(err)
-    })
-  }
-
   // Hard reset the app, deletes user accounts.
   function resetTraktify(removeLogin) {
     let userTemp = false
@@ -438,7 +430,7 @@ const {
     if(userTemp) {
       global.config.user = userTemp
     }
-    saveConfig()
+    saveConfig(global.config)
   }
 
 
@@ -483,7 +475,7 @@ const {
       }
     }
 
-    saveConfig()
+    saveConfig(global.config)
   }
   global.setSetting = setSetting
 
@@ -549,61 +541,8 @@ const {
   global.relaunchApp = relaunchApp
 
 
-  //:::: CACHE Listener ::::\\
-  const Cache = require('./modules/cache.js')
-  const Queue = new(require('./modules/queue.js'))
-
-  let keyList = {}
-
-  // Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
-  ipcMain.on('cache', (event, details) => {
-    /** details:
-     *    name,
-     *    action,
-     *    ?data,
-     *    ?key
-     */
-    switch(details.action) {
-      case 'save': {
-        Queue.add(function() {
-          const cache = new Cache(details.name)
-          cache.save()
-        }, { overwrite: true })
-        break
-      }
-
-      case 'addKey': {
-        if(!keyList.hasOwnProperty(details.name)) {
-          // list wasn't used yet
-          keyList[details.name] = {}
-        }
-        keyList[details.name][details.key] = details.data
-        break
-      }
-
-      case 'saveKeys': {
-        const cache = new Cache(details.name)
-        if(!keyList.hasOwnProperty(details.name)) {
-          // nothing was saved in the keylist
-          debugLog('!caching', 'attempted keylist doesn\'t exist')
-          break
-        }
-        for(let k in keyList[details.name]) {
-          cache.setKey(k, keyList[details.name][k])
-        }
-        cache.save()
-        break
-      }
-
-      case 'setKey': {
-        Queue.add(function() {
-          const cache = new Cache(details.name)
-          cache.setKey(details.key, details.data)
-        }, { overwrite: true })
-        break
-      }
-    }
-  })
+  // init listeners
+  require('./modules/app/listener.js')
 
 
   //:::: LOG LISTENER ::::\\

@@ -12,6 +12,14 @@ const storeDir = path.join(process.env.HOME, '.traktify')
  * @property {String} config
  */
 
+/** @type {SystemPaths} */
+const PATHS = {
+   cache: path.join(storeDir, '.cache'),
+   log: path.join(storeDir, '.log'),
+   config: path.join(storeDir, 'config.json')
+}
+
+
 /**
  * Initializes a directory tree that is used for system files.
  * It detects existing files and does not overwrite them to keep custom settings.
@@ -51,19 +59,25 @@ function initFileStructure() {
       // fix config file if necessary
       const configDir = path.join(storeDir, 'config.json')
       const configRaw = fs.readFileSync(configDir, 'utf8')
-      const config = JSON.parse(configRaw)
 
-      let missing = !Object.keys(config).includes('client')
-         || !Object.keys(config).includes('user')
+      try {
+         const config = JSON.parse(configRaw)
+
+         let missing = !Object.keys(config).includes('client')
+            || !Object.keys(config).includes('user')
    
-      if(missing) {
-         fs.outputFileSync(path.join(storeDir, 'config.json'), defaults['config.json'])
+         if(missing) {
+            throw 'config file is missing'
+         }
+      } catch (err) {
+         console.error(err)
+         fs.outputFileSync(configDir, defaults['config.json'])
       }
-      
+
       resolve({
          cache: path.join(storeDir, '.cache'),
          log: path.join(storeDir, '.log'),
-         config: path.join(storeDir, 'config.json')
+         config: configDir
       })
    })
 }
@@ -121,13 +135,30 @@ function getAPIKeys() {
 }
 
 
-module.exports = {
-   initFileStructure, getAPIKeys,
+/**
+ * Writes changes to the configuration file.
+ * @param {any} updates Config object with possibly unsaved changes
+ */
+function saveConfig(updates) {
+   return fs.writeFileSync(PATHS.config, JSON.stringify(updates))
+}
 
-   /** @type {SystemPaths} */
-   PATHS: {
-      cache: path.join(storeDir, '.cache'),
-      log: path.join(storeDir, '.log'),
-      config: path.join(storeDir, 'config.json')
+
+/**
+ * Reads configuration file from disk.
+ * @returns {Object} Configuration settings
+ */
+function readConfig() {
+   if(!fs.existsSync(PATHS.config)) {
+      return {}
    }
+
+   return JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
+}
+
+
+module.exports = {
+   PATHS,
+   initFileStructure, getAPIKeys,
+   saveConfig, readConfig
 }
