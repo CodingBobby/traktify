@@ -4,6 +4,23 @@ const dirTree = require('directory-tree')
 
 const storeDir = path.join(process.env.HOME, '.traktify')
 
+const defConfigDir = path.join(__dirname, '../../def_config.json')
+const defConfigRaw = fs.readFileSync(defConfigDir, 'utf8')
+
+
+/**
+ * Configuration settings for the app.
+ * @typedef Config
+ * @property {Object} client
+ * @property {Object} client.settings
+ * @property {Object} client.rpc
+ * @property {Object} user
+ * @property {Object} user.trakt
+ * @property {Object|false} user.trakt.auth
+ * @property {Boolean} user.trakt.status
+ */
+
+
 /**
  * Paths of system files that are saved outside the app.
  * @typedef SystemPaths
@@ -29,9 +46,6 @@ function initFileStructure() {
    fs.ensureDirSync(storeDir)
 
    const storeDirStructure = dirTree(storeDir)
-
-   const defConfigDir = path.join(__dirname, '../../def_config.json')
-   const defConfigRaw = fs.readFileSync(defConfigDir, 'utf8')
 
    const defaults = {
       '.cache': {},
@@ -137,7 +151,7 @@ function getAPIKeys() {
 
 /**
  * Writes changes to the configuration file.
- * @param {any} updates Config object with possibly unsaved changes
+ * @param {Config} updates Config object with possibly unsaved changes
  */
 function saveConfig(updates) {
    return fs.writeFileSync(PATHS.config, JSON.stringify(updates))
@@ -146,19 +160,43 @@ function saveConfig(updates) {
 
 /**
  * Reads configuration file from disk.
- * @returns {Object} Configuration settings
+ * @returns {Config} Configuration settings
  */
 function readConfig() {
    if(!fs.existsSync(PATHS.config)) {
-      return {}
+      return null
    }
 
    return JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
 }
 
 
+/**
+ * Overwrites the configuration file with defaults and returns the data.
+ * Removes authenticated users.
+ * @returns {Config} The default configuration
+ */
+function resetConfig() {
+   fs.outputFileSync(PATHS.config, defConfigRaw)
+   return JSON.parse(defConfigRaw)
+}
+
+
+/**
+ * Deletes all cache files at once.
+ */
+function removeCacheFiles() {
+   try {
+      fs.emptyDirSync(PATHS.cache)
+   } catch (err) {
+      console.error(err)
+   }
+}
+
+
 module.exports = {
    PATHS,
    initFileStructure, getAPIKeys,
-   saveConfig, readConfig
+   saveConfig, readConfig, resetConfig,
+   removeCacheFiles
 }

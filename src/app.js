@@ -14,10 +14,10 @@ let initTime = Date.now()
 // file stuff
 const fs = require('fs-extra')
 const path = require('path')
-const rimraf = fs.removeSync
 
 // path to /src/ that is used as base paths in other files
-process.env.APP_PATH = __dirname
+const APP_PATH = __dirname
+process.env.APP_PATH = APP_PATH
 
 // electron stuff
 const electron = require('electron')
@@ -42,23 +42,21 @@ const TmDB = require('moviedb-promise')
 // request stuff
 const request = require('request')
 
-// helpers
+// helper imports
 const {
   debugLog, inRange, shadeHexColor, clone, ipcChannels
 } = require('./modules/helper.js')
 
-function relP(p) {
-  return path.join(__dirname, p)
-}
 
-
-// file setup
+// file setup imports
 const {
-  initFileStructure, getAPIKeys, saveConfig, readConfig
+  initFileStructure, getAPIKeys,
+  saveConfig, readConfig, resetConfig,
+  removeCacheFiles
 } = require('./modules/app/files.js')
 
 ;(async () => {
-  const DIRS = await initFileStructure()
+  const PATHS = await initFileStructure()
 
   global.debugLog = debugLog
 
@@ -114,8 +112,8 @@ const {
     titleBarStyle: 'hidden',
     backgroundColor: '#242424',
     title: 'Traktify',
-    icon: global.darwin ? relP('assets/icons/trakt/trakt.icns')
-      : relP('assets/icons/trakt/tract.ico'),
+    icon: global.darwin ? './assets/icons/trakt/trakt.icns'
+      : './assets/icons/trakt/tract.ico',
     show: false,
     center: true,
     webPreferences: {
@@ -152,7 +150,8 @@ const {
           normalizeAccessKeys: false
         }, button => {
           if(button == 0) {
-            resetTraktify(true)
+            global.config = resetConfig()
+            disconnect()
           }
         })
       }
@@ -324,7 +323,7 @@ const {
               user.trakt.status = false
               saveConfig(global.config)
               debugLog('login failed', err)
-              deleteCacheFolder()
+              removeCacheFiles()
               loadLogin()
             }
           })
@@ -373,35 +372,21 @@ const {
 
   function disconnect() {
     global.trakt.revoke_token()
-    user.trakt.auth = false
-    user.trakt.status = false
-    defaultAll('app')
-    saveConfig(global.config)
-    deleteCacheFolder()
+    global.config = resetConfig()
+    removeCacheFiles()
     loadLogin()
   }
   global.disconnect = disconnect
 
-  function deleteCacheFolder() {
-    fs.exists(DIRS.cache, async ex => {
-      if(ex) {
-        await rimraf(DIRS.cache)
-        debugLog('cache', 'removed all files')
-      } else {
-        debugLog('cache', 'not available')
-      }
-    })
-  }
-
   // These functions do nothing but load a render page
   function loadLogin() {
-    window.loadFile(relP('pages/login/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/login/index.html'))
   }
   function loadDashboard() {
-    window.loadFile(relP('pages/dashboard/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/dashboard/index.html'))
   }
   function loadLoadingScreen() {
-    window.loadFile(relP('pages/loading/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/loading/index.html'))
   }
 
   function loadingHandler() {
@@ -416,21 +401,6 @@ const {
         }
       })
     })
-  }
-
-  // Hard reset the app, deletes user accounts.
-  function resetTraktify(removeLogin) {
-    let userTemp = false
-    if(removeLogin) {
-      disconnect()
-    } else {
-      userTemp = clone(user)
-    }
-    global.config = JSON.parse(fs.readFileSync(relP('/def_config.json'), 'utf8'))
-    if(userTemp) {
-      global.config.user = userTemp
-    }
-    saveConfig(global.config)
   }
 
 
