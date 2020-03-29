@@ -15,7 +15,10 @@ let initTime = Date.now()
 const fs = require('fs-extra')
 const path = require('path')
 
-// path to /src/ that is used as base paths in other files
+/**
+ * path to /src/ that is used as base paths in other files
+ * @type {String}
+ */
 const APP_PATH = __dirname
 process.env.APP_PATH = APP_PATH
 
@@ -157,6 +160,19 @@ const {
       }
     }]
   }]
+
+
+  if(global.darwin) {
+    menuTemplate[0].submenu.splice(1, 0, {
+      label: 'Hide Traktify',
+      accelerator: 'Command+H',
+      click() {
+        // this is only available on darwin
+        app.hide()
+      }
+    })
+  }
+
 
   // if the app is in development mode, these menu items will be pushed to the menu template
   if(process.env.NODE_ENV !== 'production') {
