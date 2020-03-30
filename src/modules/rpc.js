@@ -1,9 +1,12 @@
 let config = remote.getGlobal('config')
 let on = config.client.settings.app['discord rpc'].status
 
+const { getAPIKeys } = require('./app/files.js')
+const KEYS = getAPIKeys()
+
 let client = require('./presence.js')
 
-if(on) client = client(process.env.discord_key)
+if(on) client = client(KEYS.discord_key)
 
 module.exports = {
    update: update

@@ -1110,7 +1110,7 @@ async function updateRpc() {
     setInterval(() => {
       settings.state = pick(stateArray)
       rpc.update(settings)
-    }, 60e3)
+    }, 479e3)
   }
 }
 
