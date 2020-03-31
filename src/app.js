@@ -14,8 +14,13 @@ let initTime = Date.now()
 // file stuff
 const fs = require('fs-extra')
 const path = require('path')
-const rimraf = fs.removeSync
 
+/**
+ * path to /src/ that is used as base paths in other files
+ * @type {String}
+ */
+const APP_PATH = __dirname
+process.env.APP_PATH = APP_PATH
 
 // electron stuff
 const electron = require('electron')
@@ -40,43 +45,39 @@ const TmDB = require('moviedb-promise')
 // request stuff
 const request = require('request')
 
-// helpers
+// helper imports
 const {
   debugLog, inRange, shadeHexColor, clone, ipcChannels
 } = require('./modules/helper.js')
 
-function relP(p) {
-  return path.join(__dirname, p)
-}
 
-
-// file setup
+// file setup imports
 const {
-  initFileStructure
+  initFileStructure, getAPIKeys,
+  saveConfig, readConfig, resetConfig,
+  removeCacheFiles
 } = require('./modules/app/files.js')
 
 ;(async () => {
-  const DIRS = await initFileStructure()
+  const PATHS = await initFileStructure()
 
   global.debugLog = debugLog
 
+  let apiKeys
 
-  // api keys
-  let keyFile = (process.env.NODE_ENV === 'production'
-    || fs.existsSync('keys.secret.json'))
-    ? 'keys.secret.json'
-    : 'keys.dev.json'
-
-  let envs = JSON.parse(fs.readFileSync(relP(keyFile), 'utf8'))
-  for(let e in envs) {
-    process.env[e] = envs[e]
+  try {
+    apiKeys = getAPIKeys()
+  } catch(err) {
+    debugLog('error', 'could not get API keys', err)
   }
+
+  const API_KEYS = clone(apiKeys)
 
 
   // configuration and boolean checks that we need frequently
   // the config file will be used to save preferences the user can change
   // (like darkmode, behavior etc.)
-  global.config = JSON.parse(fs.readFileSync(DIRS.config, 'utf8'))
+  global.config = readConfig()
   let user = global.config.user
 
   // defining global variables that can be accessed from other scripts
@@ -96,8 +97,8 @@ const {
   let window = null
 
   const traktOptions = {
-    client_id: process.env.trakt_id,
-    client_secret: process.env.trakt_secret
+    client_id: API_KEYS.trakt_id,
+    client_secret: API_KEYS.trakt_secret
   }
 
   if(process.env.NODE_ENV !== 'production') {
@@ -114,8 +115,8 @@ const {
     titleBarStyle: 'hidden',
     backgroundColor: '#242424',
     title: 'Traktify',
-    icon: global.darwin ? relP('assets/icons/trakt/trakt.icns')
-      : relP('assets/icons/trakt/tract.ico'),
+    icon: global.darwin ? './assets/icons/trakt/trakt.icns'
+      : './assets/icons/trakt/tract.ico',
     show: false,
     center: true,
     webPreferences: {
@@ -152,12 +153,26 @@ const {
           normalizeAccessKeys: false
         }, button => {
           if(button == 0) {
-            resetTraktify(true)
+            global.config = resetConfig()
+            disconnect()
           }
         })
       }
     }]
   }]
+
+
+  if(global.darwin) {
+    menuTemplate[0].submenu.splice(1, 0, {
+      label: 'Hide Traktify',
+      accelerator: 'Command+H',
+      click() {
+        // this is only available on darwin
+        app.hide()
+      }
+    })
+  }
+
 
   // if the app is in development mode, these menu items will be pushed to the menu template
   if(process.env.NODE_ENV !== 'production') {
@@ -220,21 +235,21 @@ const {
 
     try {
       debugLog('api', 'creating fanart instance')
-      global.fanart = new Fanart(process.env.fanart_key)
+      global.fanart = new Fanart(API_KEYS.fanart_key)
     } catch(err) {
       debugLog('error', 'fanart authentication', new Error().stack)
     }
 
     try {
       debugLog('api', 'creating tvdb instance')
-      global.tvdb = new TvDB(process.env.tvdb_key)
+      global.tvdb = new TvDB(API_KEYS.tvdb_key)
     } catch(err) {
       debugLog('error', 'tvdb authentication', new Error().stack)
     }
 
     try {
       debugLog('api', 'creating tmdb instance')
-      global.tmdb = new TmDB(process.env.tmdb_key)
+      global.tmdb = new TmDB(API_KEYS.tmdb_key)
     } catch(err) {
       debugLog('error', 'tmdb authentication', new Error().stack)
     }
@@ -300,7 +315,7 @@ const {
           global.trakt.refresh_token(user.trakt.auth).then(async newAuth => {
             user.trakt.auth = newAuth
             user.trakt.status = true
-            saveConfig()
+            saveConfig(global.config)
             debugLog('login', 'success')
       
             // track user stats for traktify analytics
@@ -322,9 +337,9 @@ const {
             if(err) {
               user.trakt.auth = false
               user.trakt.status = false
-              saveConfig()
+              saveConfig(global.config)
               debugLog('login failed', err)
-              deleteCacheFolder()
+              removeCacheFiles()
               loadLogin()
             }
           })
@@ -349,7 +364,7 @@ const {
 
       user.trakt.auth = auth
       user.trakt.status = true
-      saveConfig()
+      saveConfig(global.config)
 
       // going back to the app and heading into dashboard
       window.focus()
@@ -362,7 +377,7 @@ const {
         debugLog('error', 'login failed')
         user.trakt.auth = false
         user.trakt.status = false
-        saveConfig()
+        saveConfig(global.config)
 
         window.focus()
         loadLogin()
@@ -373,36 +388,21 @@ const {
 
   function disconnect() {
     global.trakt.revoke_token()
-    user.trakt.auth = false
-    user.trakt.status = false
-    defaultAll('app')
-    saveConfig()
-    deleteCacheFolder()
+    global.config = resetConfig()
+    removeCacheFiles()
     loadLogin()
   }
   global.disconnect = disconnect
 
-  function deleteCacheFolder() {
-    fs.exists(DIRS.cache, ex => {
-      if(ex) {
-        rimraf(DIRS.cache, () => {
-          debugLog('cache', 'removed all files')
-        })
-      } else {
-        debugLog('cache', 'not available')
-      }
-    })
-  }
-
   // These functions do nothing but load a render page
   function loadLogin() {
-    window.loadFile(relP('pages/login/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/login/index.html'))
   }
   function loadDashboard() {
-    window.loadFile(relP('pages/dashboard/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/dashboard/index.html'))
   }
   function loadLoadingScreen() {
-    window.loadFile(relP('pages/loading/index.html'))
+    window.loadFile(path.join(APP_PATH, 'pages/loading/index.html'))
   }
 
   function loadingHandler() {
@@ -417,28 +417,6 @@ const {
         }
       })
     })
-  }
-
-  // this function can be called to save changes in the config file
-  function saveConfig() {
-    fs.writeFile(DIRS.config, JSON.stringify(global.config), err => {
-      if(err) console.error(err)
-    })
-  }
-
-  // Hard reset the app, deletes user accounts.
-  function resetTraktify(removeLogin) {
-    let userTemp = false
-    if(removeLogin) {
-      disconnect()
-    } else {
-      userTemp = clone(user)
-    }
-    global.config = JSON.parse(fs.readFileSync(relP('/def_config.json'), 'utf8'))
-    if(userTemp) {
-      global.config.user = userTemp
-    }
-    saveConfig()
   }
 
 
@@ -483,7 +461,7 @@ const {
       }
     }
 
-    saveConfig()
+    saveConfig(global.config)
   }
   global.setSetting = setSetting
 
@@ -549,61 +527,8 @@ const {
   global.relaunchApp = relaunchApp
 
 
-  //:::: CACHE Listener ::::\\
-  const Cache = require('./modules/cache.js')
-  const Queue = new(require('./modules/queue.js'))
-
-  let keyList = {}
-
-  // Instead of directly saving the cache within the request module right after changes were made, we put the saving action into a queue and also filter them to only run once each cycle.
-  ipcMain.on('cache', (event, details) => {
-    /** details:
-     *    name,
-     *    action,
-     *    ?data,
-     *    ?key
-     */
-    switch(details.action) {
-      case 'save': {
-        Queue.add(function() {
-          const cache = new Cache(details.name)
-          cache.save()
-        }, { overwrite: true })
-        break
-      }
-
-      case 'addKey': {
-        if(!keyList.hasOwnProperty(details.name)) {
-          // list wasn't used yet
-          keyList[details.name] = {}
-        }
-        keyList[details.name][details.key] = details.data
-        break
-      }
-
-      case 'saveKeys': {
-        const cache = new Cache(details.name)
-        if(!keyList.hasOwnProperty(details.name)) {
-          // nothing was saved in the keylist
-          debugLog('!caching', 'attempted keylist doesn\'t exist')
-          break
-        }
-        for(let k in keyList[details.name]) {
-          cache.setKey(k, keyList[details.name][k])
-        }
-        cache.save()
-        break
-      }
-
-      case 'setKey': {
-        Queue.add(function() {
-          const cache = new Cache(details.name)
-          cache.setKey(details.key, details.data)
-        }, { overwrite: true })
-        break
-      }
-    }
-  })
+  // init listeners
+  require('./modules/app/listener.js')
 
 
   //:::: LOG LISTENER ::::\\

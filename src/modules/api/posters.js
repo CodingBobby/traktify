@@ -26,9 +26,12 @@ const postingQueue = new Queue({
    return merged
 })
 
+
 module.exports = {
-   addHistoryUpdates, testHistoryUpdates
+   addHistoryUpdates, testHistoryUpdates,
+   requestHistoryUpdatePosting
 }
+
 
 /** 
  * Pushes updates to the update-posting queue which collects following pushes and posts them together in a single api connection rather than one for each update.
@@ -45,6 +48,7 @@ function addHistoryUpdates(smallChanges) {
       overwrite: true
    })
 }
+
 
 /** 
  * Posts updates to the trakt.tv api.
@@ -123,4 +127,44 @@ function testHistoryUpdates() {
    }
 
    reqPoster(0)
+}
+
+
+/**
+ * Wrapper for {@link addHistoryUpdates} that formats the input data so it can be processed easier.
+ * @param {Number} id trakt-id of the item
+ * @param {({type:'movie'}|{type:'episode',season:Number,episode:Number})} item type of the item, absolute season and episode number required if the item is an episode
+ * @param {Date} [date] defaults to the date of this function call
+ */
+function requestHistoryUpdatePosting(id, item, date) {
+   let update = {
+      movies: [],
+      shows: []
+   }
+
+   // should not be able to be anything else than these both
+   if(item.type == 'movie') {
+      update.movies.push({
+         watched_at: date || new Date(),
+         ids: {
+            trakt: id
+         }
+      })
+   } else if(item.type == "episode") {
+      update.shows.push({
+         ids: {
+            trakt: id
+         },
+         seasons: [{
+            number: item.season,
+            episodes: [{
+               watched_at: date || new Date(),
+               number: item.episode
+            }]
+         }]
+      })
+   }
+
+   debugLog('sync', `updating watch status of ${id}`)
+   addHistoryUpdates(update)
 }

@@ -1,10 +1,6 @@
 const fs = require('fs-extra')
 const { PATHS } = require('./app/files.js')
 
-if(fs.existsSync(PATHS.config)) {
-   module.exports.config = JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
-}
-
 const LogQueue = new(require(__dirname+'/queue.js'))({
    frequency: 5,
    reverse: true
