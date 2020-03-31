@@ -1,3 +1,8 @@
+/**
+ * The helper module provides methods that simplify frequently used calculations and other arrangements.
+ * They can be used in every context.
+ * @namespace helper
+ */
 const fs = require('fs-extra')
 const { PATHS } = require('./app/files.js')
 
@@ -82,6 +87,12 @@ function printLog(args, date) {
 }
 
 
+/**
+ * Prints a formatted and colorized text to the terminal, the app was started from and
+ * sends the log to the log saving queue.
+ * @memberof helper
+ * @param {...String|Number} args 
+ */
 function debugLog(...args) {
    let ipc
    if(typeof ipcRenderer === 'undefined') {
@@ -111,15 +122,28 @@ function debugLog(...args) {
    })
 }
 
-// Range must be an array of two numeric values
+
+/**
+ * Checks if a value lies within a range of two values. Range values are included.
+ * Because it calculates the minimum and maximum value of the specified range,
+ * it does not need to be in order.
+ * @memberof helper
+ * @param {Number} value Number to check
+ * @param {Array.<Number>} range Values the number should lie between
+ * @returns {Boolean} Whether it is in the range 
+ */
 function inRange(value, range) {
-   let [min, max] = range; max < min ? [min, max] = [max, min] : [min, max]
+   let [min, max] = range
+   max < min ? [min, max] = [max, min] : [min, max]
    return value >= min && value <= max
 }
- 
+
+
 /**
- * Takes a hex color code and changes it's brightness by the given percentage. Positive value to brighten, negative to darken a color.
+ * Takes a hex color code and changes it's brightness by the given percentage.
+ * Positive value to brighten, negative to darken a color.
  * The function is mainly used to generate dark version of the accent colors
+ * @memberof helper
  * @param {String} hex Hexadecimal color code with the format #xxxxxx
  * @param {Number} percent Value between -100 and 100
  * @returns {String} Hexadecimal color code
@@ -147,9 +171,11 @@ function shadeHexColor(hex, percent) {
  
    return '#'+RR+GG+BB
 }
- 
+
+
 /**
  * Simple helper to clone objects which prevents cross-linking.
+ * @memberof helper
  * @param {*} dolly Object to clone
  * @returns {*} Cloned object
  */
@@ -167,14 +193,16 @@ function clone(dolly) {
    return copy
 }
 
+
 /**
  * Counts n times up the DOM tree and returns it's parent
- * @param {HTMLElement} that 
- * @param {Number} n 
- * @returns {HTMLElement} nth-parent's element
+ * @memberof helper
+ * @param {HTMLElement} child Nested element to start with 
+ * @param {Number} n Number of layers to go up
+ * @returns {HTMLElement} The n-th parent
  */
-function nthParent(that, n) {
-   let parent = that
+function nthParent(child, n) {
+   let parent = child
    for(let i=0; i<n; i++) {
       parent = parent.parentElement
    }
