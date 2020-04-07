@@ -209,9 +209,49 @@ function nthParent(child, n) {
    return parent
 }
 
+/**
+ * @typedef {Object} filterResult
+ * @property {String} filtered The remaining string after removing the prefix
+ * @property {String} found The prefix
+ */
+
+/**
+ * Searches for a matching prefix in a given string and removes it.
+ * It is mainly used to identify filter arguments in search queries.
+ * @param {String} string The full text to analyse
+ * @param {Array.<String>} prefixes Strings to search for
+ * @param {String} [removeFromFilter] Characters to include in the search but remove from the filter result
+ * @returns {filterResult} The filter result
+ * @example
+ * let string = 's:Firefly'
+ * let prefixes = ['s:', 'm:']
+ * let remaining = startsWithFilter('s:Firefly', 's:', ':')
+ * remaining == {
+ *    filtered: 'Firefly',
+ *    found: 's'
+ * }
+ */
+function startsWithFilter(string, prefixes, removeFromFilter) {
+   string = string.toString()
+   for(let pre in prefixes) {
+      if(string.startsWith(prefixes[pre])) {
+         return {
+            filtered: string.split(prefixes[pre])[1],
+            found: prefixes[pre].split(removeFromFilter || '').join('')
+         }
+      }
+   }
+   
+   return {
+      found: null,
+      filtered: string
+   }
+}
+
 
 module.exports = {
    printLog, debugLog,
    inRange, shadeHexColor, clone,
-   ipcChannels, ipcParallel, nthParent
+   ipcChannels, ipcParallel, nthParent,
+   startsWithFilter
 }

@@ -10,14 +10,18 @@ module.exports = {
 }
 
 const {
-   debugLog
+   debugLog, startsWithFilter
 } = require('./helper.js')
 
 
 //:::: SYNCING ::::\\
 let syncingCache = new Cache('syncing')
 
-// returns an array of activity keys that have unseen activity
+/**
+ * To keep in sync with trakt.tv's database,
+ * this function is used to find activities that have updates available which are not shown in the app yet.
+ * @returns {Array.<'movies'|'episodes'|'shows'|'seasons'|'comments'|'lists'>} Types of activities that require updating
+ */
 async function newActivitiesAvailable() {
    syncingCache.remove()
    syncingCache.save()
@@ -26,31 +30,7 @@ async function newActivitiesAvailable() {
    debugLog('request finished', latest.all)
    let cacheContent = syncingCache.getKey('latestActivities')
 
-   if(cacheContent !== undefined) {
-      debugLog('cache content', cacheContent.all)
-      if(latest.all === cacheContent.all) {
-         debugLog('latest activities', 'nothing new')
-         return []
-      } else {
-         let updates = []
-         for(let scope in cacheContent) {
-            if(scope !== 'all') {
-               for(let action in cacheContent[scope]) {
-                  let dateOld = cacheContent[scope][action]
-                  let dateNew = latest[scope][action]
-                  if(dateNew !== dateOld) {
-                     updates.push(scope)
-                     debugLog('latest activities', action+' @ '+scope)
-                  }
-               }
-            }
-         }
-         syncingCache.setKey('latestActivities', latest)
-         syncingCache.save()
-
-         return updates
-      }
-   } else {
+   if(cacheContent === undefined) {
       debugLog('latest activities', 'all are unseen')
       // save latest activities if its the first time caching it
       syncingCache.setKey('latestActivities', latest)
@@ -58,6 +38,31 @@ async function newActivitiesAvailable() {
 
       return [ 'movies', 'episodes', 'shows', 'seasons', 'comments', 'lists' ]
    }
+
+   debugLog('cache content', cacheContent.all)
+
+   if(latest.all === cacheContent.all) {
+      debugLog('latest activities', 'nothing new')
+      return []
+   }
+
+   let updates = []
+   for(let scope in cacheContent) {
+      if(scope !== 'all') {
+         for(let action in cacheContent[scope]) {
+            let dateOld = cacheContent[scope][action]
+            let dateNew = latest[scope][action]
+            if(dateNew !== dateOld) {
+               updates.push(scope)
+               debugLog('latest activities', action+' @ '+scope)
+            }
+         }
+      }
+   }
+   syncingCache.setKey('latestActivities', latest)
+   syncingCache.save()
+
+   return updates
 }
 
 function getLatestActivities() {
@@ -290,23 +295,6 @@ function formatSearch(text) {
  
    debugLog('query', query)
    return query
-}
- 
-function startsWithFilter(string, options, removeFromFilter) {
-   string = string.toString()
-   for(let opt in options) {
-      if(string.startsWith(options[opt])) {
-         return {
-            found: options[opt].split(removeFromFilter || '').join(''),
-            filtered: string.split(options[opt])[1]
-         }
-      }
-   }
-   
-   return {
-      found: null,
-      filtered: string
-   }
 }
 
 
