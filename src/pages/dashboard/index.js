@@ -82,26 +82,6 @@ document.onkeydown = function() {
 }
 
 
-// This highlights the passed element. It does this by giving the element the 'selected' class and removing it from all siblings
-function show(x) {
-  let par = x.parentElement.parentElement;
-  [...par.children].forEach(element => {
-    if(element.children[0] === x) {
-      x.classList.add('selected')
-    } else {
-      element.children[0].classList.remove('selected')
-    }
-  })
-}
-
-function rotate(x) {
-  if(x.classList.contains('rotating')) {
-    x.classList.remove('rotating')
-  } else {
-    x.classList.add('rotating')
-  }
-}
-
 //:::: INFOCARD ::::\\
 
 // This variable can be overwritten by different new <>Buffer() classes.

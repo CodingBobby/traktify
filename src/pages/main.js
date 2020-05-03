@@ -177,3 +177,32 @@ async function requestAndLoadImage(options, onLoad) {
     }, 250)
   }
 }
+
+
+/**
+ * Highlights the passed element.
+ * It does this by giving the element the 'selected' class and removing it from all siblings.
+ * @param {HTMLElement} child 
+ */
+function show(child) {
+  let par = child.parentElement.parentElement;
+  [...par.children].forEach(element => {
+    if(element.children[0] === child) {
+      child.classList.add('selected')
+    } else {
+      element.children[0].classList.remove('selected')
+    }
+  })
+}
+
+/**
+ * Adds class to element if it doesn't have it already, otherwise removes it.
+ * @param {HTMLElement} child Target element
+ */
+function toggleClass(child, cssClass) {
+  if(child.classList.contains(cssClass)) {
+    child.classList.remove(cssClass)
+  } else {
+    child.classList.add(cssClass)
+  }
+}

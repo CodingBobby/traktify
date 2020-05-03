@@ -67,7 +67,7 @@
       <li><div class="btn icon black_b shadow_b selected" id="search_button_side" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="settings_button_side" onclick="show(this); openSettings()"><img src="../../assets/icons/app/settings.svg"></div></li>
       <li><div class="btn icon black_b shadow_b" id="logout_button_side" onclick="show(this); openLogout()"><img src="../../assets/icons/app/signout.svg"></div></li>
-      <li><div class="btn icon black_b shadow_b" onclick="show(this); reloadAllItems(this, this.parentElement.parentElement, function(_this) { rotate(_this) }, function(_this, par) { rotate(_this); show(par.children[0]) })"><img src="../../assets/icons/app/sync.svg"></div></li>
+      <li><div class="btn icon black_b shadow_b" onclick="show(this); reloadAllItems(this, this.parentElement.parentElement, function(_this) { toggleClass(_this, 'rotating') }, function(_this, par) { toggleClass(_this, 'rotating'); show(par.children[0]) })"><img src="../../assets/icons/app/sync.svg"></div></li>
     </ul>
 
     <div class="side_panel top z3" id="side_panel"></div>
