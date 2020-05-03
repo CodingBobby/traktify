@@ -29,6 +29,17 @@ var self = this;
 </div>
 <?js } ?>
 
+<?js
+    var properties = data.properties;
+    if (properties && properties.length && properties.forEach) {
+?>
+
+    <h5 class="subsection-title">Properties:</h5>
+
+    <?js= this.partial('properties.tmpl', data) ?>
+
+<?js } ?>
+
 <?js if (data.augments && data.alias && data.alias.indexOf('module:') === 0) { ?>
     <h5>Extends:</h5>
     <?js= self.partial('augments.tmpl', data) ?>

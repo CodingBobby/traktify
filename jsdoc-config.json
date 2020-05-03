@@ -36,17 +36,17 @@
          "Mixins"
       ],
       "menu": {
-         "Project Website": {
-            "href":"https://codingbobby.xyz/traktify",
-            "target":"_blank",
-            "class":"menu-item",
-            "id":"website_link"
-         },
          "Bugs & Issues": {
             "href":"https://github.com/CodingBobby/traktify/issues",
             "target":"_blank",
             "class":"menu-item",
             "id":"issues_link"
+         },
+         "Build Log": {
+            "href": "https://circleci.com/gh/CodingBobby/traktify",
+            "target": "_blank",
+            "class": "menu-item",
+            "id": "build_link"
          },
          "Discord Server": {
             "href":"https://discord.gg/BJNAMcj",
@@ -54,6 +54,7 @@
             "class":"menu-item",
             "id":"discord_link"
          }
-      }
+      },
+      "search": true
    }
 }
