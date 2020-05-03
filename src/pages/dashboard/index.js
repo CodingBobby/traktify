@@ -8,6 +8,9 @@ const relaunchApp = remote.getGlobal('relaunchApp')
 
 let config = remote.getGlobal('config')
 
+const generate = require('./../../modules/components/generators.js')
+
+
 // Here we update the app with saved settings after the window is created
 window.onload = function() {
   debugLog('window', 'dashboard loading')
@@ -214,63 +217,7 @@ function addInfoCard(position, index, traktId) {
       break
   }
   let infocard_stack = document.getElementById('infocard_stack')
-  infocard_stack.appendChild(generateInfoCardDummy(stack, index, traktId))
-}
-
-function generateInfoCardDummy(stack, index, traktId) {
-  let infocard = document.createElement('div')
-  infocard.classList = 'infocard shadow_b '+stack
-  infocard.id = 'card_'+index
-  infocard.dataset.trakt_id = traktId
-  infocard.innerHTML = `
-    <ul class="btns z4">
-      <li>
-        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
-          <img src="../../assets/icons/app/close.svg">
-        </div>
-      </li>
-    </ul>
-    <div class="cardcontent">
-      <div class="center">
-        <img class="logo gray-animation" style="height: 200px" src="../../assets/icons/traktify/512x512.png">
-      </div>
-    </div>
-  `
-  return infocard
-}
-
-function generateInfoCardContent(updates) {
-  let html = ` 
-    <div class="infocard_child black_b z4">
-      <div class="infocard_banner">
-        <img src="">
-        <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
-      </div>
-      <div class="infocard_stripe black_d_b"></div>
-      <div style="max-width: 920px;margin:auto;">
-        <div class="infocard_titles infocard_padding black_d_b tOverflow">
-          <div class="rating">
-            <img src="../../assets/icons/app/heart.svg">
-            <span class="white_t fs18 fw700">${updates.ratingPercent}%</span>
-          </div>
-          <div class="vertical_border"></div>
-          <div class="fw500 white_t tOverflow">
-            ${updates.seasonNumber}x${updates.episodeNumber} ${updates.episodeTitle}
-          </div>  
-        </div>
-        <div class="infocard_poster z1">   
-          <img class="shadow_h" src="../../assets/loading_placeholder.gif">
-          <div class="beta_action_btns">
-            <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
-            <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
-            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${updates.seasonNumber},episode:${updates.episodeNumber}});moveCards('right')"><img src="../../assets/icons/app/check.svg"></div>
-          </div>
-        </div>
-        <p class="infocard_description infocard_padding white_t fs18 fw200">${updates.description}</p>
-      </div>
-    </div> 
-  `
-  return html
+  infocard_stack.appendChild(generate.infoCardDummy(stack, index, traktId))
 }
 
 function generateStackSlider() {
@@ -314,7 +261,7 @@ function updateInfoCard(itemUpdates, index) {
   }
 
   if(theStack !== undefined) {
-    theStack.innerHTML = generateInfoCardContent(itemUpdates)
+    theStack.innerHTML = generate.infoCardContent(itemUpdates)
   } else {
     debugLog('!updating card', 'failed, could not find element')
   }
@@ -348,7 +295,7 @@ function updateInfoCardImage(url, index) {
 }
 
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-BAR :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:::: SIDE-BAR ::::*/
 
 // This object holds the DOM-elements and actions of the sidebar. We need this to generate the frame of the sidebar where content can be added dynamically later. Further comments explain the functioning.
 let sideBar = {
@@ -577,7 +524,7 @@ function closeSidePanel() {
 }
 
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: SETTINGS PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:::: SETTINGS PANEL ::::*/
 let wantsRelaunch = []
 
 // This adds a setting box to the sidepanel
@@ -755,7 +702,7 @@ function addSetting(setting, name) {
   return box
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: SEARCH-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:::: SEARCH-PANEL ::::*/
 let searchHistoryCache = new Cache('searchHistory')
 
 // This gets fired when the user searches something from the sidebar
@@ -784,7 +731,8 @@ async function search(text) {
     }
 
     // render search result
-    addSearchResult({
+    let panel = document.getElementById('results')
+    let result = generate.searchResult({
       title: item.trakt[item.trakt.type].title,
       type: item.trakt.type,
       rating: Math.round(item.trakt[item.trakt.type].rating * 10),
@@ -792,64 +740,13 @@ async function search(text) {
       description: item.trakt[item.trakt.type].overview,
       id: item.trakt[item.trakt.type].ids.tmdb
     })
+
+    panel.appendChild(result)
   })
 
   debugLog('time taken', Date.now()-requestTime+'ms')
 }
 
-// This function generates a html element for one search result and adds it to the sidebar.
-function addSearchResult(result) {
-  let panel = document.getElementById('results')
-  let panel_box = document.createElement('div')
-  panel_box.classList.add('panel_box', 'search', 'animation_slide_right')
-
-  let poster_img = document.createElement('img')
-  poster_img.classList.add('poster')
-  poster_img.src = result.img
-
-  let panel_box_container = document.createElement('div')
-  panel_box_container.classList.add('panel_box_container')
-
-  let h3 = document.createElement('h3')
-  h3.classList.add('fs18', 'tOverflow')
-  h3.innerText = result.title
-
-  let p = document.createElement('p')
-  p.classList.add('tOverflow', 'normal')
-  p.innerText = result.description
-
-  let poster_content = document.createElement('div')
-  poster_content.classList.add('poster-content')
-
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList.add('poster-content-left')
-
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let span = document.createElement('span')
-  span.classList.add('fs16')
-  span.innerText = result.rating + "%"
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right')
-  poster_content_right.append(...createActionButtons(result.id))
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(span)
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  panel_box_container.appendChild(h3)
-  panel_box_container.appendChild(p)
-  panel_box_container.appendChild(poster_content)
-
-  panel_box.appendChild(poster_img)
-  panel_box.appendChild(panel_box_container)
-
-  panel.appendChild(panel_box)
-}
 
 // Removes all elements from the search panel in the sidebar
 function removeSearchResults() {
@@ -861,7 +758,7 @@ function removeSearchResults() {
 }
 
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:::: UP-NEXT-TO-WATCH ::::*/
 // This gets fired when the dashboard is loaded
 async function generatePosterSection(update) {
   let requestTime = Date.now()
@@ -883,12 +780,15 @@ async function generatePosterSection(update) {
     let subtitle = `${next.season} x ${next.number+(next.number_abs?' ('+next.number_abs +')':'')} ${next.title}`
 
     if(index === 0) {
-      createTitle({
-        title: title,
-        subtitle: subtitle
+      let titleElement = document.getElementById('poster_title')
+      titleElement.innerHTML = generate.upNextTitle({
+        title,
+        subtitle
       })
     }
-    createPoster({
+
+    let posterSection = document.getElementById('posters')
+    let poster = generate.upNextPoster({
       title: title,
       subtitle: subtitle,
       rating: next.rating,
@@ -896,86 +796,13 @@ async function generatePosterSection(update) {
       season: next.season,
       matcher: `${item.show.show.ids.trakt}_e_${next.season}_${next.number}`
     })
+
+    posterSection.appendChild(poster)
   })
 
   debugLog('time taken',  Date.now()-requestTime+'ms')
 }
 
-
-// this is fired for each poster separately
-async function createPoster(item) {
-  let li = document.createElement('li')
-
-  li.classList.add('poster', 'poster_dashboard')
-  li.setAttribute('data_title', item.title)
-  li.setAttribute('data_subtitle', item.subtitle)
-  li.setAttribute('onmouseover', 'animateText(this, true)')
-  li.setAttribute('onmouseleave', 'animateText(this, false)')
-
-  let posterTile = document.createElement('div')
-  posterTile.classList.add('hidden')
-
-  // as values in onclicks will be added without formatting, we have to wrap them in quotes manually
-  let q = "'"
-
-  posterTile.innerHTML = `<div class="poster_tile shadow_h">
-    <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
-    <div class="beta_action_btns">
-      <div class="beta_action_btn play"
-        onclick="playNow(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/play.svg">
-      </div>
-      <div class="beta_action_btn watchlist"
-        onclick="addToWatchlist(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/list.svg">
-      </div>
-      <div class="beta_action_btn watched"
-        onclick="addToHistory(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/check.svg">
-      </div>
-    </div>
-  </div>`
-
-  li.appendChild(posterTile)
-
-  requestAndLoadImage({
-    parent: li,
-    use: 'poster',
-    type: 'season',
-    itemId: item.id,
-    reference: item.season,
-    classes: ['shadow_h', 'z1'],
-    attributes: {
-      'style': 'cursor:pointer',
-      'onclick': 'openInfoCard(this)',
-      'data_matcher': item.matcher
-    }
-  }, () => {
-    posterTile.classList.remove('hidden')
-  })
-
-  document.getElementById('posters').appendChild(li);
-}
-
-function createTitle(itemToAdd) {
-  let title = document.getElementById('poster_title')
-
-  let h3 = document.createElement('h3')
-  h3.classList.add('h3', 'red_t', 'tu')
-  h3.innerText = 'up next to watch'
-
-  let h1 = document.createElement('h1')
-  h1.classList.add('h1', 'white_t', 'tu', 'tOverflow')
-  h1.innerText = itemToAdd.title
-
-  let h1_2 = document.createElement('h1')
-  h1_2.classList.add('h1', 'white_d_t', 'tOverflow')
-  h1_2.innerText = itemToAdd.subtitle
-
-  title.appendChild(h3)
-  title.appendChild(h1)
-  title.appendChild(h1_2)
-}
 
 function animateText(textBox, onenter) {
   if(!textBox.children[0].classList.contains('hidden')){
@@ -1080,7 +907,7 @@ function openInfoCard(poster) {
   triggerInfoCardOverlay()
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: RPC :::::::::::::::::::::::::::::::::::::::::::::::*/
+/*:::: RPC ::::*/
 async function updateRpc() {
   if(config.client.settings.app['discord rpc'].status) {
     let settings = await createRpcContent()
@@ -1104,28 +931,7 @@ async function createRpcContent() {
   }
 }
 
-/*::::::::::::::::::::::::::::::::::::::::::::::: ACTION BUTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
-function createActionButtons(item) {
-  // TODO: change `item` to matcher so it includes more info
-  let playNow = document.createElement('div')
-  playNow.classList.add('action_btn', 'play')
-  playNow.innerHTML = '<img src="../../assets/icons/app/play.svg">'
-  playNow.setAttribute('onclick', `playNow(${item})`)
-
-  let addToList = document.createElement('div')
-  addToList.classList.add('action_btn', 'list')
-  addToList.innerHTML = '<img src="../../assets/icons/app/list.svg">'
-  addToList.setAttribute('onclick', `addToWatchlist(${item})`)
-
-  let addToHistory = document.createElement('div')
-  addToHistory.classList.add('action_btn', 'history')
-  addToHistory.innerHTML = '<img src="../../assets/icons/app/check.svg">'
-  addToHistory.setAttribute('onclick', `addToHistory(${item})`)
-
-  return [playNow, addToList, addToHistory];
-}
-
-
+/*:::: ACTION BUTTONS ::::*/
 // functions that get called when clicking on action buttons
 
 function playNow(matcher) {

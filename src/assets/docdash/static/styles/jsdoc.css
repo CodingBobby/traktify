@@ -16,6 +16,10 @@ body {
   font-size: 16px;
 }
 
+p {
+  max-width: 90ch;
+}
+
 img {
   max-width: 100%;
 }
@@ -392,12 +396,12 @@ footer {
 }
 
 .prettyprint {
+  width: 130ch;
   font-size: 14px;
   overflow: auto;
 }
 
 .prettyprint.source {
-  width: inherit;
   line-height: 18px;
   display: block;
   background-color: #242424;
