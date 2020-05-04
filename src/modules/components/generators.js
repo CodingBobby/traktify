@@ -21,17 +21,13 @@ module.exports = {
  */
 function infoCardDummy(stack, index, id) {
   let infocard = document.createElement('div')
-  infocard.classList = 'infocard shadow_b '+stack
+  infocard.classList.add('infocard', 'shadow_b', stack)
   infocard.id = 'card_'+index
   infocard.dataset.trakt_id = id
   infocard.innerHTML = `
-    <ul class="btns z4">
-      <li>
-        <div class="btn icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
-          <img src="../../assets/icons/app/close.svg">
-        </div>
-      </li>
-    </ul>
+    <div class="btn z4 icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
+      <img src="../../assets/icons/app/close.svg">
+    </div>
     <div class="cardcontent">
       <div class="center">
         <img class="logo gray-animation" style="height: 200px" src="../../assets/icons/traktify/512x512.png">
@@ -56,31 +52,16 @@ function infoCardDummy(stack, index, id) {
 function infoCardContent(item) {
   let html = ` 
     <div class="infocard_child black_b z4">
-      <div class="infocard_banner">
+    <div id="infocard_close" class="black_d_b z4 elmHover" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
+      <div class="infocard_left">
         <img src="">
-        <div id="infocard_close" class="black_d_b" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
+        <img src="" class="shadow_b">
       </div>
-      <div class="infocard_stripe black_d_b"></div>
-      <div style="max-width: 920px;margin:auto;">
-        <div class="infocard_titles infocard_padding black_d_b tOverflow">
-          <div class="rating">
-            <img src="../../assets/icons/app/heart.svg">
-            <span class="white_t fs18 fw700">${item.ratingPercent}%</span>
-          </div>
-          <div class="vertical_border"></div>
-          <div class="fw500 white_t tOverflow">
-            ${item.seasonNumber}x${item.episodeNumber} ${item.episodeTitle}
-          </div>  
-        </div>
-        <div class="infocard_poster z1">   
-          <img class="shadow_h" src="../../assets/loading_placeholder.gif">
-          <div class="beta_action_btns">
-            <div class="beta_action_btn play"><img src="../../assets/icons/app/play.svg"></div>
-            <div class="beta_action_btn watchlist"><img src="../../assets/icons/app/list.svg"></div>
-            <div class="beta_action_btn watched" onclick="requestHistoryUpdatePosting(nthParent(this,5).dataset.trakt_id,{type:'episode',season:${item.seasonNumber},episode:${item.episodeNumber}});moveCards('right')"><img src="../../assets/icons/app/check.svg"></div>
-          </div>
-        </div>
-        <p class="infocard_description infocard_padding white_t fs18 fw200">${item.description}</p>
+      <div class="infocard_right">
+        <h2 class="h2 white_t" style="margin: 0 0 12px">${item.episodeTitle}</h2>
+        <div class="horizontal_border"></div>
+        <p class="p white_d_t" style="margin-bottom:0">${item.description}</p>
+        ${actionBtns(item.id)}
       </div>
     </div> 
   `
@@ -95,6 +76,7 @@ function infoCardContent(item) {
  * @param {String} item.img
  * @param {String} item.title
  * @param {String} item.description
+ * @param {String} item.type
  * @param {Number} item.rating
  * @param {Number} item.id Reference ID for TMDB database
  * @returns {HTMLElement}
@@ -102,75 +84,21 @@ function infoCardContent(item) {
 function searchResult(item) {
   let panel_box = document.createElement('div')
   panel_box.classList.add('panel_box', 'search', 'animation_slide_right')
-
-  let poster_img = document.createElement('img')
-  poster_img.classList.add('poster')
-  poster_img.src = item.img
-
-  let panel_box_container = document.createElement('div')
-  panel_box_container.classList.add('panel_box_container')
-
-  let h3 = document.createElement('h3')
-  h3.classList.add('fs18', 'tOverflow')
-  h3.innerText = item.title
-
-  let p = document.createElement('p')
-  p.classList.add('tOverflow', 'normal')
-  p.innerText = item.description
-
-  let poster_content = document.createElement('div')
-  poster_content.classList.add('poster-content')
-
-  let poster_content_left = document.createElement('div')
-  poster_content_left.classList.add('poster-content-left')
-
-  let heart = document.createElement('img')
-  heart.src = '../../assets/icons/app/heart.svg'
-
-  let span = document.createElement('span')
-  span.classList.add('fs16')
-  span.innerText = item.rating + "%"
-
-  let poster_content_right = document.createElement('div')
-  poster_content_right.classList.add('poster-content-right')
-  poster_content_right.append(...createActionButtons(item.id))
-
-  poster_content_left.appendChild(heart)
-  poster_content_left.appendChild(span)
-
-  poster_content.appendChild(poster_content_left)
-  poster_content.appendChild(poster_content_right)
-
-  panel_box_container.appendChild(h3)
-  panel_box_container.appendChild(p)
-  panel_box_container.appendChild(poster_content)
-
-  panel_box.appendChild(poster_img)
-  panel_box.appendChild(panel_box_container)
-
+  panel_box.innerHTML = `
+    <img class="poster" src="${item.img}">
+    <div class="panel_box_container">
+      <h3 class="fs18 tOverflow">${item.title}</h3>
+      <p class="tOverflow normal">${item.description}</p>
+      <div class="poster-content">
+        <div class="poster-content-left">
+          <img src="../../assets/icons/app/heart.svg">
+          <span class="fs16">${item.rating}%</span>
+        </div>
+        <div class="poster-content-right tC">${item.type}</div>
+      </div>
+    </div>
+  `
   return panel_box
-}
-
-
-// used in the above function
-function createActionButtons(item) {
-  // TODO: change `item` to matcher so it includes more info
-  let playNow = document.createElement('div')
-  playNow.classList.add('action_btn', 'play')
-  playNow.innerHTML = '<img src="../../assets/icons/app/play.svg">'
-  playNow.setAttribute('onclick', `playNow(${item})`)
-
-  let addToList = document.createElement('div')
-  addToList.classList.add('action_btn', 'list')
-  addToList.innerHTML = '<img src="../../assets/icons/app/list.svg">'
-  addToList.setAttribute('onclick', `addToWatchlist(${item})`)
-
-  let addToHistory = document.createElement('div')
-  addToHistory.classList.add('action_btn', 'history')
-  addToHistory.innerHTML = '<img src="../../assets/icons/app/check.svg">'
-  addToHistory.setAttribute('onclick', `addToHistory(${item})`)
-
-  return [playNow, addToList, addToHistory]
 }
 
 
@@ -198,26 +126,14 @@ function upNextPoster(item) {
   let posterTile = document.createElement('div')
   posterTile.classList.add('hidden')
 
-  // as values in onclicks will be added without formatting, we have to wrap them in quotes manually
-  let q = "'"
-
-  posterTile.innerHTML = `<div class="poster_tile shadow_h">
-    <div class="poster_rating"><img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span></div>
-    <div class="beta_action_btns">
-      <div class="beta_action_btn play"
-        onclick="playNow(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/play.svg">
+  posterTile.innerHTML = `
+    <div class="poster_tile shadow_h">
+      <div class="poster_rating">
+        <img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span>
       </div>
-      <div class="beta_action_btn watchlist"
-        onclick="addToWatchlist(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/list.svg">
-      </div>
-      <div class="beta_action_btn watched"
-        onclick="addToHistory(${q+item.matcher+q})">
-        <img src="../../assets/icons/app/check.svg">
-      </div>
+      ${actionBtns(item.matcher)}
     </div>
-  </div>`
+  `
 
   li.appendChild(posterTile)
 
@@ -262,4 +178,21 @@ function upNextTitle(item) {
     </h1>
   `
   return html
+}
+
+
+/**
+ * Generates action buttons for specific types of a modal
+ * @param {Object} item 
+ * @param {String} type
+ */
+function actionBtns(item) {
+  let q = "'"
+  return `
+  <div class="action_btns">
+    <div class="action_btn play tu elmHover" onclick="playNow(${q+item+q})"></div>
+    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(${q+item+q})"></div>
+    <div class="action_btn history tu elmHover" onclick="addToHistory(${q+item+q})"></div>
+  </div>
+  `
 }

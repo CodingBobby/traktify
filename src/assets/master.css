@@ -90,6 +90,9 @@
   font-size: 12px;
 }
 
+.tC {
+  text-transform: capitalize;
+}
 .tu {
   text-transform: uppercase;
 }
@@ -212,11 +215,11 @@
   box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5)
 }
 
-.vertical_border {
+.horizontal_border {
   background-color: var(--white);
   opacity: 0.06;
-  width: 1px;
-  height: 100%;
+  height: 1px;
+  width: 100%;
 }
 
 .hidden {
@@ -259,6 +262,13 @@ body::after {
   min-height: calc(100vh - 60px);
   min-width: calc(100vw - 60px);
   margin: auto;
+}
+
+.elmHover {
+  transition: all 200ms ease;
+}
+.elmHover:hover {
+  -webkit-filter: brightness(.9)
 }
 /*::::::::::::::::::::::: LOADING :::::::::::::::::::::::*/
 
@@ -327,9 +337,6 @@ body::after {
   cursor: pointer;
   transition: all 200ms ease;
   display: block;
-}
-.btn:hover {
-  filter: grayscale(20%);
 }
 .btn.selected {
   background-color: var(--accent_color);
@@ -494,59 +501,40 @@ body::after {
   border-radius: 5px;
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: ACTION-BUTTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
-.beta_action_btns {
+.action_btns {
   width: 100%;
 }
 
-.beta_action_btn {
+.action_btn {
   text-align: center;
   padding: 5px 25px;
   border-radius: 4px;
   margin: 15px 0;
   color: var(--white);
   cursor: pointer;
-  transition: opacity 200ms ease;
+  transition: all 200ms ease;
 }
 
-.beta_action_btn:hover {
-  opacity: .8;
-}
-
-.beta_action_btn * {
-  vertical-align: middle;
-  display: inline-block;
-}
-
-.beta_action_btn > img {
-  width: 16px;
-  height: 19px;
-  margin-right: 10px;
-}
-
-.beta_action_btn > img,
-.beta_action_btn::after  {
-  vertical-align: middle;
-}
-
-.beta_action_btn.play {
+.action_btn.play {
   background-color: #ED1C24;
 }
-.beta_action_btn.play::after {
-  content: 'Check in?'
+.action_btn.play::after {
+  content: 'play now';
 }
 
-.beta_action_btn.watchlist {
+.action_btn.watchlist {
   background-color: #3796D5;
 }
-.beta_action_btn.watchlist::after {
-  content: 'Watchlist'
+.action_btn.watchlist::after {
+  content: 'add to list';
+  background-color: #3796D5;
 }
 
-.beta_action_btn.watched {
+.action_btn.history {
   background-color: #BD57E8;
 }
-.beta_action_btn.watched::after {
-  content: 'Watched?'
+.action_btn.history::after {
+  content: 'add to history';
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: ANIMATIONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .animation_slide_up {

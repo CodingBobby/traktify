@@ -287,8 +287,8 @@ function updateInfoCardImage(url, index) {
    *    actors[]
    */
   if(theCard !== undefined) {
-    theCard.querySelector('.infocard_banner img').src = url.banner
-    theCard.querySelector('.infocard_poster img').src = url.poster
+    theCard.querySelector('.infocard_left').children[0].src = url.banner
+    theCard.querySelector('.infocard_left').children[1].src = url.poster
   } else {
     debugLog('!updating card', 'failed, could not find element')
   }
@@ -718,7 +718,9 @@ async function search(text) {
   let data = await searchRequestHelper(text).then(res => res)
 
   data.result.forEach(item => {
-    debugLog('search', `adding result ${item.trakt[item.trakt.type].ids.trakt} (${item.trakt.score})`)
+    let type = item.trakt.type
+
+    debugLog('search', `adding result ${item.trakt[type].ids.trakt} (${item.trakt.score})`)
     // fallback for unavailable images
     let img = url = '../../assets/'+config.client.placeholder.search
 
@@ -732,13 +734,14 @@ async function search(text) {
 
     // render search result
     let panel = document.getElementById('results')
+    
     let result = generate.searchResult({
-      title: item.trakt[item.trakt.type].title,
-      type: item.trakt.type,
-      rating: Math.round(item.trakt[item.trakt.type].rating * 10),
+      title: item.trakt[type].title,
+      type: type,
+      rating: Math.round(item.trakt[type].rating * 10),
       img: img,
-      description: item.trakt[item.trakt.type].overview,
-      id: item.trakt[item.trakt.type].ids.tmdb
+      description: item.trakt[type].overview,
+      id: item.trakt[type].ids.tmdb
     })
 
     panel.appendChild(result)

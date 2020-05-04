@@ -638,8 +638,8 @@ module.exports.showBuffer = class showBuffer {
          // no images buffered
          return getShowImages(await this.tvdb).then(r => {
             this.items[pos-1].images = {
-               banner: r.tvbanner[0].url,
-               poster: r.tvposter[0].url
+               banner: (r.tvbanner || [{url:''}])[0].url,
+               poster: (r.tvposter || [{url:''}])[0].url
             }
             return this.items[pos-1].images
          })

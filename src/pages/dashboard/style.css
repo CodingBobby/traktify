@@ -3,7 +3,6 @@
   --side_panel_width: 450px;
   --panel_padding: 40px;
   --search_result_height: 205px;
-  --infocard_stripe_height: 55px;
 }
 
 .wrapper.dashboard {
@@ -14,73 +13,6 @@
 .dashboard {
   margin: auto;
   min-width: 716px;
-}
-/*:::::::::::::::::::::::::::::::::::::::::::::::: ACTION-BUTTTONS :::::::::::::::::::::::::::::::::::::::::::::::*/
-.action_btn {
-  vertical-align: middle;
-  padding: 8px;
-  position: relative;
-  cursor: pointer;
-  margin: 3px;
-  border-radius: 5px;
-}
-
-.action_btn,
-.action_btn > img {
-  display: inline-block;
-  width: 16px;
-  height: 19px;
-}
-
-.action_btn:first-child {
-  margin-left: 0;
-}
-.action_btn:last-child {
-  margin-right: 0;
-}
-
-.action_btn::before {
-  position: absolute;
-  transform: translateY(-15%) translateX(calc(-100% - 7px));
-  opacity: 0;
-  visibility: hidden;
-  padding: 3px 25px;
-  font-size: 14px;
-  white-space: nowrap;
-  font-weight: 200;
-  color: var(--white);
-  border-radius: 3px 0 0 3px;
-  transition: all 200ms ease;
-  z-index: 1;
-}
-
-.action_btn:hover::before {
-  opacity: 1;
-  visibility: visible;
-}
-
-.action_btn.play {
-  background-color: #C61017;
-}
-.action_btn.play::before {
-  content: 'Play Now?';
-  background-color: rgb(153, 13, 17);
-}
-
-.action_btn.list {
-  background-color: #2B678F;
-}
-.action_btn.list:before {
-  content: 'Add to watchlist?';
-  background-color: rgb(25, 61, 85);
-}
-
-.action_btn.history {
-  background-color: #8E44AD;
-}
-.action_btn.history:before {
-  content: 'Add to history?';
-  background-color: rgb(106, 51, 129);
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: CARDS :::::::::::::::::::::::::::::::::::::::::::::::*/
 #infocard_overlay {
@@ -93,15 +25,16 @@
   align-items: center;
 }
 
+.infocard,
 #infocard_stack {
   width: 70%;
   height: 70%;
+  max-width: 985px;
+  max-height: 600px;
 }
 
 .infocard {
   position: absolute;
-  width: 70%;
-  height: 70%;
   border-radius: 8px;
   background-color: var(--black);
   transition: ease 0.5s;
@@ -125,22 +58,6 @@
 
 .cardcontent::-webkit-scrollbar {
   display: none;
-}
-
-.infocard .banner {
-  max-height: 200px;
-  overflow: hidden;
-}
-
-.infocard .banner img {
-  width: 100%;
-  border-radius: 8px 8px 0 0;
-}
-
-.infosection {
-  padding: 20px;
-  width: calc(100% - 40px);
-  z-index: 1;
 }
 
 .infocard .btns {
@@ -203,130 +120,94 @@
   border-radius: 4px;
   overflow-y: auto;
   margin: auto;
-}
-
-.infocard_child::-webkit-scrollbar {
-  display: none;
-}
-
-.infocard_padding {
-  padding: 10px 20px 10px 240px;
-}
-
-.infocard_banner {
-  height: 200px;
-  width: 100%;
-  position: relative;
-}
-.infocard_banner img {
-  width:  100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(10%);
+  display: flex;
+  flex-direction: row;
 }
 
 #infocard_close {
   position: absolute;
-  right: 12px;
-  top: 12px;
-  width: 18px; /*visually more appealing that the actual 19px*/
-  line-height: 0;
+  right: 20px;
+  top: 0;
+  border-radius: 0 0 50% 50%;
+  width: 30px;
+  line-height: 40px;
   padding: 5px;
-  border-radius: 5px;
   display: inline-block;
   text-align: center;
   vertical-align: middle;
   cursor: pointer;
-  transition: all 200ms ease;
 }
-
-#infocard_close:hover {
-  background-color: #000;
-}
-
 #infocard_close img {
   filter: invert(1);  
   width: auto;
   height: 19px;
 }
 
-.infocard_stripe {
-  position: absolute;
+.infocard_left {
+  flex: 1;
+  padding: 25px;
+  overflow: hidden;
+  min-width: 200px;
+  max-width: 200px;
+  position: relative;
+  text-align: center;
+}
+.infocard_left > img:first-child {
   width: 100%;
-  padding: 10px 0 10px 0;
-  height: var(--infocard_stripe_height);
-  z-index: -1;
-}
-
-.infocard_titles {
-  height: var(--infocard_stripe_height);
-}
-.infocard_titles * {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.infocard_titles .vertical_border {
-  margin: 0 20px;
-}
-
-.infocard_titles .rating > img {
-  width: 30px;
-  height: auto;
-}
-
-.infocard_titles div:last-child {
-  font-size: 23px;
-  max-width: 500px;
-}
-
-.infocard_description {
-  opacity: 0.8;
-  margin: 0 0 0 2px;
-}
-
-.infocard_poster {
-  position: absolute;
-  transform: translateX(30px) translateY(-180px);
-  width: 190px;
-}
-.infocard_poster > img {
-  width: 100%;
-  height: 250px;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  top: 0;
+  -webkit-filter: blur(30px) brightness(.5);
 }
 
-@media screen and (max-width: 1280px) {
-  :root {
-    --infocard_stripe_height: 40px;
-  }
-  .infocard_poster {
-    transform: translateX(30px) translateY(-150px);
-  }
-  .infocard_titles .rating > img {
-    width: 25px;
-  }
-  .infocard_titles div:last-child {
-    font-size: 18px;
-    max-width: 234px;
-  }
-  .infocard_padding {
-    padding: 10px 20px 10px 190px;
-  }
-  .infocard_poster {
-    width: 140px;
-  }
-  .infocard_poster > img {
-    height: 190px;
-  }
-  .infocard_poster > .beta_action_btns {
-    font-size: 13px;
-  }
-  .infocard_poster > .beta_action_btns > .beta_action_btn > img {
-    width: 14px;
-    height: 17px;
-  }
+.infocard_left > img[src=""] {
+  -webkit-filter: none;
+  background-color: var(--black_d);
+  text-indent: 100vw;
+}
+
+.infocard_left > img:nth-child(2) {
+  max-width: 200px;
+  height: auto;
+  border-radius: 3px;
+  width: 100%;
+}
+
+.infocard_right {
+  overflow: auto;
+  flex: 2;
+  padding: 25px 60px 0 25px;
+  max-width: 650px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.infocard_right .horizontal_border {
+  display: table;
+}
+
+.infocard_right .action_btns {
+  bottom: 0;
+  padding: 25px 0 25px;
+  min-height: 32px;
+  position: sticky;
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap-reverse;
+  justify-content: space-between;
+  width: 100%;
+  background: linear-gradient(0deg, rgb(36, 36, 36) 50%, rgba(36, 36, 36, 0.78) 85%, rgba(36, 36, 36, 0) 100%);
+}
+
+.infocard_right .action_btns .action_btn {
+  font-size: 12px;
+  width: 32.7%;
+  padding: 5px 0;
+  margin: 0;
 }
 /*:::::::::::::::::::::::::::::::::::::::::::::::: UP-NEXT-TO-WATCH :::::::::::::::::::::::::::::::::::::::::::::::*/
 .titles {
@@ -397,7 +278,7 @@
   font-size: 23px;
 }
 
-.poster_dashboard .beta_action_btns {
+.poster_dashboard .action_btns {
   width: 110px;
   position: absolute;
   right: 0px;
@@ -405,22 +286,17 @@
   font-size: 12px;
   transition: all 400ms ease;
 }
-.poster_dashboard:first-child .beta_action_btns {
+.poster_dashboard:first-child .action_btns {
   bottom: 10px;
   width: 130px;
 }
 
-.poster_dashboard .beta_action_btns .beta_action_btn {
+.poster_dashboard .action_btns .action_btn {
   padding: 5px 5px;
   margin: 7px 0;
 }
-.poster_dashboard:first-child .beta_action_btns .beta_action_btn {
+.poster_dashboard:first-child .action_btns .action_btn {
   padding: 5px 10px;
-}
-
-.poster_dashboard .beta_action_btns .beta_action_btn  img {
-  width: 14px;
-  height: 17px;
 }
 
 .poster_dashboard:hover {
@@ -441,11 +317,11 @@
   transform: translateX(0) scale(1)!important;
   box-shadow: 0 0 0 0 transparent!important;
 }
-.poster_dashboard:hover > .hidden .beta_action_btns {
+.poster_dashboard:hover > .hidden .action_btns {
   right: 0;
 }
 
-.poster_dashboard:hover .beta_action_btns {
+.poster_dashboard:hover .action_btns {
   right: -10px;
 }
 
@@ -508,8 +384,8 @@
 .panel_header_box,
 .panel_header_gradient {
   position: absolute;
-  right: 0;
-  width: var(--side_panel_width);
+  left: 0;
+  width: calc(var(--side_panel_width) - 10px);
 }
 
 .panel_header {
@@ -644,7 +520,7 @@
 }
 
 .panel_box.search .panel_box_container {
-  width: calc(60% - 24px);
+  width: calc(58.8% - 24px);
   height: calc(var(--search_result_height) - 24px);
 }
 
@@ -668,11 +544,6 @@
 
 .panel_box.search .poster-content-left img {
   width: 20px;
-}
-
-#results .action_btn, 
-#results .action_btn > img {
-  width: 6px;
 }
 
 .poster-content {
@@ -811,5 +682,19 @@
 
   #results .panel_box_container > p {
     display: none;
+  }
+
+  .infocard_left {
+    max-width: 150px;
+    min-width: 0;
+  }
+  .infocard_right .action_btns .action_btn.play::after {
+    content: 'play';
+  }
+  .infocard_right .action_btns .action_btn.watchlist::after {
+    content: 'watchlist';
+  }
+  .infocard_right .action_btns .action_btn.history::after {
+    content: 'history';
   }
 }
