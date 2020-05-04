@@ -37,7 +37,11 @@
   <div id="dragger"></div>
   <div class="wrapper flex dashboard">
 
-    <div id="infocard_overlay" style="display: none;" class="white_t">
+    <div id="alert_overlay" class="overlay top z6" onclick="triggerAlertbox()" data-opened="true"></div>
+    <div id="alertBox" class="z6" style="display:none"></div>
+
+    <div id="info_overlay" class="overlay top z5" data-opened="true"></div>
+    <div id="infocard_overlay" class="z5" style="display:none" class="white_t">
       <ul class="btns z4" style="top: -22px; position: relative">
         <li>
           <div id="stack_left_button" class="btn small icon red_b shadow_b left" onclick="moveCards('left')">
@@ -61,7 +65,6 @@
       </div>
 
     </div>
-    <div id="info_overlay"></div>
 
     <ul class="btns top_p right z4" id="side_buttons">
       <li><div class="btn icon black_b shadow_b selected elmHover" id="search_button_side" onclick="show(this); openSearch()"><img src="../../assets/icons/app/search.svg"></div></li>
@@ -70,8 +73,8 @@
       <li><div class="btn icon black_b shadow_b elmHover" onclick="show(this); reloadAllItems(this, this.parentElement.parentElement, function(_this) { toggleClass(_this, 'rotating') }, function(_this, par) { toggleClass(_this, 'rotating'); show(par.children[0]) })"><img src="../../assets/icons/app/sync.svg"></div></li>
     </ul>
 
+    <div id="sidepanel_overlay" class="overlay top z2" onclick="closeSidePanel()" data-opened="true"></div>
     <div class="side_panel top z3" id="side_panel"></div>
-    <div class="overlay top z2" id="overlay" onclick="closeSidePanel()"></div>
     <div class="dashboard" id="dash">
       <div class="titles" id="poster_title"></div>
       <ul class="posters" id="posters"></ul>

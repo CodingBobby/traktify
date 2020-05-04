@@ -185,18 +185,15 @@ function updateLeftRightButtons() {
 // Closes the info card if already open. Currently, it is only opened by html onclick events. Opening it with this function could be done in future, possibly to speed up loading.
 function triggerInfoCardOverlay() {
   let infocard_overlay = document.getElementById('infocard_overlay')
-  let dark_overlay = document.getElementById('info_overlay')
-  if(infocard_overlay.style.display === 'none') {
-    // open it
+  if(infocard_overlay.style.display === 'none') { // open it
+    triggerOverlay('info_overlay')
     openedPanel = 'cards'
     infocard_overlay.style.display = 'flex'
-    dark_overlay.classList.add('dark_overlay', 'z6')
-  } else {
-    // close it
+  } else { // close it
+    triggerOverlay('info_overlay')
     openedPanel = null
     infocard_overlay.style.display = 'none'
     document.getElementById('infocard_stack').innerHTML = ''
-    dark_overlay.classList.remove('dark_overlay', 'z6')
 
     // Here, we could nullize the localBuffer so it is not falsely used by some other instance. When doing so, the whole instance would have to be initiated again when reopening the stacks. Because the user could reopen the same card-stack after closing without opening a different item before, we could instead keep the created instance and only overwrite the localBuffer when the opened item is not the same as before.
   }
@@ -447,7 +444,6 @@ function triggerSidePanel(panelName) {
     throw 'panel not available'
   }
 
-  let overlay = document.getElementById('overlay')
   let side_buttons = document.getElementById('side_buttons')
   let side_panel = document.getElementById('side_panel')
 
@@ -455,8 +451,7 @@ function triggerSidePanel(panelName) {
     sideBar.status = panelName
     openedPanel = 'sidebar'
 
-    // fading out the background
-    overlay.classList.add('show')
+    triggerOverlay('sidepanel_overlay')
 
     // now showing the settings panel
     side_panel.classList.remove('side_panel_animate_out')
@@ -481,16 +476,7 @@ function triggerSidePanel(panelName) {
     side_buttons.classList.remove('side_buttons_animate_in')
     side_buttons.classList.add('side_buttons_animate_out')
 
-    // fading in the background
-    overlay.style.display = 'block'
-    overlay.classList.remove('show')
-    // the timeout makes a fadeout animation possible
-    setTimeout(() => {
-      overlay.style.display = 'none'
-      sideBar.removeAll()
-    }, 220)
-
-    // re-highlight the search button
+    triggerOverlay('sidepanel_overlay', sideBar.removeAll())
     show(document.getElementById('search_button_side'))
   }
 
@@ -520,6 +506,27 @@ function closeSidePanel() {
     triggerSidePanel(sideBar.status)
   } catch(err) {
     debugLog('error', err)
+  }
+}
+
+function triggerOverlay(id, cb) {
+  let overlay = document.getElementById(id)
+  
+  if(overlay.getAttribute('data-opened') == 'true') {
+    overlay.classList.add('hide')
+    overlay.setAttribute('data-opened', 'false')
+    overlay.style.display = 'none'
+  }else if(overlay.getAttribute('data-opened') == 'false') {
+    overlay.classList.remove('hide')
+    overlay.style.display = 'block'
+    overlay.setAttribute('data-opened', 'true')
+
+    setTimeout(() => {
+      overlay.style.display = 'none'
+      if(cb) {
+        cb()
+      }
+    }, 200)
   }
 }
 
@@ -937,15 +944,35 @@ async function createRpcContent() {
 /*:::: ACTION BUTTONS ::::*/
 // functions that get called when clicking on action buttons
 
-function playNow(matcher) {
-  alert('playing now!')
+function playNow(elm, matcher, type) {
+  let itemName = ''
+  if(type == 'poster') {
+    let poster = elm.closest('.poster')
+    itemName = poster.getAttribute('data_title') + poster.getAttribute('data_subtitle')
+  }else if(type == 'card') {
+    itemName = elm.closest('.infocard').getAttribute('data-trakt_id')
+  }
+
+  showAlertBoxAndWait({
+    title: 'Info',
+    description: `Will now play <span>${itemName}</span>`, 
+    acceptButtonText: 'OK',
+    declineButtonText: 'Revert Action'
+  }, proceed => {
+    if(proceed) {
+      console.log('works')
+    } else {
+      console.log('denied')
+    }
+  })
+
 }
 
-function addToWatchlist(matcher) {
+function addToWatchlist(matcher, type) {
   alert('added to history!')
 }
 
-function addToHistory(matcher) {
+function addToHistory(matcher, type) {
   let [id, type, se, ep] = matcher.split('_')
 
   showAlertBoxAndWait({/*options*/}, proceed => {
@@ -961,18 +988,21 @@ function addToHistory(matcher) {
   })
 }
 
-
 /**
  * This triggers an alert box where the user can accept or decline his recently performed action. It will be reusable across the whole app.
  * @param {Object} options Individual settings for the popup
  * @param {Function} proceed Callback sending sending back status
  */
 function showAlertBoxAndWait(options, proceed) {
-  // the `options` object could have properties like
-  // { title, description, acceptButtonText, declineButtonText }
+  let box = document.getElementById('alertBox')
 
-  // call this to decline the action
-  proceed(false)
-  // call this to accept
-  proceed(true)
+  triggerOverlay('alert_overlay')
+
+  if(box.style.display == 'none') {
+    box.style.display = 'flex'
+    box.innerHTML = generate.alertBox(options, proceed)
+  }else{
+    box.style.display = 'none'
+    box.innerHTML = ''
+  }  
 }

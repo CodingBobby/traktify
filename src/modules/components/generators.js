@@ -7,7 +7,8 @@
 
 module.exports = {
   infoCardDummy, infoCardContent,
-  searchResult, upNextPoster, upNextTitle
+  searchResult, upNextPoster, upNextTitle,
+  alertBox
 }
 
 
@@ -25,7 +26,7 @@ function infoCardDummy(stack, index, id) {
   infocard.id = 'card_'+index
   infocard.dataset.trakt_id = id
   infocard.innerHTML = `
-    <div class="btn z4 icon red_b shadow_b" id="close_button_info" onclick="triggerInfoCardOverlay()">
+    <div id="infocard_close" class="btn-close black_d_b z4 elmHover" onclick="triggerInfoCardOverlay()">
       <img src="../../assets/icons/app/close.svg">
     </div>
     <div class="cardcontent">
@@ -52,7 +53,9 @@ function infoCardDummy(stack, index, id) {
 function infoCardContent(item) {
   let html = ` 
     <div class="infocard_child black_b z4">
-    <div id="infocard_close" class="black_d_b z4 elmHover" onclick="triggerInfoCardOverlay()"><img src="../../assets/icons/app/close.svg"></div>
+      <div id="infocard_close" class="btn-close black_d_b z4 elmHover" onclick="triggerInfoCardOverlay()">
+        <img src="../../assets/icons/app/close.svg">
+      </div>
       <div class="infocard_left">
         <img src="">
         <img src="" class="shadow_b">
@@ -61,7 +64,7 @@ function infoCardContent(item) {
         <h2 class="h2 white_t" style="margin: 0 0 12px">${item.episodeTitle}</h2>
         <div class="horizontal_border"></div>
         <p class="p white_d_t" style="margin-bottom:0">${item.description}</p>
-        ${actionBtns(item.id)}
+        ${actionBtns(item.matcher, 'card')}
       </div>
     </div> 
   `
@@ -131,7 +134,7 @@ function upNextPoster(item) {
       <div class="poster_rating">
         <img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span>
       </div>
-      ${actionBtns(item.matcher)}
+      ${actionBtns(item.matcher, 'poster')}
     </div>
   `
 
@@ -155,7 +158,6 @@ function upNextPoster(item) {
 
   return li
 }
-
 
 /**
  * Generates html-string used for the title block on the up-next dashboard.
@@ -182,17 +184,45 @@ function upNextTitle(item) {
 
 
 /**
- * Generates action buttons for specific types of a modal
- * @param {Object} item 
- * @param {String} type
+ * Generates html-string containing the action buttons
+ * @memberof generators
+ * @param {Object} matcher 
+ * @param {'poster'|'card'} type
+ * @returns {String}
  */
-function actionBtns(item) {
+function actionBtns(matcher, type) {
   let q = "'"
   return `
   <div class="action_btns">
-    <div class="action_btn play tu elmHover" onclick="playNow(${q+item+q})"></div>
-    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(${q+item+q})"></div>
-    <div class="action_btn history tu elmHover" onclick="addToHistory(${q+item+q})"></div>
+    <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+type+q})"></div>
+    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+type+q})"></div>
+    <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+type+q})"></div>
   </div>
+  `
+}
+
+/**
+ * Generates html-string used for the alert box
+ * @memberof generators
+ * @param {Object} options 
+ * @param {String} options.title
+ * @param {String} options.description
+ * @param {String} options.acceptButtonText
+ * @param {String} options.declineButtonText
+ * @returns {String}
+ */
+function alertBox(options, proceed) {
+  return `
+    <div class="alertBox black_b shadow_h">
+      <div class="btn-close black_d_b elmHover" onclick="${proceed(false)}">
+        <img src="../../assets/icons/app/close.svg">
+      </div>
+      <h4 class="fs23 fw700 white_t">${options.title}</h4>
+      <p class="fs18 fw200 white_d_t" style="margin-bottom:10px">${options.description}</p>
+      <div class="alert_btns">
+        <div class="alert_btn red_b white_t elmHover" onclick="${proceed(true)}">${options.acceptButtonText}</div>
+        <div class="alert_btn black_d_b white_t elmHover" onclick="${proceed(false)}">${options.declineButtonText}</div>
+      </div>
+    </div>
   `
 }

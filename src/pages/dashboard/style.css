@@ -19,7 +19,6 @@
   width: 100%;
   height: 100%;
   position: absolute;
-  z-index: 7;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -125,22 +124,8 @@
 }
 
 #infocard_close {
-  position: absolute;
   right: 20px;
   top: 0;
-  border-radius: 0 0 50% 50%;
-  width: 30px;
-  line-height: 40px;
-  padding: 5px;
-  display: inline-block;
-  text-align: center;
-  vertical-align: middle;
-  cursor: pointer;
-}
-#infocard_close img {
-  filter: invert(1);  
-  width: auto;
-  height: 19px;
 }
 
 .infocard_left {
@@ -160,7 +145,7 @@
   z-index: -1;
   left: 0;
   top: 0;
-  -webkit-filter: blur(30px) brightness(.5);
+  -webkit-filter: blur(30px) brightness(.8);
 }
 
 .infocard_left > img[src=""] {
@@ -334,29 +319,6 @@
 }
 .poster_dashboard:last-child {
   margin-right: 0;
-}
-/*:::::::::::::::::::::::::::::::::::::::::::::::: OVERLAYS :::::::::::::::::::::::::::::::::::::::::::::::*/
-.dark_overlay {
-  display: block !important;
-  animation: blend_in 0.15s !important;
-  animation-fill-mode: forwards !important;
-}
-
-#info_overlay {
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  display: none;
-
-  position: absolute;
-  overflow: hidden;
-  background-color: rgb(20, 20, 20);
-
-  opacity: 0.75;
-  backdrop-filter: blur(8px);
-  animation: blend_out 0.15s;
-  animation-fill-mode: forwards;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: SIDE-PANEL :::::::::::::::::::::::::::::::::::::::::::::::*/
 .side_panel {

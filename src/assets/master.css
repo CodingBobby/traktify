@@ -166,8 +166,14 @@
 .z4 {
   z-index: 4;
 }
+.z5 {
+  z-index: 5;
+}
 .z6 {
   z-index: 6;
+}
+.z7 {
+  z-index: 7;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: COLORS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .black_t {
@@ -448,20 +454,35 @@ body::after {
 .btn-switch__radio_no:checked ~ .btn-switch__label_yes {
   color: var(--white);
 }
+
+.btn-close {
+  position: absolute;
+  border-radius: 0 0 30px 30px;
+  width: 30px;
+  line-height: 40px;
+  padding: 5px;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+}
+.btn-close img {
+  filter: invert(1);  
+  width: auto;
+  height: 19px;
+}
 /*::::::::::::::::::::::: OVERLAY :::::::::::::::::::::::*/
 .overlay {
   left: 0;
   height: 100vh;
   width: 100vw;
   display: none;
-
   overflow: hidden;
   background-color: var(--black_d);
-
   opacity: 0.75;
   animation: blend_out 150ms cubic-bezier(.165,.84,.44,1) 1 forwards;
 }
-.overlay.show {
+.overlay.hide {
   display: block!important;
   animation: blend_in 150ms cubic-bezier(.165,.84,.44,1) 1 forwards!important;
 }
@@ -535,6 +556,53 @@ body::after {
 }
 .action_btn.history::after {
   content: 'add to history';
+}
+/*:::::::::::::::::::::::::::::::::::::::::::::::: ALERTBOX :::::::::::::::::::::::::::::::::::::::::::::::*/
+#alertBox {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.alertBox {
+  min-width: 400px;
+  padding: 20px 80px 57px 30px;
+  max-width: 500px;
+  border-radius: 3px;
+  position: relative;
+}
+
+.alertBox > .btn-close {
+  top: 0;
+  right: 20px;
+}
+.alertBox > h4,
+.alertBox > p {
+  margin: 0;
+}
+
+.alertBox > p span {
+  font-weight: 600;
+}
+
+.alert_btns {
+  position: absolute;
+  right: 20px;
+}
+
+.alert_btn {
+  display: inline-block;
+  padding: 5px 30px;
+  border-radius: 30px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.alert_btn:last-child {
+  margin-right: 0;
 }
 /*::::::::::::::::::::::::::::::::::::::::::::::: ANIMATIONS :::::::::::::::::::::::::::::::::::::::::::::::*/
 .animation_slide_up {
