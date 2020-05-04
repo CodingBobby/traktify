@@ -8,7 +8,7 @@
 module.exports = {
   infoCardDummy, infoCardContent,
   searchResult, upNextPoster, upNextTitle,
-  alertBox
+  alertBox: confirmActionAlertBox
 }
 
 
@@ -64,7 +64,7 @@ function infoCardContent(item) {
         <h2 class="h2 white_t" style="margin: 0 0 12px">${item.episodeTitle}</h2>
         <div class="horizontal_border"></div>
         <p class="p white_d_t" style="margin-bottom:0">${item.description}</p>
-        ${actionBtns(item.matcher, 'card')}
+        ${actionButtons(item.matcher, 'card')}
       </div>
     </div> 
   `
@@ -134,7 +134,7 @@ function upNextPoster(item) {
       <div class="poster_rating">
         <img src="../../assets/icons/app/heart.svg"><span class="fw700 white_t">${Math.round(item.rating*10)}%</span>
       </div>
-      ${actionBtns(item.matcher, 'poster')}
+      ${actionButtons(item.matcher, 'poster')}
     </div>
   `
 
@@ -184,45 +184,65 @@ function upNextTitle(item) {
 
 
 /**
- * Generates html-string containing the action buttons
+ * Generates html-string containing the action buttons.
+ * It contains three main buttons that are styled depending on the type.
  * @memberof generators
- * @param {Object} matcher 
+ * @param {String} matcher 
  * @param {'poster'|'card'} type
  * @returns {String}
  */
-function actionBtns(matcher, type) {
+function actionButtons(matcher, type) {
   let q = "'"
-  return `
-  <div class="action_btns">
-    <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+type+q})"></div>
-    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+type+q})"></div>
-    <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+type+q})"></div>
-  </div>
+  let html = `
+    <div class="action_btns">
+      <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+type+q})"></div>
+      <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+type+q})"></div>
+      <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+type+q})"></div>
+    </div>
   `
+  return html
 }
 
 /**
- * Generates html-string used for the alert box
+ * Generates element used for an alert box with a yes/no option.
+ * Takes a callback that allows different actions depending on the clicked button.
  * @memberof generators
- * @param {Object} options 
+ * @param {Object} options Data to render in the alert box
  * @param {String} options.title
  * @param {String} options.description
  * @param {String} options.acceptButtonText
  * @param {String} options.declineButtonText
- * @returns {String}
+ * @param {Function} proceed Callback function for button clicks
+ * @returns {HTMLElement}
  */
-function alertBox(options, proceed) {
-  return `
-    <div class="alertBox black_b shadow_h">
-      <div class="btn-close black_d_b elmHover" onclick="${proceed(false)}">
-        <img src="../../assets/icons/app/close.svg">
-      </div>
-      <h4 class="fs23 fw700 white_t">${options.title}</h4>
-      <p class="fs18 fw200 white_d_t" style="margin-bottom:10px">${options.description}</p>
-      <div class="alert_btns">
-        <div class="alert_btn red_b white_t elmHover" onclick="${proceed(true)}">${options.acceptButtonText}</div>
-        <div class="alert_btn black_d_b white_t elmHover" onclick="${proceed(false)}">${options.declineButtonText}</div>
-      </div>
-    </div>
+function confirmActionAlertBox(options, proceed) {
+  let box = document.createElement('div')
+  box.classList = 'alertBox black_b shadow_h'
+  box.innerHTML = `
+    <h4 class="fs23 fw700 white_t">${options.title}</h4>
+    <p class="fs18 fw200 white_d_t" style="margin-bottom:10px">${options.description}</p>
+    <div class="alert_btns"></div>
   `
+
+  let close = document.createElement('div')
+  close.classList = 'btn-close black_d_b elmHover'
+  close.innerHTML = `<img src="../../assets/icons/app/close.svg">`
+  close.onclick = function () { proceed(false) }
+  box.appendChild(close)
+
+  let buttons = box.getElementsByClassName('alert_btns')[0]
+
+  let accept = document.createElement('div')
+  accept.classList = 'alert_btn red_b white_t elmHover'
+  accept.innerText = options.acceptButtonText
+  accept.onclick = function() { proceed(true) }
+  buttons.appendChild(accept)
+
+  let decline = document.createElement('div')
+  decline.classList = 'alert_btn black_d_b white_t elmHover'
+  decline.innerHTML = options.declineButtonText
+  decline.onclick = function () { proceed(false) }
+  buttons.appendChild(decline)
+
+  return box
 }

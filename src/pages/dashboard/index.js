@@ -1,3 +1,9 @@
+/**
+ * Functions directly available from the renderer of Traktify's dashboard page.
+ * @namespace dashboard
+ */
+
+
 const trakt = remote.getGlobal('trakt')
 const fanart = remote.getGlobal('fanart')
 const getSettings = remote.getGlobal('getSettings')
@@ -972,7 +978,7 @@ function addToWatchlist(matcher, type) {
   alert('added to history!')
 }
 
-function addToHistory(matcher, type) {
+function addToHistory(matcher) {
   let [id, type, se, ep] = matcher.split('_')
 
   showAlertBoxAndWait({/*options*/}, proceed => {
@@ -990,7 +996,12 @@ function addToHistory(matcher, type) {
 
 /**
  * This triggers an alert box where the user can accept or decline his recently performed action. It will be reusable across the whole app.
+ * @memberof dashboard
  * @param {Object} options Individual settings for the popup
+ * @param {String} options.title
+ * @param {String} options.description
+ * @param {String} options.acceptButtonText
+ * @param {String} options.declineButtonText
  * @param {Function} proceed Callback sending sending back status
  */
 function showAlertBoxAndWait(options, proceed) {
@@ -1000,8 +1011,8 @@ function showAlertBoxAndWait(options, proceed) {
 
   if(box.style.display == 'none') {
     box.style.display = 'flex'
-    box.innerHTML = generate.alertBox(options, proceed)
-  }else{
+    box.appendChild(generate.confirmActionAlertBox(options, proceed))
+  } else{
     box.style.display = 'none'
     box.innerHTML = ''
   }  
