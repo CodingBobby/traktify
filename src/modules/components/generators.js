@@ -194,11 +194,11 @@ function upNextTitle(item) {
 function actionButtons(matcher, type) {
   let q = "'"
   let html = `
-    <div class="action_btns">
-      <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+type+q})"></div>
-      <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+type+q})"></div>
-      <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+type+q})"></div>
-    </div>
+  <div class="action_btns">
+    <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+modal+q})"></div>
+    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+modal+q})"></div>
+    <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+modal+q})"></div>
+  </div>
   `
   return html
 }
