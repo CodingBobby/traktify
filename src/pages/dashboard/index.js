@@ -944,12 +944,12 @@ async function createRpcContent() {
 /*:::: ACTION BUTTONS ::::*/
 // functions that get called when clicking on action buttons
 
-function playNow(elm, matcher, type) {
+function playNow(elm, matcher, modal) {
   let itemName = ''
-  if(type == 'poster') {
+  if(modal == 'poster') {
     let poster = elm.closest('.poster')
     itemName = poster.getAttribute('data_title') + poster.getAttribute('data_subtitle')
-  }else if(type == 'card') {
+  }else if(modal == 'card') {
     itemName = elm.closest('.infocard').getAttribute('data-trakt_id')
   }
 
@@ -968,11 +968,11 @@ function playNow(elm, matcher, type) {
 
 }
 
-function addToWatchlist(matcher, type) {
+function addToWatchlist(matcher, modal) {
   alert('added to history!')
 }
 
-function addToHistory(matcher, type) {
+function addToHistory(matcher, modal) {
   let [id, type, se, ep] = matcher.split('_')
 
   showAlertBoxAndWait({/*options*/}, proceed => {

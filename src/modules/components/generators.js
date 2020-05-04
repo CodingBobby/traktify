@@ -187,16 +187,16 @@ function upNextTitle(item) {
  * Generates html-string containing the action buttons
  * @memberof generators
  * @param {Object} matcher 
- * @param {'poster'|'card'} type
+ * @param {'poster'|'card'} modal
  * @returns {String}
  */
-function actionBtns(matcher, type) {
+function actionBtns(matcher, modal) {
   let q = "'"
   return `
   <div class="action_btns">
-    <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+type+q})"></div>
-    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+type+q})"></div>
-    <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+type+q})"></div>
+    <div class="action_btn play tu elmHover" onclick="playNow(this, ${q+matcher+q}, ${q+modal+q})"></div>
+    <div class="action_btn watchlist tu elmHover" onclick="addToWatchlist(this, ${q+matcher+q}, ${q+modal+q})"></div>
+    <div class="action_btn history tu elmHover" onclick="addToHistory(this, ${q+matcher+q}, ${q+modal+q})"></div>
   </div>
   `
 }

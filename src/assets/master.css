@@ -274,6 +274,7 @@ body::after {
   transition: all 200ms ease;
 }
 .elmHover:hover {
+  filter: brightness(.9);
   -webkit-filter: brightness(.9)
 }
 /*::::::::::::::::::::::: LOADING :::::::::::::::::::::::*/

@@ -145,10 +145,12 @@
   z-index: -1;
   left: 0;
   top: 0;
+  filter: blur(30px) brightness(.8);
   -webkit-filter: blur(30px) brightness(.8);
 }
 
 .infocard_left > img[src=""] {
+  filter: none;
   -webkit-filter: none;
   background-color: var(--black_d);
   text-indent: 100vw;
