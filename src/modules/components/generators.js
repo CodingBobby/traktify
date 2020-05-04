@@ -227,7 +227,7 @@ function confirmActionAlertBox(options, proceed) {
   let close = document.createElement('div')
   close.classList = 'btn-close black_d_b elmHover'
   close.innerHTML = `<img src="../../assets/icons/app/close.svg">`
-  close.onclick = function () { proceed(false) }
+  close.onclick = function() { proceed(false) }
   box.appendChild(close)
 
   let buttons = box.getElementsByClassName('alert_btns')[0]
@@ -241,7 +241,7 @@ function confirmActionAlertBox(options, proceed) {
   let decline = document.createElement('div')
   decline.classList = 'alert_btn black_d_b white_t elmHover'
   decline.innerHTML = options.declineButtonText
-  decline.onclick = function () { proceed(false) }
+  decline.onclick = function() { proceed(false) }
   buttons.appendChild(decline)
 
   return box

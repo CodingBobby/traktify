@@ -15,6 +15,7 @@ const relaunchApp = remote.getGlobal('relaunchApp')
 let config = remote.getGlobal('config')
 
 const generate = require('./../../modules/components/generators.js')
+const posters = require('./../../modules/api/posters.js')
 
 
 // Here we update the app with saved settings after the window is created
@@ -951,47 +952,74 @@ async function createRpcContent() {
 // functions that get called when clicking on action buttons
 
 function playNow(elm, matcher, modal) {
-  let itemName = ''
-  if(modal == 'poster') {
-    let poster = elm.closest('.poster')
-    itemName = poster.getAttribute('data_title') + poster.getAttribute('data_subtitle')
-  } else if(modal == 'card') {
-    itemName = elm.closest('.infocard').getAttribute('data-trakt_id')
-  }
-
   showAlertBoxAndWait({
     title: 'Info',
-    description: `Will now play <span>${itemName}</span>`, 
+    description: `Will start playing <span>${getItemName(elm, modal)}</span>.`, 
     acceptButtonText: 'OK',
     declineButtonText: 'Revert Action'
   }, proceed => {
     if(proceed) {
-      console.log('works')
+      console.log('playing')
+      showAlertBoxAndWait()
+      // start playing
     } else {
-      console.log('denied')
+      console.log('declined playing')
+      showAlertBoxAndWait()
     }
   })
-
 }
 
-function addToWatchlist(matcher, modal) {
-  alert('added to history!')
+function addToWatchlist(elm, matcher, modal) {
+  showAlertBoxAndWait({
+    title: 'Info',
+    description: `Adding <span>${getItemName(elm, modal)}</span> to watchlist.`, 
+    acceptButtonText: 'OK',
+    declineButtonText: 'Revert Action'
+  }, proceed => {
+    if(proceed) {
+      console.log('added to watchlist')
+      showAlertBoxAndWait()
+      // start playing
+    } else {
+      console.log('declined addition to watchlist')
+      showAlertBoxAndWait()
+    }
+  })
 }
 
-function addToHistory(matcher, modal) {
+function addToHistory(elm, matcher, modal) {
   let [id, type, se, ep] = matcher.split('_')
 
-  showAlertBoxAndWait({/*options*/}, proceed => {
+  showAlertBoxAndWait({
+    title: 'Info',
+    description: `Adding <span>${getItemName(elm, modal)}</span> to history.`, 
+    acceptButtonText: 'OK',
+    declineButtonText: 'Revert Action'
+  }, proceed => {
     if(proceed) {
-      requestHistoryUpdatePosting(id, {
+      console.log('added to history')
+      posters.requestHistoryUpdatePosting(id, {
         type: type == 'e' ? 'episode' : 'movie',
         season: type == 'e' ? Number(se) : null,
         episode: type == 'e' ? Number(ep) : null
       })
+      showAlertBoxAndWait()
     } else {
-      debugLog('declined', `history update for ${id}`)
+      console.log('declined addition to history')
+      showAlertBoxAndWait()
     }
   })
+}
+
+function getItemName(elm, modal) {
+  let itemName = ''
+  if(modal == 'poster') {
+    let poster = elm.closest('.poster')
+    itemName = poster.getAttribute('data_title') + ' ' +poster.getAttribute('data_subtitle')
+  } else if(modal == 'card') {
+    itemName = elm.closest('.infocard').getAttribute('data-trakt_id')
+  }
+  return itemName
 }
 
 /**
