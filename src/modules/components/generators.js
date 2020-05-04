@@ -188,10 +188,10 @@ function upNextTitle(item) {
  * It contains three main buttons that are styled depending on the type.
  * @memberof generators
  * @param {String} matcher 
- * @param {'poster'|'card'} type
+ * @param {'poster'|'card'} modal
  * @returns {String}
  */
-function actionButtons(matcher, type) {
+function actionButtons(matcher, modal) {
   let q = "'"
   let html = `
   <div class="action_btns">

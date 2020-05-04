@@ -955,7 +955,7 @@ function playNow(elm, matcher, modal) {
   if(modal == 'poster') {
     let poster = elm.closest('.poster')
     itemName = poster.getAttribute('data_title') + poster.getAttribute('data_subtitle')
-  }else if(modal == 'card') {
+  } else if(modal == 'card') {
     itemName = elm.closest('.infocard').getAttribute('data-trakt_id')
   }
 
