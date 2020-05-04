@@ -8,7 +8,7 @@
 module.exports = {
   infoCardDummy, infoCardContent,
   searchResult, upNextPoster, upNextTitle,
-  alertBox: confirmActionAlertBox
+  confirmActionAlertBox
 }
 
 
