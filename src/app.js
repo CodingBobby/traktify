@@ -338,7 +338,9 @@ const {
             request(`https://traktify-server.herokuapp.com/stats?username=${userSettings.user.username}`, {
               json: true
             }, (err, res, body) => {
-              debugLog('user authentications', body.data.requests)
+              if (err) debugLog('error', err)
+              if (body.data) debugLog('user authentications', body.data.requests)
+              else debugLog('error', 'traktify server error', new Error().stack)
             })
       
 
