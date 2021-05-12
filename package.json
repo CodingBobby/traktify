@@ -4,7 +4,7 @@
   "description": "multi platform desktop app for trakt.tv",
   "main": "src/app/app.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "start": "electron .",
     "build-docs": "jsdoc -c jsdoc-config.json",
     "test-docs": "npm run clean && npm run build-docs && npm run clean"
@@ -31,11 +31,11 @@
     "rimraf": "^3.0.2"
   },
   "dependencies": {
-    "background": "^0.3.3",
     "directory-tree": "^2.2.9",
     "flat-cache": "^3.0.4",
     "fs-extra": "^9.1.0",
+    "klyft": "^0.2.3",
     "path": "^0.12.7",
-    "request": "^2.88.2"
+    "trakt.tv": "^8.0.0"
   }
 }
