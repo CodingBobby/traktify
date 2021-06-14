@@ -17,3 +17,9 @@
  * using the trakt api with the trakt.js library
  * in an electron framework
  */
+
+
+/**
+ * Entry point of the electron.js app.
+ * @namespace App
+ */

@@ -1,6 +1,34 @@
+/**
+ * Task management and automation.
+ * @namespace Manager
+ */
+
+
+/**
+ * Callback function for Tasks.
+ * @typedef {Function} TASK_CB
+ * @param {*} [args] argument for the Task, can be array, object, etc.
+ * @param {TASK_PROG} [progress] callback to report an update
+ * @returns result that will be resolved after Task completion
+ * @memberof Manager
+ */
+
+
+/**
+ * Callback function to run when Task's progress updates.
+ * @typedef {Function} TASK_PROG
+ * @param {number} fraction progress in range 0–1
+ * @memberof Manager
+ */
+
+
+/**
+ * @memberof Manager
+ */
 class Queue {
   
   /**
+   * Organisation of repetitive or time-consuming jobs.
    * @param {Object} [options] optional settings for the queue
    * @param {Number} [options.frequency] ticks per second, default: 1 sec
    * @param {Boolean} [options.reverse] if latest task should be run first, default: false
@@ -32,7 +60,6 @@ class Queue {
    * @param {boolean} [options.overwrite] if task should be removed when a similar one is already in the queue, default: false
    */
   add(callback, options) {
-    // options: { ?args, ?overwrite }
     options = options || {}
     let job = new Task(callback, options.args)
 
@@ -131,30 +158,29 @@ class Queue {
   }
 }
 
-/**
- * Callback function for Tasks.
- * @typedef {Function} TASK_CB
- * @param {*} args one argument, can be array or object
- * @returns result that will be resolved after Task completion
- */
 
+/**
+ * @memberof Manager
+ */
 class Task {
 
   /**
    * Wraps Promises for easier and more specific use.
    * The Queue will create new Tasks internally but they can be used manually for asynchronous jobs.
    * @param {TASK_CB} callback the function to run
-   * @param {Object} args optional arguments to be used in the Task's function
+   * @param {Object} [args] optional arguments to be used in the Task's function
+   * @param {TASK_PROG} [progress] runs when callback reports an update
    * @example new Task(args => sum(args.nums), { nums: [1, 2, 3] })
    * // argument declaration can also be skipped when not required
    * new Task(() => sum([1, 2, 3]))
    * // but it can be usedful in specific cases
    * new Task(sum, [1, 2, 3])
    */
-  constructor(callback, args) {
-     this.time = Date.now()
-     this.callback = callback
-     this.args = args
+  constructor(callback, args, progress) {
+    this.time = Date.now()
+    this.callback = callback
+    this.args = args || {}
+    this.progress = progress || function(i) {}
   }
 
   /**
@@ -166,7 +192,7 @@ class Task {
       let result
 
       try {
-        result = await this.callback(this.args)
+        result = await this.callback(this.args, this.progress)
       } catch(err) {
         if(err) rej(err)
       }

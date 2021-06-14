@@ -78,7 +78,7 @@ When building, make sure to set the environment to `'production'` at the start o
 
 ### Authors
    - [Bumbleboss](https://github.com/Bumbleboss): Frontend developer & Graphics designer
-   - [CodingBobby](https://github.com/CodingBobby): Fullstack developer
+   - [CodingBobby](https://github.com/CodingBobby): Backend developer
 
 ### 3rd Party Dependencies
    - [Jean van Kasteel](https://github.com/vankasteelj): `trakt.tv` and `fanart.tv`
