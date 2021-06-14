@@ -15,6 +15,7 @@
 /bin
 /target
 /dist
+/out
 
 # node stuff
 /node_modules

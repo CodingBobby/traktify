@@ -6,7 +6,7 @@
 
 /**
  * Filters an input string according to a special format.
- * @example 'tv:firefly' => { found: 'tv', filterd: 'firefly' }
+ * @example 'tv:firefly' -> { found: 'tv', filterd: 'firefly' }
  * @param {string} string the full input text
  * @param {string[]} prefixes list of possible prefixes
  * @param {string} [removeFromFilter] hyphen to remove afterwards

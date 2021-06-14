@@ -34,7 +34,6 @@
     "directory-tree": "^2.2.9",
     "flat-cache": "^3.0.4",
     "fs-extra": "^9.1.0",
-    "klyft": "^0.2.3",
     "path": "^0.12.7",
     "trakt.tv": "^8.0.0"
   }
