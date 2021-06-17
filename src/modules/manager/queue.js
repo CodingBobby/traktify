@@ -1,29 +1,23 @@
 /**
- * Task management and automation.
- * @namespace Manager
- */
-
-
-/**
- * Callback function for Tasks.
+ * Callback function for {@link Task}s.
  * @typedef {Function} TASK_CB
  * @param {*} [args] argument for the Task, can be array, object, etc.
  * @param {TASK_PROG} [progress] callback to report an update
  * @returns result that will be resolved after Task completion
- * @memberof Manager
+ * @memberof Modules.Manager
  */
 
 
 /**
- * Callback function to run when Task's progress updates.
+ * Callback function to run when {@link Task}'s progress updates.
  * @typedef {Function} TASK_PROG
  * @param {number} fraction progress in range 0–1
- * @memberof Manager
+ * @memberof Modules.Manager
  */
 
 
 /**
- * @memberof Manager
+ * @memberof Modules.Manager
  */
 class Queue {
   
@@ -160,16 +154,16 @@ class Queue {
 
 
 /**
- * @memberof Manager
+ * @memberof Modules.Manager
  */
 class Task {
 
   /**
    * Wraps Promises for easier and more specific use.
-   * The Queue will create new Tasks internally but they can be used manually for asynchronous jobs.
+   * The {@link Queue} will create new Tasks internally but they can be used manually for asynchronous jobs.
    * @param {TASK_CB} callback the function to run
    * @param {Object} [args] optional arguments to be used in the Task's function
-   * @param {TASK_PROG} [progress] runs when callback reports an update
+   * @param {TASK_PROG} [progress] runs when callback reports an update; for that callback itself needs a callback
    * @example new Task(args => sum(args.nums), { nums: [1, 2, 3] })
    * // argument declaration can also be skipped when not required
    * new Task(() => sum([1, 2, 3]))

@@ -2,6 +2,7 @@
  * @typedef {Object} FILTERED
  * @property {string} found
  * @property {string} filtered 
+ * @memberof Modules.API
  */
 
 /**
@@ -11,6 +12,7 @@
  * @param {string[]} prefixes list of possible prefixes
  * @param {string} [removeFromFilter] hyphen to remove afterwards
  * @returns {FILTERED}
+ * @memberof Modules.API
  */
 function startsWithFilter(string, prefixes, removeFromFilter) {
   string = string.toString()
@@ -33,6 +35,7 @@ function startsWithFilter(string, prefixes, removeFromFilter) {
 /**
  * List of available shortcuts that can be used to query trakt.tv searches.
  * @type {string[]}
+ * @memberof Modules.API
  */
 const searchShortCuts = [
   's', 'show', 'shows', 'tv',
@@ -47,6 +50,7 @@ const searchShortCuts = [
  * @property {string} found
  * @property {string} filtered 
  * @property {'show'|'movie'|'episode'|'person'} type
+ * @memberof Modules.API
  */
 
 /**
@@ -54,6 +58,7 @@ const searchShortCuts = [
  * This formats the raw input text into a usable object.
  * @param {string} text user's input string
  * @return {FILTERED_EXT}
+ * @memberof Modules.API
  */
 function formatSearch(text) {
   let searchOptions = searchShortCuts.map(o => o + ':')
