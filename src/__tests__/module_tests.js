@@ -1,5 +1,5 @@
 describe('testing helper modules', () => {
-  const filters = require('../modules/filters')
+  const filters = require('../modules/api/filters.js')
 
   test('filtering search prefixes', () => {
     let limiter = ':'

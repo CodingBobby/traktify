@@ -21,7 +21,7 @@ const isRenderer = require('is-electron-renderer')
 
     /** @private */
     this.options = options || {}
-    this.options.timeout = this.options.timeout ?? 1e3
+    this.options.timeout = this.options.timeout || 1e3
     this.options.window = this.options.window || null
 
     if (!isRenderer && !this.options.window) {
@@ -53,7 +53,7 @@ const isRenderer = require('is-electron-renderer')
       const timer = setTimeout(() => {
         const err = `no reply over route '${route}' within allowed timeframe`
         reject(new Error(err))
-      }, timeout ?? this.options.timeout)
+      }, timeout || this.options.timeout)
 
       // unique channel will never be used twice to send a message
       this.listener.once(ID, (_event, replyData) => {
