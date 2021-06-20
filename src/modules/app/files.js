@@ -11,13 +11,21 @@ const defConfigRaw = fs.readFileSync(defConfigDir, 'utf8')
 
 
 /**
- * Initializes a directory tree that is used for system files.
+ * Initializes a directory tree that is used for system-files.
  * It detects existing files and does not overwrite them to keep custom settings.
- * @returns {Promise.<SystemPaths>} resolves paths of system files
+ * @returns {Promise<PATHS.SystemPaths>} resolves paths of system-files
  * @memberof Modules.App
  */
 function initFileStructure() {
-  fs.ensureDirSync(PATHS.data)
+  try {
+    fs.ensureDirSync(PATHS.data)
+  } catch (err) {
+    tracer.error(err)
+    return new Promise((resolve, reject) => {
+      reject('directory access failed, enough permissions?')
+    })
+  }
+  
 
   const storeDirStructure = dirTree(PATHS.data)
 
@@ -31,13 +39,18 @@ function initFileStructure() {
     // add missing files
 
     // TODO: This will only work if the default file structure does not consist of multiple directory levels. Create helper function to make this possible if a more structured default tree is required.
-    let firstChildren = storeDirStructure.children.map(c => c.name)
+    let presentFiles = storeDirStructure.children.map(c => c.name)
     let desired = ['.cache', '.log', 'config.json']
+
+    // false if anything had to be modified
+    let noFixing = true
 
     desired.map(d => {
       // only pass items that are not yet present
-      if(!firstChildren.includes(d)) return d
+      if (!presentFiles.includes(d)) return d
     }).filter(n => n).forEach(m => {
+      noFixing = false
+
       if (typeof defaultContent[m] == 'object') {
         // in this case, the missing element was a directory
         fs.ensureDirSync(path.join(PATHS.data, m))
@@ -45,6 +58,8 @@ function initFileStructure() {
         fs.outputFileSync(path.join(PATHS.data, m), defaultContent[m])
       }
     })
+
+    if (!noFixing) tracer.warn('system-files are created')
 
     // fix config file if necessary
     const configDir = path.join(PATHS.data, 'config.json')
@@ -61,16 +76,47 @@ function initFileStructure() {
         throw 'config file is missing important content'
       }
     } catch (err) {
+      noFixing = false
+
       tracer.error(err)
       fs.outputFileSync(configDir, defaultContent['config.json'])
       tracer.warn('overwritten config with defaults')
     }
+
+    if (noFixing) tracer.log('system-files are present and as expected')
 
     resolve(PATHS)
   })
 }
 
 
+/**
+ * Configuration settings for the app.
+ * @typedef Config
+ * @property {Object} client
+ * @property {Object} client.settings
+ * @property {Object} client.rpc
+ * @property {Object} user
+ * @property {Object} user.trakt
+ * @property {Object|false} user.trakt.auth
+ * @property {Boolean} user.trakt.status
+ * @memberof Modules.App
+ */
+
+/**
+ * Reads configuration file from disk.
+ * @returns {Config} Configuration settings
+ * @memberof Modules.App
+ */
+function readConfig() {
+  try {
+    return JSON.parse(fs.readFileSync(PATHS.config, 'utf8'))
+  } catch (err) {
+    tracer.error(err)
+  }
+}
+
+
 module.exports = {
-  PATHS, initFileStructure
+  initFileStructure, readConfig
 }

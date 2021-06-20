@@ -2,6 +2,12 @@ const fs = require('fs-extra')
 const colors = require('colors')
 const PATHS = require('../app/paths.js')
 
+/**
+ * @typedef LogLevel
+ * @type {'log'|'info'|'warn'|'error'|'trace'|'debug'|'fatal'}
+ * @memberof Modules.Manager
+ */
+
 // Temporary storage for logs that couldn't be saved because the log-file doesn't exist yet.
 // Happens when the app starts the first time and things are logged before required files are created.
 let tmpLog = ''
@@ -9,6 +15,14 @@ let tmpLog = ''
 
 /**
  * Logging interface that formats different levels and saves to file defined in {@link Modules.App.PATHS}.
+ * @type {Tracer.Logger}
+ * @property {Function} log
+ * @property {Function} info
+ * @property {Function} warn
+ * @property {Function} error
+ * @property {Function} trace
+ * @property {Function} debug
+ * @property {Function} fatal
  * @memberof Modules.Manager
  */
 const tracer = require('tracer').colorConsole({

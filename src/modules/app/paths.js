@@ -7,10 +7,10 @@ const DATA_DIR = path.join(process.env.HOME, '.traktify')
 /**
  * Paths of system files that are saved outside the app.
  * @typedef SystemPaths
- * @property {string} app
- * @property {string} cache
- * @property {string} log
- * @property {string} config
+ * @property {string} app full path to the app's `src/`
+ * @property {string} cache full path to `.cache` folder
+ * @property {string} log full path to `.log` file
+ * @property {string} config full path to `config.json` file
  * @memberof Modules.App
  */
 
