@@ -50,8 +50,10 @@
     "directory-tree": "^2.2.9",
     "flat-cache": "^3.0.4",
     "fs-extra": "^9.1.0",
+    "is-electron-renderer": "^2.0.1",
     "path": "^0.12.7",
     "tracer": "^1.1.5",
-    "trakt.tv": "^8.0.0"
+    "trakt.tv": "^8.0.0",
+    "uuid": "^8.3.2"
   }
 }

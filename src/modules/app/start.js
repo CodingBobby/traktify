@@ -11,41 +11,46 @@ const {
 } = electron
 
 const path = require('path')
+const tracer = require('../manager/log.js')
 
 const BASE_PATH = process.env.BASE_PATH
+
+
+/**
+ * Callback that is fired when window is ready.
+ * @typedef {Function} WindowIsReady
+ * @param {electron.BrowserWindow} window app window which is ready now
+ * @memberof Modules.App
+ */
 
 
 /**
  * Ask for the electron app to build its windows when ready.
  * This should be called only once at launch.
  * @memberof Modules.App
- * @param {Function} onReady fires when {@link buildWindow} has reported readiness
+ * @param {WindowIsReady} onReady fires when {@link buildWindow} has reported readiness
  */
 function startApp(onReady) {
   // build the app when it's ready
-  app.on('ready', () => {
-    buildWindow(onReady)
+  app.once('ready', () => {
+    buildLoadingWindow(onReady)
   })
 
   // this quits the whole app
-  app.on('window-all-closed', () => {
+  app.once('window-all-closed', () => {
     app.quit()
   })
 }
 
 
-const mainWindowOptions = {
-  width: 900,
-  height: 750,
-  useContentSize: true,
-  titleBarStyle: 'hidden',
-  backgroundColor: '#242424',
-  title: 'Traktify',
-  show: false,
-  center: true,
-  webPreferences: {
-    experimentalFeatures: true
-  }
+const webPreferences = {
+  // required for some visual features like css-webkit
+  experimentalFeatures: true,
+  // as advised by electron's security guidelines
+  preload: path.join(BASE_PATH, 'pages/communicator.js'),
+  nodeIntegration: false,
+  enableRemoteModule: false,
+  contextIsolation: true
 }
 
 const loadingWindowOptions = {
@@ -57,9 +62,7 @@ const loadingWindowOptions = {
   title: 'Traktify',
   show: false,
   center: true,
-  webPreferences: {
-    experimentalFeatures: true
-  }
+  webPreferences
 }
 
 
@@ -67,50 +70,36 @@ const loadingWindowOptions = {
  * Creates the app's windows on startup and initialises their listeners.
  * Used by {@link startApp}.
  * @memberof Modules.App
- * @param {Function} onReady fires when loading-window has shown up
+ * @param {WindowIsReady} onReady fires when loading-window has shown up
  */
-function buildWindow(onReady) {
-  /**
-   * Traktify's main window.
-   * @type {electron.BrowserWindow} 
-   * @memberof Modules.App
-   */
-  let mainWindow = new BrowserWindow(mainWindowOptions)
-
+function buildLoadingWindow(onReady) {
   /**
    * Loading window that shows before the main window becomes visible.
    * @type {electron.BrowserWindow} 
    * @memberof Modules.App
    */
   let loadingWindow = new BrowserWindow(loadingWindowOptions)
-  loadingWindow.show()
-  loadingWindow.once('show', onReady) // report that the window is visible
 
   loadingWindow.loadFile(path.join(BASE_PATH, 'pages/loading/index.html'))
 
-  // setTimeout(() => {
-  //   loadingWindow.close()
-  //   mainWindow.show()
-  // }, 2e3)
+  loadingWindow.webContents.on('did-finish-load', () => {
+    loadingWindow.show()
+
+    // report that the window is visible
+    loadingWindow.once('show', () => {
+      tracer.log('window is ready')
+      onReady(loadingWindow)
+    })
+  })
 
 
-  // listeners for the app windows,
-  // have to be added to both the main and the loading window because
-  // the user could quit or unfocus the app while it is still loading
+  // listeners for the app windows
   loadingWindow.on('closed', () => {
     loadingWindow = null
   })
 
   loadingWindow.on('restore', () => {
     loadingWindow.focus()
-  })
-
-  mainWindow.on('closed', () => {
-    mainWindow = null
-  })
-
-  mainWindow.on('restore', () => {
-    mainWindow.focus()
   })
 }
 
