@@ -62,17 +62,15 @@ process.env.INIT_TIME = INIT_TIME
 const BASE_PATH = __dirname
 process.env.BASE_PATH = BASE_PATH
 
-// prepare log listener before the app starts
-//initLogListener()
-
 
 const electron = require('electron')
+const tracer = require('./modules/manager/log.js')
 const { SwitchBoard } = require('./modules/manager/ipc.js')
 const { startApp } = require('./modules/app/start.js')
 const { initLogListener } = require('./modules/app/listener.js')
 const { getAPIKeys } = require('./modules/api/init.js')
 const { initFileStructure, readConfig } = require('./modules/app/files.js')
-const tracer = require('./modules/manager/log.js')
+const { connectUser, authenticateUser } = require('./modules/api/auth.js')
 
 startApp(async loadingWindow => {
   // Loading window is shown and page is fully rendered.
@@ -106,36 +104,13 @@ startApp(async loadingWindow => {
       await SB.send('report.progress', 3/steps)
 
       // try to authenticate
-
+      authenticateUser(() => {}, () => {})
     } else {
       tracer.log('no user found')
       await SB.send('report.progress', 3/steps)
 
       // move to login page
+      connectUser(() => {}, () => {})
     }
   })
 })
-
-
-
-
-
-// example for queue and task stuff
-
-const { Queue, Task } = require('./modules/manager/queue.js')
-const { ipcMain } = require('electron')
-
-function sum(arr, update) {
-  let s = 0
-  for (i in arr) {
-    s += arr[i]
-    update(i/arr.length)
-  }
-  return s
-}
-
-function progress(fraction) {
-  console.log(`Progress: ${Math.round(fraction*100)} %`)
-}
-
-new Task(sum, [1, 2, 3, 4, 5], progress).run().then(console.log)

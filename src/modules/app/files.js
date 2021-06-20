@@ -105,7 +105,7 @@ function initFileStructure() {
 
 /**
  * Reads configuration file from disk.
- * @returns {Config} Configuration settings
+ * @returns {Config} configuration settings
  * @memberof Modules.App
  */
 function readConfig() {
@@ -117,6 +117,20 @@ function readConfig() {
 }
 
 
+/**
+ * Writes changes to the configuration file.
+ * @param {Config} unsaved config object with possibly unsaved changes
+ * @memberof Modules.App
+ */
+function saveConfig(unsaved) {
+  try {
+    return fs.writeFileSync(PATHS.config, JSON.stringify(unsaved))
+  } catch (err) {
+    tracer.error(err)
+  }
+}
+
+
 module.exports = {
-  initFileStructure, readConfig
+  initFileStructure, readConfig, saveConfig
 }

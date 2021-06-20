@@ -65,13 +65,13 @@ const isRenderer = require('is-electron-renderer')
 
 
   /**
-   * @typedef {Function} IPC_CB
+   * @callback IPC_CB
    * @param {*} args
    * @param {IPC_DONE} done
    */
 
   /**
-   * @typedef {Function} IPC_DONE
+   * @callback IPC_DONE
    * @param {*} result
    */
 

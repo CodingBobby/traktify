@@ -1,6 +1,6 @@
 /**
  * Callback function for {@link Task}s.
- * @typedef {Function} TASK_CB
+ * @callback TASK_CB
  * @param {*} [args] argument for the Task, can be array, object, etc.
  * @param {TASK_PROG} [progress] callback to report an update
  * @returns result that will be resolved after Task completion
@@ -10,7 +10,7 @@
 
 /**
  * Callback function to run when {@link Task}'s progress updates.
- * @typedef {Function} TASK_PROG
+ * @callback TASK_PROG
  * @param {number} fraction progress in range 0–1
  * @memberof Modules.Manager
  */
