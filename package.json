@@ -1,14 +1,16 @@
 {
   "name": "traktify",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "multi platform desktop app for trakt.tv",
   "main": "src/main.js",
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
     "start": "electron .",
+    "clean": "rimraf dist out coverage",
     "build-docs": "jsdoc -c jsdoc-config.json",
     "test-docs": "npm run clean && npm run build-docs && npm run clean",
-    "watch-docs": "npm-watch build-docs"
+    "watch-docs": "npm-watch build-docs",
+    "show-coverage": "jest --coverage && open coverage/lcov-report/index.html"
   },
   "watch": {
     "build-docs": {
@@ -40,8 +42,8 @@
   "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
     "colors": "^1.4.0",
-    "electron": "^12.0.4",
-    "jest": "^26.6.3",
+    "electron": "^12.0.11",
+    "jest": "^27.0.4",
     "jsdoc": "^3.6.6",
     "npm-watch": "^0.10.0",
     "rimraf": "^3.0.2"
@@ -49,7 +51,7 @@
   "dependencies": {
     "directory-tree": "^2.2.9",
     "flat-cache": "^3.0.4",
-    "fs-extra": "^9.1.0",
+    "fs-extra": "^10.0.0",
     "is-electron-renderer": "^2.0.1",
     "path": "^0.12.7",
     "tracer": "^1.1.5",
