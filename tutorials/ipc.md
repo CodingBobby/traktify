@@ -10,8 +10,8 @@ Fortunately, communication between front- and backend inside an electron app is 
 It uses `ipcMain` and `ipcRenderer` but to make it more documentable and unified througout traktify, the class {@link Modules.Manager.SwitchBoard} was implemented.
 
 ## Table of Contents
- - [Frontend Calls Backend](#front-back)
- - [Backend Calls Frontend](#back-front)
+- [Frontend Calls Backend](#front-back)
+- [Backend Calls Frontend](#back-front)
 
 
 <a name="front-back"></a>

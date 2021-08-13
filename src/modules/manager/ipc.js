@@ -11,6 +11,7 @@ const isRenderer = require('is-electron-renderer')
 
   /**
    * Interface for communication between main and renderer or between renderers.
+   * See {@tutorial ipc} for examples and more information on how it works.
    * @param {Object} [options]
    * @param {electron.BrowserWindow} [options.window] target window of connection, not required when connecting to main process
    * @param {number} [options.timeout] milliseconds after which an error is thrown if target didn't reply, default: 1000

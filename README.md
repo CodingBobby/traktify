@@ -68,7 +68,7 @@ If you want to use the Discord Rich-Presence integration, you'll also have to in
 Contributions are very welcome!
 To report issues and start pull requests, please use github's integrated systems.
 
-A detailed documentation for developers is available [here](https://codingbobby.xyz/traktify/docs).
+A detailed documentation for developers is available [here](https://codingbobby.xyz/traktify/rebuild/index).
 Please note that this might not be complete.
 
 ### Quickstart

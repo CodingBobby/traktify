@@ -80,17 +80,7 @@ function buildLoadingWindow(onReady) {
    */
   let loadingWindow = new BrowserWindow(loadingWindowOptions)
 
-  loadingWindow.loadFile(path.join(BASE_PATH, 'pages/loading/index.html'))
-
-  loadingWindow.webContents.on('did-finish-load', () => {
-    loadingWindow.show()
-
-    // report that the window is visible
-    loadingWindow.once('show', () => {
-      tracer.log('window is ready')
-      onReady(loadingWindow)
-    })
-  })
+  onReady(loadingWindow)
 
 
   // listeners for the app windows
@@ -104,6 +94,27 @@ function buildLoadingWindow(onReady) {
 }
 
 
+/**
+ * Open a specific page (file) and wait until the content is fully loaded.
+ * @param {Object} options 
+ * @param {electron.BrowserWindow} options.window the window to load content in
+ * @param {string} options.page name of the page to load (folder in {@link src/pages/})
+ * @param {Function} onLoad
+ * @memberof Modules.App
+ */
+function loadPage(options, onLoad) {
+  options.window.loadFile(path.join(BASE_PATH, `pages/${options.page}/index.html`))
+
+  options.window.webContents.once('did-finish-load', () => {
+    options.window.show()
+
+    // report that the window is visible
+    tracer.log('window is ready')
+    onLoad()
+  })
+}
+
+
 module.exports = {
-  startApp
+  startApp, loadPage
 }

@@ -12,6 +12,7 @@
 
 const { contextBridge } = require('electron')
 const { SwitchBoard } = require('../modules/manager/ipc.js')
+const { formatSearch } = require('../modules/api/filters.js')
 
 const SB = new SwitchBoard()
 
@@ -39,13 +40,56 @@ const API = {
 
 
   /**
-   * Reports the state of something.
-   * @param {Object} data
+   * Request a link and user-code for authentication in an external browser.
+   * @returns {Promise.<Modules.API.TraktAuthPoll>}
    * @memberof Modules.Renderer
    */
-  report: data => {
-    
+  auth: () => {
+    return SB.send('request.authpoll', '')
   },
+
+
+  /**
+   * Get requests wrapping the trakt.tv API.
+   * @namespace Get
+   * @memberof Modules.Renderer
+   */
+
+  /**
+   * @type {Object.<string,Function>}
+   * @property {Function} search
+   * @memberof Modules.Renderer
+   */
+  get: {
+
+    /**
+     * Searches the trakt.tv database and allows shortcuts within the search string.
+     * @param {string} query search string
+     * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>} resolves a list of objects
+     * @example window.traktify.get.search('m:inception')
+     * @memberof Modules.Renderer.Get
+     */
+    search: query => {
+      return SB.send('get', {
+        method: 'traktSearch',
+        query: formatSearch(query)
+      })
+    },
+
+
+    /**
+     * Lists the methods trakt.js offers.
+     * Note: These are *not* available through the internal API directly.
+     * @returns {Promise.<Array.<string>>}
+     * @memberof Modules.Renderer.Get
+     */
+    available: () => {
+      return SB.send('get', {
+        method: 'availableMethods',
+        query: '' // none required
+      })
+    }
+  }
 
 }
 
