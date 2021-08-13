@@ -35,6 +35,7 @@
  */
 /**
  * Methods and utilities related to API requests.
+ * For details on the trakt.tv API, see {@link https://github.com/vankasteelj/trakt.tv/blob/master/docs/available_methods.md}.
  * @namespace API
  * @memberof Modules
  */
@@ -66,51 +67,108 @@ process.env.BASE_PATH = BASE_PATH
 const electron = require('electron')
 const tracer = require('./modules/manager/log.js')
 const { SwitchBoard } = require('./modules/manager/ipc.js')
-const { startApp } = require('./modules/app/start.js')
+const { startApp, loadPage } = require('./modules/app/start.js')
 const { initLogListener } = require('./modules/app/listener.js')
 const { getAPIKeys } = require('./modules/api/init.js')
 const { initFileStructure, readConfig } = require('./modules/app/files.js')
 const { connectUser, authenticateUser } = require('./modules/api/auth.js')
 
-startApp(async loadingWindow => {
-  // Loading window is shown and page is fully rendered.
-  let steps = 5 // tasks to complete in this callback
+startApp(appWindow => {
+  // loading window is ready for content to be rendered
 
-  // open communication with render process
-  const SB = new SwitchBoard({ window: loadingWindow })
+  loadPage({
+    window: appWindow,
+    page: 'loading'
+  }, async () => {
+    let steps = 5 // tasks to complete in this callback
 
-  // make tracer available for the window
-  initLogListener(SB)
-  await SB.send('report.progress', 0/steps)
+    // open communication channel with render process
+    const SB = new SwitchBoard({ window: appWindow })
 
-  // get/check the API keys
-  const KEYS = getAPIKeys()
-  await SB.send('report.progress', 1/steps)
+    // make tracer available for the window
+    initLogListener(SB)
+    await SB.send('report.progress', 0/steps)
 
-  // check/fix the local file structure
-  initFileStructure().then(async (PATHS, rejected) => {
-    // will only get rejected if files cannot be written or read
-    if (rejected) {
-      tracer.warn(rejected)
-      return
-    }
-    await SB.send('report.progress', 2/steps)
+    // check the API keys
+    getAPIKeys()
+    await SB.send('report.progress', 1/steps)
 
-    // check if user exists in config
-    const CONFIG = readConfig()
+    // check/fix the local file structure
+    initFileStructure().then(async (PATHS, rejected) => {
+      // will only get rejected if files cannot be written or read
+      if (rejected) {
+        tracer.warn(rejected)
+        return
+      }
+      await SB.send('report.progress', 2/steps)
 
-    if (CONFIG.user.trakt.auth) {
-      tracer.log('found existing user')
-      await SB.send('report.progress', 3/steps)
+      // check if user exists in config
+      const CONFIG = readConfig()
 
-      // try to authenticate
-      authenticateUser(() => {}, () => {})
-    } else {
-      tracer.log('no user found')
-      await SB.send('report.progress', 3/steps)
+      if (CONFIG.user.trakt.auth) {
+        tracer.log('found existing user')
+        await SB.send('report.progress', 3/steps)
 
-      // move to login page
-      connectUser(() => {}, () => {})
-    }
+        // try to authenticate
+        authenticateUser(async trakt => {
+          // user is now connected
+          await SB.send('report.progress', 4/steps)
+
+          // loading can proceed with user-specific things
+          userLoading(trakt, SB)
+        }, () => {})
+
+      } else {
+        tracer.log('no user found')
+        await SB.send('report.progress', 3/steps)
+
+        enterLogin()
+
+        function enterLogin() {
+          loadPage({
+            window: appWindow,
+            page: 'login'
+          }, () => {
+            // here, the user sees a login-screen which only proceeds with this when clicking a button
+
+            // this request is sent by that button
+            SB.on('request.authpoll', (_data, done) => {
+              tracer.log('poll request received')
+
+              connectUser(async poll => {
+                done(poll)
+
+              }, async trakt => {
+                // user is connected and loading can proceed with user-specific things
+                loadPage({
+                  window: appWindow,
+                  page: 'loading'
+                }, async () => {
+                  await SB.send('report.progress', 4/steps)
+                  userLoading(trakt, SB)
+                })
+
+              }, () => {
+                // login didn't work, so go back
+                enterLogin()
+              })
+
+            })
+          })
+        }
+
+      }
+    })
+
   })
+
 })
+
+
+const { initGetListener } = require('./modules/app/listener.js')
+
+function userLoading(trakt, SB) {
+  initGetListener(trakt, SB)
+
+  // trakt.tv requests can now be done for loading
+}
