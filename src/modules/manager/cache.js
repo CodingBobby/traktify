@@ -104,6 +104,7 @@ class Cache {
       return undefined
       
     } else {
+      tracer.info('valid content was found in cache')
       return value.data
     }
   }
@@ -137,10 +138,8 @@ class Cache {
    */
   save() {
     let timer = Date.now()
-    tracer.log('cache is saving...')
-
     this.cache.save(true)
-    tracer.log(`cache was saved in ${Date.now() - timer} ms`)
+    tracer.info(`cache was saved in ${Date.now() - timer} ms`)
   }
 
 

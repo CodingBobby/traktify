@@ -64,11 +64,10 @@ const BASE_PATH = __dirname
 process.env.BASE_PATH = BASE_PATH
 
 
-const electron = require('electron')
 const tracer = require('./modules/manager/log.js')
 const { SwitchBoard } = require('./modules/manager/ipc.js')
-const { startApp, loadPage } = require('./modules/app/start.js')
-const { initLogListener } = require('./modules/app/listener.js')
+const { startApp, loadPage, userLoading } = require('./modules/app/start.js')
+const { initLogListener, initGetListener } = require('./modules/app/listener.js')
 const { getAPIKeys } = require('./modules/api/init.js')
 const { initFileStructure, readConfig } = require('./modules/app/files.js')
 const { connectUser, authenticateUser } = require('./modules/api/auth.js')
@@ -79,50 +78,55 @@ startApp(appWindow => {
   loadPage({
     window: appWindow,
     page: 'loading'
-  }, async () => {
-    let steps = 5 // tasks to complete in this callback
+  }, () => {
+    const steps = 5 // tasks to complete in this callback
 
     // open communication channel with render process
     const SB = new SwitchBoard({ window: appWindow })
 
     // make tracer available for the window
     initLogListener(SB)
-    await SB.send('report.progress', 0/steps)
+    // yes, it's a Promise but not essential to wait for
+    SB.send('report.progress', 0/steps)
 
     // check the API keys
     getAPIKeys()
-    await SB.send('report.progress', 1/steps)
+    SB.send('report.progress', 1/steps)
 
     // check/fix the local file structure
-    initFileStructure().then(async (PATHS, rejected) => {
+    initFileStructure().then((PATHS, rejected) => {
       // will only get rejected if files cannot be written or read
       if (rejected) {
-        tracer.warn(rejected)
+        tracer.error(rejected)
         return
       }
-      await SB.send('report.progress', 2/steps)
+      SB.send('report.progress', 2/steps)
 
       // check if user exists in config
       const CONFIG = readConfig()
 
       if (CONFIG.user.trakt.auth) {
         tracer.log('found existing user')
-        await SB.send('report.progress', 3/steps)
+        SB.send('report.progress', 3/steps)
 
         // try to authenticate
-        authenticateUser(async trakt => {
+        authenticateUser(trakt => {
           // user is now connected
-          await SB.send('report.progress', 4/steps)
+          SB.send('report.progress', 4/steps)
 
+          // enable renderer to ask for requests
+          initGetListener(trakt, SB)
           // loading can proceed with user-specific things
           userLoading(trakt, SB)
-        }, () => {})
+        }, () => {
+          // TODO: remove auth codes from config and load login page
+        })
 
       } else {
         tracer.log('no user found')
-        await SB.send('report.progress', 3/steps)
+        SB.send('report.progress', 3/steps)
 
-        enterLogin()
+        enterLogin() // functionalised for possibility to jump back
 
         function enterLogin() {
           loadPage({
@@ -135,16 +139,19 @@ startApp(appWindow => {
             SB.on('request.authpoll', (_data, done) => {
               tracer.log('poll request received')
 
-              connectUser(async poll => {
+              connectUser(poll => {
                 done(poll)
 
-              }, async trakt => {
+              }, trakt => {
                 // user is connected and loading can proceed with user-specific things
                 loadPage({
                   window: appWindow,
                   page: 'loading'
-                }, async () => {
-                  await SB.send('report.progress', 4/steps)
+                }, () => {
+                  SB.send('report.progress', 4/steps)
+
+                  // enable renderer to ask for requests
+                  initGetListener(trakt, SB)
                   userLoading(trakt, SB)
                 })
 
@@ -163,12 +170,3 @@ startApp(appWindow => {
   })
 
 })
-
-
-const { initGetListener } = require('./modules/app/listener.js')
-
-function userLoading(trakt, SB) {
-  initGetListener(trakt, SB)
-
-  // trakt.tv requests can now be done for loading
-}

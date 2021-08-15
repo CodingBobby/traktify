@@ -12,6 +12,7 @@ const {
 
 const path = require('path')
 const tracer = require('../manager/log.js')
+const Cache = require('../manager/cache.js')
 
 const BASE_PATH = process.env.BASE_PATH
 
@@ -115,6 +116,71 @@ function loadPage(options, onLoad) {
 }
 
 
+
+/**
+ * Procedure that requests user specific content from trakt.tv.
+ * @param {Trakt} trakt fully authenticated instance
+ * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
+ */
+function userLoading(trakt, SB) {
+  const steps = 5 // required loading steps
+  SB.send('report.progress', 0/steps)
+
+  // trakt.tv requests can now be done for loading
+  let syncingCache = new Cache('syncing')
+
+  trakt.sync.last_activities().then(latestActivities => {
+    SB.send('report.progress', 1/steps)
+
+    syncingCache.retrieve('latestActivities', setKey => {
+      SB.send('report.progress', 2/steps)
+
+      // cache is empty
+      setKey(latestActivities)
+      syncingCache.save()
+      requestUpdateDetails(['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'])
+
+    }, (cacheContent, updateKey) => {
+      SB.send('report.progress', 2/steps)
+
+      if (latestActivities.all === cacheContent.all) {
+        // nothing new happened
+        tracer.log('no new activities')
+        requestUpdateDetails([])
+
+      } else {
+        // filter what exactly has new activities
+        let updates = []
+        for (let scope in cacheContent) {
+          if (scope !== 'all') {
+            for (let action in cacheContent[scope]) {
+              let dateOld = cacheContent[scope][action]
+              let dateNew = latestActivities[scope][action]
+
+              if (dateNew !== dateOld) {
+                updates.push(scope)
+                tracer.log(`new activity: ${action+' @ '+scope}`)
+              }
+            }
+          }
+        }
+
+        // save activities for next time
+        updateKey(latestActivities)
+        syncingCache.save()
+        requestUpdateDetails(updates)
+      }
+    })
+  })
+
+  function requestUpdateDetails(scopes) {
+    SB.send('report.progress', 3/steps)
+
+    tracer.info(`continueing with ${scopes}`)
+  }
+}
+
+
 module.exports = {
-  startApp, loadPage
+  startApp, loadPage, userLoading
 }
