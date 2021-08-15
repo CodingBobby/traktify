@@ -16,6 +16,34 @@ const { Queue, Task } = require('../manager/queue.js')
  */
 
 /**
+ * All properties except for `all` are objects of different activities which all contain a timestamp of their latest subactivity.
+ * See example for better understanding.
+ * @typedef {Object} TRAKT_ACTIVITY_OBJECT
+ * @property {string} all timestamp of latest overall activity
+ * @property {Object.<string,string>} [account]
+ * @property {Object.<string,string>} [comments]
+ * @property {Object.<string,string>} [episodes]
+ * @property {Object.<string,string>} [seasons]
+ * @property {Object.<string,string>} [shows]
+ * @property {Object.<string,string>} [movies]
+ * @property {Object.<string,string>} [lists]
+ * @property {Object.<string,string>} [watchlist]
+ * @property {Object.<string,string>} [recommendations]
+ * @memberof Modules.API
+ * @example // an object of this type might look like so:
+ * activitySummary = {
+ *   all: "2021-07-11T09:46:18.000Z",
+ *   comments: {
+ *     liked_at: "2021-07-11T09:46:18.000Z"
+ *   },
+ *   episodes: {
+ *     watched_at: "2021-06-16T09:14:38.000Z",
+ *     rated_at: "2021-06-16T09:21:11.000Z"
+ *   }
+ * }
+ */
+
+/**
  * @typedef {Object} TRAKT_SEARCH_OBJECT
  * @property {'movie'|'show'|'episode'|'person'} type
  * @property {number} score
@@ -111,6 +139,26 @@ class Traktor {
 
 
   /**
+   * Get list of methods that are available through the trakt API.
+   * @returns {Promise.<Array.<string>>}
+   */
+   availableMethods() {
+    return new Promise((res, _rej) => {
+      res(Object.keys(this.trakt))
+    })
+  }
+
+
+  /**
+   * Get a summary of the user's latest activities.
+   * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
+   */
+  latestActivities() {
+    return this.trakt.sync.last_activities()
+  }
+
+
+  /**
    * Search the trakt.tv database.
    * @param {Modules.API.FILTERED_EXT} query result from {@link Modules.API.formatSearch}
    * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>}
@@ -155,15 +203,7 @@ class Traktor {
   }
 
 
-  /**
-   * Get list of methods that are available through the trakt API.
-   * @returns {Promise.<Array.<string>>}
-   */
-  availableMethods() {
-    return new Promise((res, _rej) => {
-      res(Object.keys(this.trakt))
-    })
-  }
+  
 }
 
 

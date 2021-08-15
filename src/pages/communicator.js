@@ -78,6 +78,18 @@ const API = {
 
 
     /**
+     * Get a summary of the lastest activities of the user in each (sub)category.
+     * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
+     * @memberof Modules.Renderer.Get
+     */
+    latest: () => {
+      return SB.send('get', {
+        method: 'latestActivities'
+      })
+    },
+
+
+    /**
      * Lists the methods trakt.js offers.
      * Note: These are *not* available through the internal API directly.
      * @returns {Promise.<Array.<string>>}
@@ -85,8 +97,7 @@ const API = {
      */
     available: () => {
       return SB.send('get', {
-        method: 'availableMethods',
-        query: '' // none required
+        method: 'availableMethods'
       })
     }
   }

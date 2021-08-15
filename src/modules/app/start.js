@@ -13,6 +13,7 @@ const {
 const path = require('path')
 const tracer = require('../manager/log.js')
 const Cache = require('../manager/cache.js')
+const { Traktor } = require('../api/getters.js')
 
 const BASE_PATH = process.env.BASE_PATH
 
@@ -129,21 +130,23 @@ function userLoading(trakt, SB) {
   // trakt.tv requests can now be done for loading
   let syncingCache = new Cache('syncing')
 
-  trakt.sync.last_activities().then(latestActivities => {
+  let traktor = new Traktor(trakt)
+
+  traktor.latestActivities().then(latest => {
     SB.send('report.progress', 1/steps)
 
     syncingCache.retrieve('latestActivities', setKey => {
       SB.send('report.progress', 2/steps)
 
       // cache is empty
-      setKey(latestActivities)
+      setKey(latest)
       syncingCache.save()
       requestUpdateDetails(['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'])
 
     }, (cacheContent, updateKey) => {
       SB.send('report.progress', 2/steps)
 
-      if (latestActivities.all === cacheContent.all) {
+      if (latest.all === cacheContent.all) {
         // nothing new happened
         tracer.log('no new activities')
         requestUpdateDetails([])
@@ -155,7 +158,7 @@ function userLoading(trakt, SB) {
           if (scope !== 'all') {
             for (let action in cacheContent[scope]) {
               let dateOld = cacheContent[scope][action]
-              let dateNew = latestActivities[scope][action]
+              let dateNew = latest[scope][action]
 
               if (dateNew !== dateOld) {
                 updates.push(scope)
@@ -166,7 +169,7 @@ function userLoading(trakt, SB) {
         }
 
         // save activities for next time
-        updateKey(latestActivities)
+        updateKey(latest)
         syncingCache.save()
         requestUpdateDetails(updates)
       }
@@ -176,7 +179,10 @@ function userLoading(trakt, SB) {
   function requestUpdateDetails(scopes) {
     SB.send('report.progress', 3/steps)
 
-    tracer.info(`continueing with ${scopes}`)
+    // now request only the new activities
+    tracer.info(`continueing with [${scopes}]`)
+
+
   }
 }
 
