@@ -1,6 +1,6 @@
 const tracer = require('../manager/log.js')
 const { SwitchBoard } = require('../manager/ipc.js')
-const { Traktor } = require('../api/getters.js')
+const { Traktor, CachedTraktor } = require('../api/getters.js')
 
 
 /**
@@ -28,7 +28,7 @@ function initLogListener(SB) {
  * @memberof Modules.App
  */
 function initGetListener(trakt, SB) {
-  const GET = new Traktor(trakt)
+  const GET = new CachedTraktor(trakt)
 
   SB.on('get', (data, send) => {
     // data: { method: '', query: {} }

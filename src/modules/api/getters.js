@@ -1,4 +1,5 @@
 const tracer = require('../manager/log.js')
+const Cache = require('../manager/cache.js')
 const Trakt = require('trakt.tv')
 const filters = require('./filters.js') // required for docs
 const { Queue, Task } = require('../manager/queue.js')
@@ -142,7 +143,7 @@ class Traktor {
    * Get list of methods that are available through the trakt API.
    * @returns {Promise.<Array.<string>>}
    */
-   availableMethods() {
+  availableMethods() {
     return new Promise((res, _rej) => {
       res(Object.keys(this.trakt))
     })
@@ -201,12 +202,69 @@ class Traktor {
 
     return result
   }
+}
 
+
+/**
+ * @memberof Modules.API
+ */
+class CachedTraktor extends Traktor {
+  /**
+   * A cached version of the class {@link Modules.API.Traktor} which looks for content saved in cache which could be served instead of doing the actual API request.
+   * @param {Trakt} trakt authenticated API instance of trakt.tv
+   */
+  constructor(trakt) {
+    super(trakt)
+
+    /**
+     * @type {Object.<string,Cache>}
+     */
+    this.cache = {}
+    
+    return new Proxy(this, {
+      get: (obj, prop) => typeof obj[prop] !== 'function'
+        ? obj[prop]
+        : (() => {
+          // for each found Traktor method, initialise a Cache
+          this.cache[prop] = new Cache(prop)
+
+          // callback that is actually being proxied
+          return (...args) => obj.cacheware(prop, args)
+        })()
+    })
+  }
 
   
+  /**
+   * This middleware wraps the original get-methods into {@link Modules.Manager.Cache}'s `retrieval` method.
+   * @param {string} prop method's name which to execute from super
+   * @param {*} args whatever should be passed to that method
+   * @returns {Promise.<*>} whatever the original method would return
+   */
+  cacheware(prop, args) {
+    // this is executed when no valid cache content was found
+    const parent = () => this[prop].apply(this, args)
+
+    // stringify arguments so each configuration can be cached individually
+    const cacheKey = JSON.stringify(args)
+
+    return new Promise((resolve, _rej) => {
+      this.cache[prop].retrieve(cacheKey, async setKey => {
+        const requestResult = await parent()
+
+        // cache result for next time
+        setKey(requestResult)
+        this.cache[prop].save()
+
+        resolve(requestResult)
+      }, (cachedResult, _updateKey) => {
+        resolve(cachedResult)
+      })
+    })
+  }
 }
 
 
 module.exports = {
-  Traktor
+  Traktor, CachedTraktor
 }
