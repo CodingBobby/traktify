@@ -117,7 +117,12 @@ startApp(appWindow => {
           // enable renderer to ask for requests
           initGetListener(trakt, SB)
           // loading can proceed with user-specific things
-          userLoading(trakt, SB)
+          userLoading(trakt, SB, () => {
+            loadPage({
+              window: appWindow,
+              page: 'main'
+            }, () => {})
+          })
         }, () => {
           // TODO: remove auth codes from config and load login page
         })
@@ -152,7 +157,12 @@ startApp(appWindow => {
 
                   // enable renderer to ask for requests
                   initGetListener(trakt, SB)
-                  userLoading(trakt, SB)
+                  userLoading(trakt, SB, () => {
+                    loadPage({
+                      window: appWindow,
+                      page: 'main'
+                    }, () => {})
+                  })
                 })
 
               }, () => {

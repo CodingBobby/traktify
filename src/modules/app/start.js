@@ -120,10 +120,14 @@ function loadPage(options, onLoad) {
 
 /**
  * Procedure that requests user specific content from trakt.tv.
+ * Within this function, it is only checked if new updates are available to request -- if not, all data is already saved in cache.
+ * If API requests are needed, {@link requestUpdateDetails} is called.
+ * A callback is fired when the app can proceed and load the main page.
  * @param {Trakt} trakt fully authenticated instance
  * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
+ * @param {function} done fires when all loading requests are done
  */
-function userLoading(trakt, SB) {
+function userLoading(trakt, SB, done) {
   const steps = 5 // required loading steps
   SB.send('report.progress', 0/steps)
 
@@ -141,7 +145,7 @@ function userLoading(trakt, SB) {
       // cache is empty
       setKey(latest)
       syncingCache.save()
-      requestUpdateDetails(['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'])
+      requestUpdateDetails(['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'], traktor, SB, done)
 
     }, (cacheContent, updateKey) => {
       SB.send('report.progress', 2/steps)
@@ -149,7 +153,9 @@ function userLoading(trakt, SB) {
       if (latest.all === cacheContent.all) {
         // nothing new happened
         tracer.log('no new activities')
-        requestUpdateDetails([])
+        
+        // instead of requesting details, we can proceed here
+        done()
 
       } else {
         // filter what exactly has new activities
@@ -171,19 +177,33 @@ function userLoading(trakt, SB) {
         // save activities for next time
         updateKey(latest)
         syncingCache.save()
-        requestUpdateDetails(updates)
+        requestUpdateDetails(updates, traktor, SB, done)
       }
     })
   })
-
-  function requestUpdateDetails(scopes) {
-    SB.send('report.progress', 3/steps)
-
-    // now request only the new activities
-    tracer.info(`continueing with [${scopes}]`)
+}
 
 
+/**
+ * 
+ * @param {Array.<'movies'|'episodes'|'shows'|'seasons'|'comments'|'lists'>} scopes list of scopes which need to be requested
+ * @param {Modules.API.Traktor} traktor authenticated API instance
+ * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
+ * @param {function} done fires when all requests are done
+ */
+function requestUpdateDetails(scopes, traktor, SB, done) {
+  SB.send('report.progress', 3/steps)
+
+  // now request only the new activities
+  tracer.info(`continueing with [${scopes}]`)
+
+  if (scopes.includes('episodes')) {
+    // if the user watched new episodes, the up-next-to-watch must update
+
+    
   }
+
+  done()
 }
 
 
