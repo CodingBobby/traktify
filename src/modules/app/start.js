@@ -35,7 +35,7 @@ const BASE_PATH = process.env.BASE_PATH
 function startApp(onReady) {
   // build the app when it's ready
   app.once('ready', () => {
-    buildLoadingWindow(onReady)
+    buildAppWindow(onReady)
   })
 
   // this quits the whole app
@@ -55,9 +55,11 @@ const webPreferences = {
   contextIsolation: true
 }
 
-const loadingWindowOptions = {
-  width: 200,
-  height: 200,
+const windowOptions = {
+  minWidth: 800,
+  minHeight: 500,
+  width: 900,
+  height: 650,
   useContentSize: true,
   titleBarStyle: 'hidden',
   backgroundColor: '#242424',
@@ -74,24 +76,24 @@ const loadingWindowOptions = {
  * @memberof Modules.App
  * @param {WindowIsReady} onReady fires when loading-window has shown up
  */
-function buildLoadingWindow(onReady) {
+function buildAppWindow(onReady) {
   /**
    * Loading window that shows before the main window becomes visible.
    * @type {electron.BrowserWindow} 
    * @memberof Modules.App
    */
-  let loadingWindow = new BrowserWindow(loadingWindowOptions)
+  let appWindow = new BrowserWindow(windowOptions)
 
-  onReady(loadingWindow)
+  onReady(appWindow)
 
 
   // listeners for the app windows
-  loadingWindow.on('closed', () => {
-    loadingWindow = null
+  appWindow.on('closed', () => {
+    appWindow = null
   })
 
-  loadingWindow.on('restore', () => {
-    loadingWindow.focus()
+  appWindow.on('restore', () => {
+    appWindow.focus()
   })
 }
 
