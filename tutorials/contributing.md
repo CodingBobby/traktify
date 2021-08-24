@@ -22,7 +22,7 @@ To start working on Traktify, you first need to clone this repository and move i
 ```sh
 git clone https://github.com/CodingBobby/traktify.git
 cd traktify
-git checkout development
+git checkout rebuild
 ```
 After that, you install the required dependencies.
 This might take a while.
@@ -82,6 +82,9 @@ function sumArray (arr) {
    return sum
 }
 ```
+
+Without any comments other people reading your code would have to search and read docs from traktify, mozilla and electron and look through the app files before understanding whats going on.
+**We want each file to be as understandable as possible on its own without additional information.**
 
 <a name="commits"></a>
 
