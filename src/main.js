@@ -101,7 +101,7 @@ startApp(appWindow => {
     SB.send('report.progress', 1/steps)
 
     // check/fix the local file structure
-    initFileStructure().then((PATHS, rejected) => {
+    initFileStructure().then((_PATHS, rejected) => {
       // will only get rejected if files cannot be written or read
       if (rejected) {
         tracer.error(rejected)
@@ -141,49 +141,48 @@ startApp(appWindow => {
         tracer.log('no user found')
         SB.send('report.progress', 3/steps)
 
-        enterLogin() // functionalised for possibility to jump back
-
+        // functionalised for possibility to reload
         function enterLogin() {
           loadPage({
             window: appWindow,
             page: 'login'
-          }, () => {
-            // here, the user sees a login-screen which only proceeds with this when clicking a button
-
-            // this request is sent by that button
-            SB.on('request.authpoll', (_data, done) => {
-              tracer.log('poll request received')
-
-              connectUser(poll => {
-                done(poll)
-
-              }, trakt => {
-                // user is connected and loading can proceed with user-specific things
-                loadPage({
-                  window: appWindow,
-                  page: 'loading'
-                }, () => {
-                  SB.send('report.progress', 4/steps)
-
-                  // enable renderer to ask for requests
-                  initGetListener(trakt, SB)
-                  userLoading(trakt, SB, () => {
-                    loadPage({
-                      window: appWindow,
-                      page: 'main'
-                    }, () => {})
-                  })
-                })
-
-              }, () => {
-                // login didn't work, so go back
-                enterLogin()
-              })
-
-            })
-          })
+          }, () => {})
         }
 
+        // wait for user requesting a login poll
+        SB.on('request.authpoll', (_data, done) => {
+          tracer.log('poll request received')
+
+          connectUser(poll => {
+            // send poll details back so user can authenticate
+            done(poll)
+
+          }, trakt => {
+            // user is connected and loading can proceed with user-specific things
+            loadPage({
+              window: appWindow,
+              page: 'loading'
+            }, () => {
+              SB.send('report.progress', 4/steps)
+
+              // enable renderer to ask for requests
+              initGetListener(trakt, SB)
+              userLoading(trakt, SB, () => {
+                loadPage({
+                  window: appWindow,
+                  page: 'main'
+                }, () => {})
+              })
+            })
+
+          }, () => {
+            // login didn't work, so reload page
+            enterLogin()
+          })
+
+        })
+
+        enterLogin()
       }
     })
 
