@@ -3,7 +3,7 @@ An electron app consists of at least two separate processes:
  - web-like renderer process (frontend)
 
 The renderer process is what the user gets to see and controls when clicking around in the app.
-It handles `onclick` events, `DOM` modification, etc.—just what a normal webside would and could do.
+It handles `onclick` events, `DOM` modification, etc.—just what a normal website would and could do.
 But a "native" app is much more than just a website and requires communication with a backend to retreive data, access local files or to modify the app window itself which is not part of the "website".
 
 Fortunately, communication between front- and backend inside an electron app is easier than using traditional `HTTP` requests.
