@@ -33,6 +33,7 @@ body {
 #code {
   margin: 6px 0 0;
   display: none;
+  user-select: all;
 }
 
 #actions {

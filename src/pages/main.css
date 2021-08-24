@@ -47,6 +47,9 @@ html {
   font-size: var(--font);
   color: var(--white);
   font-family: 'Manrope', sans-serif;
+}
+
+body > * {
   user-select: none;
 }
 /*====================================TYPOGRAPHY====================================*/
