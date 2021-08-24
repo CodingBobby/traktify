@@ -67,7 +67,11 @@ process.env.BASE_PATH = BASE_PATH
 const tracer = require('./modules/manager/log.js')
 const { SwitchBoard } = require('./modules/manager/ipc.js')
 const { startApp, loadPage, userLoading } = require('./modules/app/start.js')
-const { initLogListener, initGetListener } = require('./modules/app/listener.js')
+const {
+  initLogListener,
+  initGetListener,
+  initSystemListener
+} = require('./modules/app/listener.js')
 const { getAPIKeys } = require('./modules/api/init.js')
 const { initFileStructure, readConfig } = require('./modules/app/files.js')
 const { connectUser, authenticateUser } = require('./modules/api/auth.js')
@@ -86,6 +90,9 @@ startApp(appWindow => {
 
     // make tracer available for the window
     initLogListener(SB)
+    // other essential methods
+    initSystemListener(SB)
+
     // yes, it's a Promise but not essential to wait for
     SB.send('report.progress', 0/steps)
 
@@ -115,7 +122,9 @@ startApp(appWindow => {
           SB.send('report.progress', 4/steps)
 
           // enable renderer to ask for requests
+          // this listener should remain active
           initGetListener(trakt, SB)
+
           // loading can proceed with user-specific things
           userLoading(trakt, SB, () => {
             loadPage({
@@ -124,6 +133,7 @@ startApp(appWindow => {
             }, () => {})
           })
         }, () => {
+          // connecting user didn't work, potentially because of revokation
           // TODO: remove auth codes from config and load login page
         })
 

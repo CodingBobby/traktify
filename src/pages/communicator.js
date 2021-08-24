@@ -41,11 +41,22 @@ const API = {
 
   /**
    * Request a link and user-code for authentication in an external browser.
-   * @returns {Promise.<Modules.API.TraktAuthPoll>}
+   * @returns {Promise.<Modules.API.TRAKT_AUTH_POLL>}
    * @memberof Modules.Renderer
    */
   auth: () => {
     return SB.send('request.authpoll', '')
+  },
+
+
+  /**
+   * Open an external link with the computer's default browser.
+   * @param {string} link url to open
+   * @returns {void}
+   * @memberof Modules.Renderer
+   */
+  browse: link => {
+    SB.send('request.openexternal', link)
   },
 
 
@@ -57,7 +68,6 @@ const API = {
 
   /**
    * @type {Object.<string,Function>}
-   * @property {Function} search
    * @memberof Modules.Renderer
    */
   get: {

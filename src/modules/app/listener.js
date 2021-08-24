@@ -1,6 +1,7 @@
 const tracer = require('../manager/log.js')
 const { SwitchBoard } = require('../manager/ipc.js')
 const { Traktor, CachedTraktor } = require('../api/getters.js')
+const { shell } = require('electron')
 
 
 /**
@@ -23,6 +24,8 @@ function initLogListener(SB) {
 
 
 /**
+ * Starts a listener for the GET requests sent from the frontend via {@link Modules.Renderer.Get}.
+ * Methods return cached data but are being forwarded to {@link Modules.API.Traktor} when a fresh API request is required.
  * @param {} trakt
  * @param {SwitchBoard} SB manager connected to related window
  * @memberof Modules.App
@@ -40,6 +43,21 @@ function initGetListener(trakt, SB) {
 }
 
 
+/**
+ * Activeates a set of listeners that provide access to actions related to the unser's computer.
+ * @param {SwitchBoard} SB manager connected to app's window
+ * @memberof Modules.App
+ */
+function initSystemListener(SB) {
+  SB.on('request.openexternal', (link, done) => {
+    tracer.log(`opening url ${link}`)
+    
+    shell.openExternal(link)
+    done()
+  })
+}
+
+
 module.exports = {
-  initLogListener, initGetListener
+  initLogListener, initGetListener, initSystemListener
 }

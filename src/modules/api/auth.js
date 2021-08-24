@@ -18,7 +18,7 @@ const trakt = new Trakt({
  */
 
 /**
- * @typedef {Object} TraktAuthPoll
+ * @typedef {Object} TRAKT_AUTH_POLL
  * @property {string} device_code
  * @property {number} expires_in
  * @property {number} interval
@@ -29,7 +29,7 @@ const trakt = new Trakt({
 
 /**
  * @callback PollIsReady
- * @param {TraktAuthPoll} poll
+ * @param {TRAKT_AUTH_POLL} poll
  * @memberof Modules.API
  */
 
