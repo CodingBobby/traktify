@@ -63,6 +63,27 @@ const API = {
 
 
   /**
+   * Initialises an IPC listener using {@link Modules.Manager.SwitchBoard}.
+   * @param {string} channel route to listen on
+   * @param {function} callback fires when message is received
+   * @returns {void}
+   * @memberof Modules.Renderer
+   * @example // waiting for reports about loading progress
+   * window.traktify.listen('report.progress', details => {
+   *   // log details to developer console
+   *   console.log('progress:', Math.round(details.fraction*100), '%')
+   *   console.log('working on:', details.message)
+   * })
+   */
+  listen: (channel, callback) => {
+    SB.on(channel, (data, done) => {
+      callback(data)
+      done()
+    })
+  },
+
+
+  /**
    * Get requests wrapping the trakt.tv API.
    * @namespace Get
    * @memberof Modules.Renderer
