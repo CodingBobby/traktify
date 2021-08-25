@@ -186,9 +186,10 @@ startApp(appWindow => {
        * @param {Trakt} trakt authenticated trakt.tv instance
        * @param {boolean} firstTime if user was logged in for the first time
        */
-       function startLoading(trakt, firstTime) {
+      async function startLoading(trakt, firstTime) {
         // user is now connected
-        SB.send('report.progress', {
+        // wait for it because it would otherwise appear in the loading screen below
+        await SB.send('report.progress', {
           fraction: 4/steps,
           message: 'connecting to APIs'
         })
