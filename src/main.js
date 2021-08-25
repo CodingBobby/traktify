@@ -83,7 +83,7 @@ startApp(appWindow => {
     window: appWindow,
     page: 'loading'
   }, () => {
-    const steps = 5 // tasks to complete in this callback
+    const steps = 4 // tasks to complete in this callback
 
     // open communication channel with render process
     const SB = new SwitchBoard({ window: appWindow })
@@ -93,12 +93,20 @@ startApp(appWindow => {
     // other essential methods
     initSystemListener(SB)
 
+    // tell frontend what is going on
     // yes, it's a Promise but not essential to wait for
-    SB.send('report.progress', 0/steps)
+    SB.send('report.progress', {
+      fraction: 0/steps,
+      message: 'checking API keys'
+    })
 
     // check the API keys
     getAPIKeys()
-    SB.send('report.progress', 1/steps)
+
+    SB.send('report.progress', {
+      fraction: 1/steps,
+      message: 'checking file setup'
+    })
 
     // check/fix the local file structure
     initFileStructure().then((_PATHS, rejected) => {
@@ -107,31 +115,26 @@ startApp(appWindow => {
         tracer.error(rejected)
         return
       }
-      SB.send('report.progress', 2/steps)
+
+      SB.send('report.progress', {
+        fraction: 2/steps,
+        message: 'looking for trakt.tv user'
+      })
 
       // check if user exists in config
       const CONFIG = readConfig()
 
       if (CONFIG.user.trakt.auth) {
         tracer.log('found existing user')
-        SB.send('report.progress', 3/steps)
+        
+        SB.send('report.progress', {
+          fraction: 3/steps,
+          message: 'trying to authenticate'
+        })
 
         // try to authenticate
         authenticateUser(trakt => {
-          // user is now connected
-          SB.send('report.progress', 4/steps)
-
-          // enable renderer to ask for requests
-          // this listener should remain active
-          initGetListener(trakt, SB)
-
-          // loading can proceed with user-specific things
-          userLoading(trakt, SB, () => {
-            loadPage({
-              window: appWindow,
-              page: 'main'
-            }, () => {})
-          })
+          startLoading(trakt, false)
         }, () => {
           // connecting user didn't work, potentially because of revokation
           // TODO: remove auth codes from config and load login page
@@ -139,7 +142,10 @@ startApp(appWindow => {
 
       } else {
         tracer.log('no user found')
-        SB.send('report.progress', 3/steps)
+        SB.send('report.progress', {
+          fraction: 3/steps,
+          message: 'proceeding to login'
+        })
 
         // functionalised for possibility to reload
         function enterLogin() {
@@ -163,16 +169,7 @@ startApp(appWindow => {
               window: appWindow,
               page: 'loading'
             }, () => {
-              SB.send('report.progress', 4/steps)
-
-              // enable renderer to ask for requests
-              initGetListener(trakt, SB)
-              userLoading(trakt, SB, () => {
-                loadPage({
-                  window: appWindow,
-                  page: 'main'
-                }, () => {})
-              })
+              startLoading(trakt, true)
             })
 
           }, () => {
@@ -184,6 +181,31 @@ startApp(appWindow => {
 
         enterLogin()
       }
+
+      /**
+       * @param {Trakt} trakt authenticated trakt.tv instance
+       * @param {boolean} firstTime if user was logged in for the first time
+       */
+       function startLoading(trakt, firstTime) {
+        // user is now connected
+        SB.send('report.progress', {
+          fraction: 4/steps,
+          message: 'connecting to APIs'
+        })
+
+        // enable renderer to ask for requests
+        // this listener should remain active
+        initGetListener(trakt, SB)
+
+        // loading can proceed with user-specific things
+        userLoading(trakt, SB, () => {
+          loadPage({
+            window: appWindow,
+            page: 'main'
+          }, () => {})
+        })
+      }
+
     })
 
   })

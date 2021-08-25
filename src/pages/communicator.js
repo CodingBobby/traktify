@@ -18,8 +18,10 @@ const SB = new SwitchBoard()
 
 
 SB.on('report.progress', (data, done) => {
-  // using the web-console
-  console.log(`progress: ${Math.round(data*100)} %`)
+  // data: { fraction: 0...1, message: string }
+
+  API.tracer({ lvl: 'info', msg: `progress: ${Math.round(data.fraction*100)} %` })
+  API.tracer({ lvl: 'info', msg: `working on: ${data.message}` })
 
   done()
 })

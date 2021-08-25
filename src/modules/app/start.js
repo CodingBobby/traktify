@@ -130,8 +130,11 @@ function loadPage(options, onLoad) {
  * @param {function} done fires when all loading requests are done
  */
 function userLoading(trakt, SB, done) {
-  const steps = 5 // required loading steps
-  SB.send('report.progress', 0/steps)
+  const steps = 9 // required loading steps
+  SB.send('report.progress', {
+    fraction: 0/steps,
+    message: 'fetching latest activities'
+  })
 
   // trakt.tv requests can now be done for loading
   let syncingCache = new Cache('syncing')
@@ -139,18 +142,27 @@ function userLoading(trakt, SB, done) {
   let traktor = new Traktor(trakt)
 
   traktor.latestActivities().then(latest => {
-    SB.send('report.progress', 1/steps)
+    SB.send('report.progress', {
+      fraction: 1/steps,
+      message: 'comparing with local data'
+    })
 
     syncingCache.retrieve('latestActivities', setKey => {
-      SB.send('report.progress', 2/steps)
+      SB.send('report.progress', {
+        fraction: 2/steps,
+        message: 'updating local data'
+      })
 
       // cache is empty
       setKey(latest)
       syncingCache.save()
-      requestUpdateDetails(['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'], traktor, SB, done)
+      requestUpdateDetails(steps, ['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'], traktor, SB, done)
 
     }, (cacheContent, updateKey) => {
-      SB.send('report.progress', 2/steps)
+      SB.send('report.progress', {
+        fraction: 2/steps,
+        message: 'updating local data'
+      })
 
       if (latest.all === cacheContent.all) {
         // nothing new happened
@@ -179,7 +191,7 @@ function userLoading(trakt, SB, done) {
         // save activities for next time
         updateKey(latest)
         syncingCache.save()
-        requestUpdateDetails(updates, traktor, SB, done)
+        requestUpdateDetails(steps, updates, traktor, SB, done)
       }
     })
   })
@@ -187,23 +199,64 @@ function userLoading(trakt, SB, done) {
 
 
 /**
- * 
+ * When (re)loading the app, the user might have new activities on their trakt.tv profile which aren't shown in traktify yet.
+ * This takes a list of update categories and loads their new activities into chache.
+ * @param {number} steps number of loading steps for progress reporter
  * @param {Array.<'movies'|'episodes'|'shows'|'seasons'|'comments'|'lists'>} scopes list of scopes which need to be requested
  * @param {Modules.API.Traktor} traktor authenticated API instance
  * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
  * @param {function} done fires when all requests are done
  */
-function requestUpdateDetails(scopes, traktor, SB, done) {
-  SB.send('report.progress', 3/steps)
-
+function requestUpdateDetails(steps, scopes, traktor, SB, done) {
   // now request only the new activities
   tracer.info(`continueing with [${scopes}]`)
 
-  if (scopes.includes('episodes')) {
-    // if the user watched new episodes, the up-next-to-watch must update
-
-    
+  if (scopes.includes('movies')) {
+    SB.send('report.progress', {
+      fraction: 3/steps,
+      message: 'fetching movies'
+    })
   }
+
+  if (scopes.includes('episodes')) {
+    SB.send('report.progress', {
+      fraction: 4/steps,
+      message: 'fetching episodes'
+    })
+  }
+
+  if (scopes.includes('shows')) {
+    SB.send('report.progress', {
+      fraction: 5/steps,
+      message: 'fetching shows'
+    })
+  }
+
+  if (scopes.includes('seasons')) {
+    SB.send('report.progress', {
+      fraction: 6/steps,
+      message: 'fetching seasons'
+    })
+  }
+
+  if (scopes.includes('comments')) {
+    SB.send('report.progress', {
+      fraction: 7/steps,
+      message: 'fetching comments'
+    })
+  }
+
+  if (scopes.includes('lists')) {
+    SB.send('report.progress', {
+      fraction: 8/steps,
+      message: 'fetching lists'
+    })
+  }
+
+  SB.send('report.progress', {
+    fraction: 9/steps,
+    message: 'proceeding to dashboard'
+  })
 
   done()
 }
