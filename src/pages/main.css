@@ -52,6 +52,10 @@ html {
 body > * {
   user-select: none;
 }
+
+img {
+  -webkit-user-drag: none;
+}
 /*====================================TYPOGRAPHY====================================*/
 .fs32,
 .fs27,

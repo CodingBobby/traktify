@@ -4,6 +4,7 @@
  */
  actions.children[0].addEventListener('click', () => {
   window.traktify.auth().then(result => {
+    // shows verification code on page
     code.innerText = result.user_code;
     code.style.display = 'initial';
 
