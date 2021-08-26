@@ -147,14 +147,6 @@ startApp(appWindow => {
           message: 'proceeding to login'
         })
 
-        // functionalised for possibility to reload
-        function enterLogin() {
-          loadPage({
-            window: appWindow,
-            page: 'login'
-          }, () => {})
-        }
-
         // wait for user requesting a login poll
         SB.on('request.authpoll', (_data, done) => {
           tracer.log('poll request received')
@@ -172,14 +164,18 @@ startApp(appWindow => {
               startLoading(trakt, true)
             })
 
-          }, () => {
-            // login didn't work, so reload page
-            enterLogin()
+          }, errorReason => {
+            // error happened which the user should be notified about
+            SB.send('report.error', errorReason)
           })
 
         })
 
-        enterLogin()
+        // now open login page
+        loadPage({
+          window: appWindow,
+          page: 'login'
+        }, () => {})
       }
 
       /**

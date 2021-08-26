@@ -77,8 +77,8 @@ const API = {
    */
   listen: (channel, callback) => {
     SB.on(channel, (data, done) => {
-      callback(data)
       done()
+      callback(data)
     })
   },
 

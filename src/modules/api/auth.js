@@ -33,6 +33,12 @@ const trakt = new Trakt({
  * @memberof Modules.API
  */
 
+/**
+ * @callback FailureCallback
+ * @param {string} reason short description of the error
+ * @memberof Modules.API
+ */
+
 
 /**
  * Starts login procedure for the user.
@@ -40,7 +46,7 @@ const trakt = new Trakt({
  * The function waits for the user to go though this procedure.
  * @param {PollIsReady} onPoll fires when auth poll can be shared
  * @param {TraktIsReady} onSuccess fires when authenticaion was successful
- * @param {Function} onFailure fires when user couldn't be logged in, who might have cancelled the process or it timed out
+ * @param {FailureCallback} onFailure fires when user couldn't be logged in, who might have cancelled the process or it timed out
  * @memberof Modules.API
  */
 function connectUser(onPoll, onSuccess, onFailue) {
@@ -72,7 +78,7 @@ function connectUser(onPoll, onSuccess, onFailue) {
         config.user.trakt.status = false
         saveConfig(config)
   
-        onFailue()
+        onFailue('authentication failed')
       }
     })
   }).catch(err => {
@@ -84,7 +90,7 @@ function connectUser(onPoll, onSuccess, onFailue) {
       config.user.trakt.status = false
       saveConfig(config)
 
-      onFailue()
+      onFailue('auth server could not be reached')
     }
   })
 }
