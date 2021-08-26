@@ -9,7 +9,7 @@ initialize();
  */
 function initialize() {
   const imgs = [
-    '../../assets/media/oading/Make the app your own personalized space..png',
+    '../../assets/media/loading/Make the app your own personalized space..png',
     '../../assets/media/loading/Search anything you want with no effort..png',
     '../../assets/media/loading/Your favourite content in one place..png'
   ];
