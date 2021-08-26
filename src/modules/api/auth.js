@@ -75,6 +75,17 @@ function connectUser(onPoll, onSuccess, onFailue) {
         onFailue()
       }
     })
+  }).catch(err => {
+    if (err) {
+      tracer.error('problem with authentication server')
+      tracer.error(err)
+
+      config.user.trakt.auth = false
+      config.user.trakt.status = false
+      saveConfig(config)
+
+      onFailue()
+    }
   })
 }
 
