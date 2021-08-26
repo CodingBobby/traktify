@@ -84,6 +84,16 @@ const API = {
 
 
   /**
+   * Get a list of files and directories existing at a given path.
+   * @param {string} path `.` refers to the repo's base
+   * @returns {Promise.<Array.<string>>}
+   */
+  files: path => {
+    return SB.send('request.filelist', path)
+  },
+
+
+  /**
    * Get requests wrapping the trakt.tv API.
    * @namespace Get
    * @memberof Modules.Renderer

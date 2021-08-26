@@ -2,6 +2,7 @@ const tracer = require('../manager/log.js')
 const { SwitchBoard } = require('../manager/ipc.js')
 const { Traktor, CachedTraktor } = require('../api/getters.js')
 const { shell } = require('electron')
+const fs = require('fs')
 
 
 /**
@@ -49,11 +50,24 @@ function initGetListener(trakt, SB) {
  * @memberof Modules.App
  */
 function initSystemListener(SB) {
+  // open url in user's default application
   SB.on('request.openexternal', (link, done) => {
     tracer.log(`opening url ${link}`)
     
     shell.openExternal(link)
     done()
+  })
+
+  // get a list of files in a specific path
+  SB.on('request.filelist', (path, done) => {
+    fs.readdir(path, (err, files) => {
+      if (err) {
+        tracer.error(err)
+        throw err
+      }
+
+      done(files)
+    })
   })
 }
 
