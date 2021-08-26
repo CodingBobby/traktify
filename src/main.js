@@ -77,134 +77,92 @@ const { initFileStructure, readConfig } = require('./modules/app/files.js')
 const { connectUser, authenticateUser } = require('./modules/api/auth.js')
 
 startApp(appWindow => {
-  // loading window is ready for content to be rendered
+  // open communication channel with render process
+  const SB = new SwitchBoard({ window: appWindow })
 
-  loadPage({
-    window: appWindow,
-    page: 'loading'
-  }, () => {
-    const steps = 4 // tasks to complete in this callback
+  // make tracer available for the window
+  initLogListener(SB)
+  // other essential methods
+  initSystemListener(SB)
 
-    // open communication channel with render process
-    const SB = new SwitchBoard({ window: appWindow })
+  // check the API keys
+  getAPIKeys()
 
-    // make tracer available for the window
-    initLogListener(SB)
-    // other essential methods
-    initSystemListener(SB)
+  // check/fix the local file structure
+  initFileStructure().then((_PATHS, rejected) => {
+    // will only get rejected if files cannot be written or read
+    if (rejected) {
+      tracer.error(rejected)
+      return
+    }
 
-    // tell frontend what is going on
-    // yes, it's a Promise but not essential to wait for
-    SB.send('report.progress', {
-      fraction: 0/steps,
-      message: 'checking API keys'
-    })
+    // check if user exists in config
+    const CONFIG = readConfig()
 
-    // check the API keys
-    getAPIKeys()
+    if (CONFIG.user.trakt.auth) {
+      tracer.log('found existing user')
 
-    SB.send('report.progress', {
-      fraction: 1/steps,
-      message: 'checking file setup'
-    })
-
-    // check/fix the local file structure
-    initFileStructure().then((_PATHS, rejected) => {
-      // will only get rejected if files cannot be written or read
-      if (rejected) {
-        tracer.error(rejected)
-        return
-      }
-
-      SB.send('report.progress', {
-        fraction: 2/steps,
-        message: 'looking for trakt.tv user'
+      // try to authenticate
+      authenticateUser(trakt => {
+        startLoading(trakt, false)
+      }, () => {
+        // connecting user didn't work, potentially because of revokation
+        // TODO: remove auth codes from config and load login page
       })
 
-      // check if user exists in config
-      const CONFIG = readConfig()
+    } else {
+      tracer.log('no user found')
 
-      if (CONFIG.user.trakt.auth) {
-        tracer.log('found existing user')
-        
-        SB.send('report.progress', {
-          fraction: 3/steps,
-          message: 'trying to authenticate'
-        })
+      // wait for user requesting a login poll
+      SB.on('request.authpoll', (_data, done) => {
+        tracer.log('poll request received')
 
-        // try to authenticate
-        authenticateUser(trakt => {
-          startLoading(trakt, false)
-        }, () => {
-          // connecting user didn't work, potentially because of revokation
-          // TODO: remove auth codes from config and load login page
-        })
+        connectUser(poll => {
+          // send poll details back so user can authenticate
+          done(poll)
 
-      } else {
-        tracer.log('no user found')
-        SB.send('report.progress', {
-          fraction: 3/steps,
-          message: 'proceeding to login'
-        })
-
-        // wait for user requesting a login poll
-        SB.on('request.authpoll', (_data, done) => {
-          tracer.log('poll request received')
-
-          connectUser(poll => {
-            // send poll details back so user can authenticate
-            done(poll)
-
-          }, trakt => {
-            // user is connected and loading can proceed with user-specific things
-            loadPage({
-              window: appWindow,
-              page: 'loading'
-            }, () => {
-              startLoading(trakt, true)
-            })
-
-          }, errorReason => {
-            // error happened which the user should be notified about
-            SB.send('report.error', errorReason)
-          })
-
-        })
-
-        // now open login page
-        loadPage({
-          window: appWindow,
-          page: 'login'
-        }, () => {})
-      }
-
-      /**
-       * @param {Trakt} trakt authenticated trakt.tv instance
-       * @param {boolean} firstTime if user was logged in for the first time
-       */
-      async function startLoading(trakt, firstTime) {
-        // user is now connected
-        // wait for it because it would otherwise appear in the loading screen below
-        await SB.send('report.progress', {
-          fraction: 4/steps,
-          message: 'connecting to APIs'
-        })
-
-        // enable renderer to ask for requests
-        // this listener should remain active
-        initGetListener(trakt, SB)
-
-        // loading can proceed with user-specific things
-        userLoading(trakt, SB, () => {
+        }, trakt => {
+          // user is connected and loading can proceed with user-specific things
           loadPage({
             window: appWindow,
-            page: 'main'
-          }, () => {})
-        })
-      }
+            page: 'loading'
+          }, () => {
+            startLoading(trakt, true)
+          })
 
-    })
+        }, errorReason => {
+          // error happened which the user should be notified about
+          SB.send('report.error', errorReason)
+        })
+
+      })
+
+      // now open login page
+      loadPage({
+        window: appWindow,
+        page: 'login'
+      }, () => {})
+    }
+
+    /**
+     * @param {Trakt} trakt authenticated trakt.tv instance
+     * @param {boolean} firstTime if user was logged in for the first time
+     */
+    async function startLoading(trakt, firstTime) {
+      // user is now connected
+
+      // enable renderer to ask for requests
+      // this listener should remain active
+      initGetListener(trakt, SB)
+
+      // loading can proceed with user-specific things
+      userLoading(trakt, SB, () => {
+        loadPage({
+          window: appWindow,
+          page: 'main'
+        }, () => {})
+      })
+    }
 
   })
-
 })
