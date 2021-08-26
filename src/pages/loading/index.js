@@ -60,7 +60,7 @@ function shuffleArray(array) {
  * @param {string} path directory of the image
  * @returns {string} 
  */
- function createSlide(path) {
+function createSlide(path) {
   return `
   <div class="wrapper">
     <h1 class="fs32 fwSemiBold">${path.split('/').pop().replace('.png', '')}</h1>

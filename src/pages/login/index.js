@@ -2,7 +2,7 @@
  * Code below handles the authentication of the user. 
  * When login button is triggered it, the button is replaced with two different buttons.
  */
- actions.children[0].addEventListener('click', () => {
+actions.children[0].addEventListener('click', () => {
   window.traktify.auth().then(result => {
     // shows verification code on page
     code.innerText = result.user_code;
@@ -23,4 +23,4 @@
       window.traktify.browse(e.target.dataset.url)
     })
   }).catch(err => console.error(err))
-}, {once: true})
+}, { once: true })
