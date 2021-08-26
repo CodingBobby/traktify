@@ -53,8 +53,23 @@ body > * {
   user-select: none;
 }
 
+body[no-user] {
+  background-image: url(../assets/media/background.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  display: flex;
+}
+
 img {
   -webkit-user-drag: none;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
 }
 /*====================================TYPOGRAPHY====================================*/
 .fs32,

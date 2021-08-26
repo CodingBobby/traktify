@@ -1,18 +1,3 @@
-body {
-  background-image: url(../../assets/media/background.png);
-  background-size: cover;
-  background-repeat: no-repeat;
-  display: flex;
-}
-
-.wrapper {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  margin: auto;
-}
-
 .wrapper img {
   width: 372px;
   height: auto;
