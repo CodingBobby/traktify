@@ -104,7 +104,13 @@ startApp(appWindow => {
 
       // try to authenticate
       authenticateUser(trakt => {
-        startLoading(trakt, false)
+        // user credentials are valid, continue with loading
+        loadPage({
+          window: appWindow,
+          page: 'loading'
+        }, () => {
+          startLoading(trakt, false)
+        })
       }, () => {
         // connecting user didn't work, potentially because of revokation
         // TODO: remove auth codes from config and load login page
