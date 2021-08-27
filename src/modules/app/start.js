@@ -129,40 +129,44 @@ function loadPage(options, onLoad) {
  * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
  * @param {function} done fires when all loading requests are done
  */
-function userLoading(trakt, SB, done) {
+async function userLoading(trakt, SB, done) {
   const steps = 9 // required loading steps
   SB.send('report.progress', {
     fraction: 0/steps,
     message: 'fetching latest activities'
   })
+  await delay(1e3)
 
   // trakt.tv requests can now be done for loading
   let syncingCache = new Cache('syncing')
 
   let traktor = new Traktor(trakt)
 
-  traktor.latestActivities().then(latest => {
+  traktor.latestActivities().then(async latest => {
     SB.send('report.progress', {
       fraction: 1/steps,
       message: 'comparing with local data'
     })
+    await delay(1e3)
 
-    syncingCache.retrieve('latestActivities', setKey => {
+    syncingCache.retrieve('latestActivities', async setKey => {
       SB.send('report.progress', {
         fraction: 2/steps,
         message: 'updating local data'
       })
+      await delay(1e3)
 
       // cache is empty
       setKey(latest)
       syncingCache.save()
       requestUpdateDetails(steps, ['movies', 'episodes', 'shows', 'seasons', 'comments', 'lists'], traktor, SB, done)
 
-    }, (cacheContent, updateKey) => {
+    }, async (cacheContent, updateKey) => {
       SB.send('report.progress', {
         fraction: 2/steps,
         message: 'updating local data'
       })
+      await delay(1e3)
 
       if (latest.all === cacheContent.all) {
         // nothing new happened
@@ -207,7 +211,7 @@ function userLoading(trakt, SB, done) {
  * @param {Modules.Manager.SwitchBoard} SB communicator for progress reporting
  * @param {function} done fires when all requests are done
  */
-function requestUpdateDetails(steps, scopes, traktor, SB, done) {
+async function requestUpdateDetails(steps, scopes, traktor, SB, done) {
   // now request only the new activities
   tracer.info(`continueing with [${scopes}]`)
 
@@ -216,6 +220,7 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 3/steps,
       message: 'fetching movies'
     })
+    await delay(1e3)
   }
 
   if (scopes.includes('episodes')) {
@@ -223,6 +228,7 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 4/steps,
       message: 'fetching episodes'
     })
+    await delay(1e3)
   }
 
   if (scopes.includes('shows')) {
@@ -230,6 +236,7 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 5/steps,
       message: 'fetching shows'
     })
+    await delay(1e3)
   }
 
   if (scopes.includes('seasons')) {
@@ -237,6 +244,7 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 6/steps,
       message: 'fetching seasons'
     })
+    await delay(1e3)
   }
 
   if (scopes.includes('comments')) {
@@ -244,6 +252,7 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 7/steps,
       message: 'fetching comments'
     })
+    await delay(1e3)
   }
 
   if (scopes.includes('lists')) {
@@ -251,16 +260,31 @@ function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 8/steps,
       message: 'fetching lists'
     })
+    await delay(1e3)
   }
 
   SB.send('report.progress', {
     fraction: 9/steps,
     message: 'proceeding to dashboard'
   })
+  await delay(1e3)
 
   done()
 }
 
+
+/**
+ * Artificial delay in form of a promise.
+ * @param {number} time delay in milliseconds
+ * @returns {Promise.<void>}
+ */
+function delay(time) {
+  return new Promise((res, _rej) => {
+    setTimeout(() => {
+      res()
+    }, time)
+  })
+}
 
 module.exports = {
   startApp, loadPage, userLoading
