@@ -36,6 +36,7 @@
   --watchlist: #3796D5;
   --font: 14px;
   --border: 5px;
+  --margin: 30px;
 }
 
 body,
@@ -60,16 +61,47 @@ body[no-user] {
   display: flex;
 }
 
-img {
-  -webkit-user-drag: none;
-}
-
 .wrapper {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: center;
   margin: auto;
+}
+/*====================================BRAND-STYLES====================================*/
+img {
+  -webkit-user-drag: none;
+}
+
+.shadow {
+  box-shadow: 0 0 34px 3px #0000004d;
+}
+/*====================================COMPONENTS====================================*/
+#progress {
+  position: absolute;
+  bottom: var(--margin);
+  left: var(--margin);
+  background-color: var(--black);
+  border-radius: var(--border);
+  display: none;
+}
+#progress span {
+  margin: 18px 0 0 20px;
+  display: block;
+}
+#progress div {
+  position: relative;
+  width: 330px;
+  height: 7px;
+  border-radius: var(--border);
+  background-color: var(--red2);
+  margin: 10px 20px 20px;
+}
+#progress div div {
+  margin: 0;
+  position: absolute;
+  background-color: var(--red);
+  width: 0%;
 }
 /*====================================TYPOGRAPHY====================================*/
 .fs32,

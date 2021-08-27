@@ -1,13 +1,13 @@
 let slideIndex = 0;
-const imgPath = 'assets/media/loading/';
+const imgsPath = 'assets/media/loading/';
 
 /**
- * Gets an array of file names (loading images) from a path and proceeds to shuffle them.
+ * Gets an array of filenames (loading images) from a path and proceeds to shuffle them.
  * Shuffling is done to create a random start each time the user is loading.
  */
-window.traktify.files('./src/' + imgPath).then(result => {
-  shuffleArray(result).forEach(name => {
-    carousel.innerHTML += createSlide(imgPath, name)
+window.traktify.files('./src/' + imgsPath).then(result => {
+  shuffleArray(result).forEach(filename => {
+    carousel.innerHTML += createSlide(imgsPath, filename)
   });
   
   playSlides()
