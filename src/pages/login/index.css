@@ -26,16 +26,6 @@
   display: flex;
 }
 
-#actions > div {
-  padding: 7px;
-  background-color: var(--red);
-  border-radius: var(--border);
-  text-align: center;
-  cursor: pointer;
-  width: 100%;
-  text-transform: capitalize;
-}
-
 #actions > div:first-child:not(:last-child) {
   margin-right: 15px;
 }

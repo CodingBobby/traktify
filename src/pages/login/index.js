@@ -10,8 +10,8 @@ actions.children[0].addEventListener('click', () => {
 
     // replaces login button with two different buttons
     actions.innerHTML = `
-      <div class="fs18 fwMedium" data-code="${result.user_code}">copy code</div>
-      <div class="fs18 fwMedium" data-url="${result.verification_url}">open url</div>
+      <div class="fs18 fwMedium btn red" data-code="${result.user_code}">copy code</div>
+      <div class="fs18 fwMedium btn red" data-url="${result.verification_url}">open url</div>
     `;
 
     // first button copies code to clipboard while second button opens verification url outside the app

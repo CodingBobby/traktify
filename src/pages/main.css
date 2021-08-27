@@ -24,7 +24,7 @@
 /*====================================INITIAL====================================*/
 :root {
   --black: #303030;
-  --black2: #1D1D1D;
+  --black2: #171717;
   --white: #FFFFFF;
   --white2: #CECECE;
   --white3: #696969;
@@ -73,8 +73,27 @@ img {
   -webkit-user-drag: none;
 }
 
+hr {
+  opacity: 0.05;
+  border: 1px solid var(--white);
+  margin: 10px 0;
+  border-radius: 28%;
+}
+
 .shadow {
   box-shadow: 0 0 34px 3px #0000004d;
+}
+
+.btn {
+  padding: 7px 15px;
+  border-radius: var(--border);
+  text-align: center;
+  cursor: pointer;
+  width: 100%;
+  text-transform: capitalize;
+}
+.btn.red {
+  background-color: var(--red);
 }
 /*====================================COMPONENTS====================================*/
 #progress {
@@ -89,6 +108,9 @@ img {
   margin: 18px 0 0 20px;
   display: block;
 }
+#progress span::first-letter {
+  text-transform: capitalize;
+}
 #progress div {
   position: relative;
   width: 330px;
@@ -102,6 +124,50 @@ img {
   position: absolute;
   background-color: var(--red);
   width: 0%;
+}
+
+.overlay {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: #17171761;
+  backdrop-filter: blur(8px);
+}
+
+#alerts {
+  position: absolute;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  justify-content: center;
+  align-items: center;
+  display: none;
+}
+#alerts .alertbox {
+  position: relative;
+  background-color: var(--black);
+  border-radius: var(--border);
+  padding: 15px 20px 20px;
+  width: 100%;
+  max-width: 475px;
+}
+#alerts .alertbox h3,
+#alerts .alertbox p {
+  margin: 0;
+}
+#alerts .alertbox p::first-letter {
+  text-transform: capitalize;
+}
+#alerts .alertbox > div {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+#alerts .alertbox > div .btn {
+  width: fit-content;
+}
+#alerts .alertbox > div .btn:first-child:not(:last-child) {
+  margin-right: 15px;
 }
 /*====================================TYPOGRAPHY====================================*/
 .fs32,
