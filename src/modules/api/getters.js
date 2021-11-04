@@ -6,6 +6,21 @@ const { Queue, Task } = require('../manager/queue.js')
 
 
 /**
+ * Wraps functions into a logger that records execution-time.
+ * @param {Function} request API request
+ * @returns {Promise} whatever the request resolves to
+ * @memberof Modules.API
+ */
+function runWithTimer(request) {
+  let timer = Date.now()
+  return request().then(result => {
+    tracer.info(`request was made in ${Date.now() - timer} ms`)
+    return result
+  })
+}
+
+
+/**
  * @typedef {Object} TRAKT_IDS
  * @property {number} trakt
  * @property {string} slug
@@ -155,7 +170,7 @@ class Traktor {
    * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
    */
   latestActivities() {
-    return this.trakt.sync.last_activities()
+    return runWithTimer(() => this.trakt.sync.last_activities())
   }
 
 
@@ -165,10 +180,10 @@ class Traktor {
    * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>}
    */
   traktSearch(query) {
-    return this.trakt.search.text({
+    return runWithTimer(() => this.trakt.search.text({
       type: query.type,
       query: query.filtered
-    })
+    }))
   }
 
 
@@ -187,16 +202,16 @@ class Traktor {
 
     switch (searchResult.type) {
       case 'movie':
-        result = this.trakt.movies.summary(options)
+        result = runWithTimer(() => this.trakt.movies.summary(options))
         break;
       case 'show':
-        result = this.trakt.shows.summary(options)
+        result = runWithTimer(() => this.trakt.shows.summary(options))
         break;
       case 'episode':
-        result = this.trakt.episodes.summary(options)
+        result = runWithTimer(() => this.trakt.episodes.summary(options))
         break;
       case 'person': // only because of this, a switch is needed
-        result = this.trakt.people.summary(options)
+        result = runWithTimer(() => this.trakt.people.summary(options))
         break;
     }
 

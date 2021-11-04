@@ -17,6 +17,7 @@ const { formatSearch } = require('../modules/api/filters.js')
 const SB = new SwitchBoard()
 
 
+// listens for messages coming from the backend
 SB.on('report.progress', (data, done) => {
   // data: { fraction: 0...1, message: string }
 
@@ -121,7 +122,7 @@ const API = {
 
 
     /**
-     * Get a summary of the lastest activities of the user in each (sub)category.
+     * Get a summary of the latest activities of the user in each (sub)category.
      * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
      * @memberof Modules.Renderer.Get
      */
