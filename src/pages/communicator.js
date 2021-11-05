@@ -143,6 +143,44 @@ const API = {
       return SB.send('get', {
         method: 'availableMethods'
       })
+    },
+
+
+    /**
+     * Get a list of shows the user started (or finished) to watch.
+     * The default removes hidden items from that list, but this filter can be turned off.
+     * @param {boolean} [includeHidden] turns off the filter when true
+     * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
+     * @memberof Modules.Renderer.Get
+     */
+    shows: includeHidden => {
+      return SB.send('get', {
+        method: includeHidden ? 'allWatchedShows' : 'watchedShows'
+      })
+    },
+
+
+    /**
+     * Get a list of movies the user watched at least once.
+     * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_MOVIE>>}
+     * @memberof Modules.Renderer.Get
+     */
+    movies: () => {
+      return SB.send('get', {
+        method: 'watchedMovies'
+      })
+    },
+
+
+    /**
+     * Get a list of shows the user wishes to hide from the progress table.
+     * @returns {Promise.<Array.<Modules.API.TRAKT_HIDDEN_SHOW>>}
+     * @memberof Modules.Renderer.Get
+     */
+    hidden: () => {
+      return SB.send('get', {
+        method: 'hiddenShows'
+      })
     }
   }
 

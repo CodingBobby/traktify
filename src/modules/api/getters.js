@@ -7,6 +7,7 @@ const { Queue, Task } = require('../manager/queue.js')
 
 /**
  * Wraps functions into a logger that records execution-time.
+ * This one is used for requests from the trakt API.
  * @param {Function} request API request
  * @returns {Promise} whatever the request resolves to
  * @memberof Modules.API
@@ -66,18 +67,18 @@ function runWithTimer(request) {
  * @property {Object} [movie]
  * @property {string} [movie.title]
  * @property {number} [movie.year]
- * @property {TRAKT_IDS} [movie.ids]
+ * @property {Modules.API.TRAKT_IDS} [movie.ids]
  * @property {Object} [episode]
  * @property {string} [episode.title]
  * @property {number} [episode.year]
- * @property {TRAKT_IDS} [episode.ids]
+ * @property {Modules.API.TRAKT_IDS} [episode.ids]
  * @property {Object} [show]
  * @property {string} [show.title]
  * @property {number} [show.year]
- * @property {TRAKT_IDS} [show.ids]
+ * @property {Modules.API.TRAKT_IDS} [show.ids]
  * @property {Object} [person]
  * @property {string} [person.name]
- * @property {TRAKT_IDS} [person.ids]
+ * @property {Modules.API.TRAKT_IDS} [person.ids]
  * @memberof Modules.API
  */
 
@@ -85,7 +86,7 @@ function runWithTimer(request) {
  * @typedef {Object} TRAKT_MOVIE_SUMMARY
  * @property {string} title
  * @property {number} year release year
- * @property {TRAKT_IDS} ids
+ * @property {Modules.API.TRAKT_IDS} ids
  * @property {string} tagline very short shout
  * @property {string} overview short description of story
  * @property {string} released full release date
@@ -109,7 +110,7 @@ function runWithTimer(request) {
  * @typedef {Object} TRAKT_SHOW_SUMMARY
  * @property {string} title
  * @property {number} year release year
- * @property {TRAKT_IDS} ids
+ * @property {Modules.API.TRAKT_IDS} ids
  * @property {string} overview short description of story
  * @property {string} first_aired full date of first release
  * @property {Object} airs
@@ -139,6 +140,58 @@ function runWithTimer(request) {
  * @memberof Modules.API
  */
 
+/**
+ * @typedef {Object} TRAKT_WATCHED_SHOW
+ * @property {number} plays number of played episodes, counts multiple watches
+ * @property {string} last_watched_at date of last watch
+ * @property {string} last_updated_at date of last interaction
+ * @property {string} reset_at date of restated watching, could be null
+ * @property {Object} show details about the show
+ * @property {string} show.title name of the show
+ * @property {number} show.year year of first airing
+ * @property {Modules.API.TRAKT_IDS} show.ids all ID formats for this show
+ * @property {Array.<Modules.API.TRAKT_WATCHED_SEASON>} seasons list of seasons which contain a watched episode
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_WATCHED_SEASON
+ * @property {number} number season's number, starting at 1
+ * @property {Array.<Modules.API.TRAKT_WATCHED_EPISODE>} episodes list of watched episodes
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_WATCHED_EPISODE
+ * @property {number} number episode's number in the season, starting at 1
+ * @property {number} plays number of times it was played
+ * @property {string} last_watched_at date of most recent play
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_HIDDEN_SHOW
+ * @property {string} hidden_at date of the user's action
+ * @property {'show'} type
+ * @property {Object} show
+ * @property {string} show.title name of the show
+ * @property {number} show.year when the show started to air
+ * @property {Modules.API.TRAKT_IDS} show.ids all ID formats for this show
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_WATCHED_MOVIE
+ * @property {number} plays number of time it was played
+ * @property {string} last_watched_at date of last watch
+ * @property {string} last_updated_at date of last interaction
+ * @property {Object} movie details about the movie
+ * @property {string} movie.title name of the movie
+ * @property {number} movie.year year of release
+ * @property {Modules.API.TRAKT_IDS} movie.ids all ID formats for this movie
+ * @memberof Modules.API
+ */
+
 
 /**
  * @memberof Modules.API
@@ -159,6 +212,7 @@ class Traktor {
    * @returns {Promise.<Array.<string>>}
    */
   availableMethods() {
+    // has to be wrapped in a Promise to match type of the other methods
     return new Promise((res, _rej) => {
       res(Object.keys(this.trakt))
     })
@@ -216,6 +270,62 @@ class Traktor {
     }
 
     return result
+  }
+
+
+  /**
+   * Get a list of shows the user has hidden from his progress table.
+   * @returns {Promise.<Array.<Modules.API.TRAKT_HIDDEN_SHOW>>}
+   */
+  hiddenShows() {
+    return runWithTimer(() => this.trakt.users.hidden.get({
+      section: 'progress_watched',
+      limit: 100 // this request is paginated (why tho?)
+    }))
+  }
+
+
+  /**
+   * Get a list of all shows the user started to watch.
+   * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
+   */
+  allWatchedShows() {
+    return runWithTimer(() => this.trakt.sync.watched({
+      type: 'shows'
+    }))
+  }
+
+
+  /**
+   * Get a list of shows the user watched but has not hidden.
+   * They can be used for up-next or history dashboards.
+   * Forwarded by {@link Modules.Renderer.Get.shows}.
+   * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
+   */
+  watchedShows() {
+    return new Promise(async (resolve, _rej) => {
+      let all = await this.allWatchedShows()
+      let hidden = await this.hiddenShows()
+      let hiddenIDs = hidden.map(item => item.show.ids.trakt)
+
+      let rest = all.filter(item => {
+        // only keep shows that were not hidden
+        return !hiddenIDs.includes(item.show.ids.trakt)
+      })
+
+      resolve(rest)
+    })
+  }
+
+
+  /**
+   * Get a list of movies the user has watched at least once.
+   * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_MOVIE>>}
+   */
+  watchedMovies() {
+    return runWithTimer(() => this.trakt.sync.watched({
+      type: 'movies'
+    }))
   }
 }
 
