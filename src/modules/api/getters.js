@@ -209,6 +209,7 @@ class Traktor {
 
   /**
    * Get list of methods that are available through the trakt API.
+   * Forwarded by {@link Modules.Renderer.Get.available}.
    * @returns {Promise.<Array.<string>>}
    */
   availableMethods() {
@@ -221,6 +222,7 @@ class Traktor {
 
   /**
    * Get a summary of the user's latest activities.
+   * Forwarded by {@link Modules.Renderer.Get.latest}.
    * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
    */
   latestActivities() {
@@ -230,6 +232,7 @@ class Traktor {
 
   /**
    * Search the trakt.tv database.
+   * Forwarded by {@link Modules.Renderer.Get.search}.
    * @param {Modules.API.FILTERED_EXT} query result from {@link Modules.API.formatSearch}
    * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>}
    */
@@ -275,6 +278,7 @@ class Traktor {
 
   /**
    * Get a list of shows the user has hidden from his progress table.
+   * Forwarded by {@link Modules.Renderer.Get.hidden}.
    * @returns {Promise.<Array.<Modules.API.TRAKT_HIDDEN_SHOW>>}
    */
   hiddenShows() {
@@ -287,6 +291,7 @@ class Traktor {
 
   /**
    * Get a list of all shows the user started to watch.
+   * Forwarded by {@link Modules.Renderer.Get.shows}.
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
    */
   allWatchedShows() {
@@ -320,6 +325,7 @@ class Traktor {
 
   /**
    * Get a list of movies the user has watched at least once.
+   * Forwarded by {@link Modules.Renderer.Get.movies}.
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_MOVIE>>}
    */
   watchedMovies() {
