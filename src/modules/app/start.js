@@ -56,8 +56,8 @@ const webPreferences = {
 }
 
 const windowOptions = {
-  minWidth: 800,
-  minHeight: 500,
+  minWidth: 900,
+  minHeight: 600,
   width: 900,
   height: 650,
   useContentSize: true,
