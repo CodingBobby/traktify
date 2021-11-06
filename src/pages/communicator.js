@@ -201,6 +201,27 @@ const API = {
       return SB.send('get', {
         method: 'hiddenShows'
       })
+    },
+
+
+    /**
+     * Get all details known for a specific item.
+     * Even though the IDs are unique, the target type is required because of the way the trakt API works.
+     * @param {Object} query
+     * @param {'movie'|'show'|'episode'|'person'} query.type
+     * @param {number} query.id identification number in trakt format
+     * @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
+     * @memberof Modules.Renderer.Get
+     * @example window.traktify.get.details({
+     *   type: 'movie',
+     *   ID: 796
+     * })
+     */
+    details: query => {
+      return SB.send('get', {
+        method: 'itemSummary',
+        query: query
+      })
     }
   }
 

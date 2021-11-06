@@ -136,7 +136,7 @@ function runWithTimer(request) {
  */
 
 /**
- * @typedef {Modules.API.TRAKT_MOVIE_SUMMARY|Modules.API.TRAKT_SHOW_SUMMARY} TRAKT_SEARCH_DETAILS
+ * @typedef {Modules.API.TRAKT_MOVIE_SUMMARY|Modules.API.TRAKT_SHOW_SUMMARY} TRAKT_ITEM_DETAILS
  * @memberof Modules.API
  */
 
@@ -245,34 +245,42 @@ class Traktor {
 
 
   /**
-   * Get more details about an item.
+   * Get more details about an item from the list of search results.
    * @param {Modules.API.TRAKT_SEARCH_OBJECT} searchResult
-   * @returns {Promise.<Modules.API.TRAKT_SEARCH_DETAILS>}
+   * @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
    */
   extractSearchResultDetails(searchResult) {
-    let resultID = searchResult[searchResult.type].ids.trakt
+    return this.itemSummary({
+      type: searchResult.type,
+      id: searchResult[searchResult.type].ids.trakt
+    })
+  }
+
+
+  /**
+   * Get more details about an item.
+   * @param {Object} query
+   * @param {'movie'|'show'|'episode'|'person'} type
+   * @param {number} query.id trakt-formatted identifier
+   * @returns @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
+   */
+  itemSummary(query) {
+    // trakt would freak out if there are more parameters than allowed
     let options = {
-      id: resultID,
-      extended: 'full'
+      id: query.id,
+      extended: 'full' // full details are always wanted
     }
-    let result;
-
-    switch (searchResult.type) {
+    
+    switch (query.type) {
       case 'movie':
-        result = runWithTimer(() => this.trakt.movies.summary(options))
-        break;
+        return runWithTimer(() => this.trakt.movies.summary(options))
       case 'show':
-        result = runWithTimer(() => this.trakt.shows.summary(options))
-        break;
+        return runWithTimer(() => this.trakt.shows.summary(options))
       case 'episode':
-        result = runWithTimer(() => this.trakt.episodes.summary(options))
-        break;
+        return runWithTimer(() => this.trakt.episodes.summary(options))
       case 'person': // only because of this, a switch is needed
-        result = runWithTimer(() => this.trakt.people.summary(options))
-        break;
+        return runWithTimer(() => this.trakt.people.summary(options))
     }
-
-    return result
   }
 
 
