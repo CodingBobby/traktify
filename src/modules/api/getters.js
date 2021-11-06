@@ -294,32 +294,10 @@ class Traktor {
    * Forwarded by {@link Modules.Renderer.Get.shows}.
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
    */
-  allWatchedShows() {
+  watchedShows() {
     return runWithTimer(() => this.trakt.sync.watched({
       type: 'shows'
     }))
-  }
-
-
-  /**
-   * Get a list of shows the user watched but has not hidden.
-   * They can be used for up-next or history dashboards.
-   * Forwarded by {@link Modules.Renderer.Get.shows}.
-   * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
-   */
-  watchedShows() {
-    return new Promise(async (resolve, _rej) => {
-      let all = await this.allWatchedShows()
-      let hidden = await this.hiddenShows()
-      let hiddenIDs = hidden.map(item => item.show.ids.trakt)
-
-      let rest = all.filter(item => {
-        // only keep shows that were not hidden
-        return !hiddenIDs.includes(item.show.ids.trakt)
-      })
-
-      resolve(rest)
-    })
   }
 
 

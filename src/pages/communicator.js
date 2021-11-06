@@ -149,14 +149,34 @@ const API = {
     /**
      * Get a list of shows the user started (or finished) to watch.
      * The default removes hidden items from that list, but this filter can be turned off.
-     * @param {boolean} [includeHidden] turns off the filter when true
+     * Results can be used for up-next or history dashboards.
+     * @param {boolean} [includeHidden]
      * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
      * @memberof Modules.Renderer.Get
      */
     shows: includeHidden => {
-      return SB.send('get', {
-        method: includeHidden ? 'allWatchedShows' : 'watchedShows'
-      })
+      if (includeHidden) {
+        return SB.send('get', {
+          method: 'watchedShows'
+        })
+        
+      } else {
+        return Promise.all([
+          SB.send('get', {
+            method: 'watchedShows'
+          }),
+          SB.send('get', {
+            method: 'hiddenShows'
+          })
+        ]).then(([all, hidden]) => {
+          let hiddenIDs = hidden.map(item => item.show.ids.trakt)
+
+          return all.filter(item => {
+            // only keep shows that were not hidden
+            return !hiddenIDs.includes(item.show.ids.trakt)
+          })
+        })
+      }
     },
 
 
