@@ -214,7 +214,7 @@ const API = {
      * @memberof Modules.Renderer.Get
      * @example window.traktify.get.details({
      *   type: 'movie',
-     *   ID: 796
+     *   id: 796
      * })
      */
     details: query => {
