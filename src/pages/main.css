@@ -21,6 +21,14 @@
   font-display: swap;
   src: url(../assets/fonts/manrope_semibold.woff2) format('woff2');
 }
+
+@font-face {
+  font-family: 'icons';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url(../assets/fonts/icons.woff) format('woff');
+}
 /*====================================INITIAL====================================*/
 :root {
   --black: #303030;
@@ -68,6 +76,25 @@ body[no-user] {
   align-items: center;
   margin: auto;
 }
+/*====================================ICONS====================================*/
+[class*='icon-']:before{
+  display: inline-block;
+  font-family: 'icons';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  font-size: 0.7em;
+}
+
+.icon-heart:before{content:'\0041'}
+.icon-history:before{content:'\0042'}
+.icon-play:before{content:'\0043'}
+.icon-reload:before{content:'\0044'}
+.icon-search:before{content:'\0045'}
+.icon-settings:before{content:'\0046'}
+.icon-user:before{content:'\0047'}
+.icon-watchlist:before{content:'\0048'}
 /*====================================BRAND-STYLES====================================*/
 img {
   -webkit-user-drag: none;

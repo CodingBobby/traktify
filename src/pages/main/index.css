@@ -11,36 +11,42 @@
 }
 
 #untw > div {
+  background: var(--black) no-repeat center center / cover;
   border-radius: var(--border);
-  background-color: var(--red);
   color: var(--white);
+}
+
+#untw > div:not([data-untw-text]) {
+  cursor: pointer;
 }
 
 #untw > div[data-untw-latest] {
   grid-row: 1/5;
-  background-color: var(--red2);
 }
 
-#untw > div[data-untw-title] {
+#untw > div[data-untw-text] {
   margin-top: 29px;
   grid-column: 2/5;
   background-color: transparent;
 }
 
-#untw > div[data-untw-title] span {
+#untw > div[data-untw-text] span {
   display: block;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-#untw > div[data-untw-title] span:first-child {
+#untw > div[data-untw-text] span:first-child {
   text-transform: uppercase;
 }
 
-#untw > div[data-untw-title] span[loading]:first-child {
+#untw > div[data-untw-text] span[loading]:first-child {
   margin-top: 0;
   width: 33%;
   height: 23%;
 }
-#untw > div[data-untw-title] span[loading] {
+#untw > div[data-untw-text] span[loading] {
   height: 30%;
   margin-top: 9px;
   border-radius: var(--border);
@@ -54,7 +60,7 @@
   #untw {
     grid-template-columns: repeat(3, 324px);
   }
-  #untw > div[data-untw-title] {
+  #untw > div[data-untw-text] {
     grid-column: 2/4;
   }
 }
@@ -65,7 +71,7 @@
   #untw > div[data-untw-latest] {
     grid-row: 2/6;
   }
-  #untw > div[data-untw-title] {
+  #untw > div[data-untw-text] {
     grid-column: 1/3;
   }
 }
