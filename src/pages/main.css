@@ -33,6 +33,7 @@
 :root {
   --black: #303030;
   --black2: #171717;
+  --black_alpha: #171717CC;
   --white: #FFFFFF;
   --white2: #CECECE;
   --white3: #696969;
@@ -122,6 +123,9 @@ hr {
 .btn.red {
   background-color: var(--red);
 }
+.btn.small {
+  padding: 3px 10px;
+}
 /*====================================COMPONENTS====================================*/
 #progress {
   position: absolute;
@@ -130,34 +134,23 @@ hr {
   background-color: var(--black);
   border-radius: var(--border);
   display: none;
+  padding: 20px;
 }
 #progress span {
-  margin: 18px 0 0 20px;
   display: block;
 }
 #progress span::first-letter {
   text-transform: capitalize;
 }
-#progress div {
-  position: relative;
+#progress .progress {
   width: 330px;
-  height: 7px;
-  border-radius: var(--border);
-  background-color: var(--red2);
-  margin: 10px 20px 20px;
-}
-#progress div div {
-  margin: 0;
-  position: absolute;
-  background-color: var(--red);
-  width: 0%;
 }
 
 .overlay {
   width: 100%;
   height: 100%;
   position: absolute;
-  background: #17171761;
+  background: var(--black_alpha);
   backdrop-filter: blur(8px);
 }
 
@@ -182,13 +175,17 @@ hr {
 #alerts .alertbox p {
   margin: 0;
 }
+#alerts .alertbox p span {
+  color: var(--white);
+  font-weight: 600;
+}
 #alerts .alertbox p::first-letter {
   text-transform: capitalize;
 }
 #alerts .alertbox > div {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 #alerts .alertbox > div .btn {
   width: fit-content;
@@ -197,15 +194,29 @@ hr {
   margin-right: 15px;
 }
 
+.progress {
+  height: 7px;
+  border-radius: var(--border);
+  background-color: var(--red2);
+  position: relative;
+  margin-top: 10px;
+}
+.progress div {
+  position: absolute;
+  background-color: var(--red);
+  width: 0%;
+  margin: 0;
+  height: 100%;
+  border-radius: var(--border);
+}
+
 [loading] {
   background-color: var(--white2)!important;
   overflow: hidden;
 }
-
 [loading="dark"] {
   background-color: var(--white3)!important;
 }
-
 [loading]::after {
   display: block;
   height: 100%;
@@ -220,7 +231,6 @@ hr {
   animation: loading 2s infinite;
   content: '';
 }
-
 @keyframes loading {
   100% {
     transform: translateX(100%);

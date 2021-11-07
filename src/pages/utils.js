@@ -48,7 +48,7 @@ function modifyAlertbox(title, text, btn, btn2) {
 
   if (btn2) {
     btnsElm.innerHTML = `
-      <div class="fs16 fwMedium btn">${btn2.text}</div>
+      <div class="fs16 fwMedium tWhite2 btn">${btn2.text}</div>
       <div class="fs16 fwMedium btn red">${btn.text}</div>
     `;
 

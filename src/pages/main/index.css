@@ -14,6 +14,8 @@
   background: var(--black) no-repeat center center / cover;
   border-radius: var(--border);
   color: var(--white);
+  position: relative;
+  overflow: hidden;
 }
 
 #untw > div:not([data-untw-text]) {
@@ -50,6 +52,47 @@
   height: 30%;
   margin-top: 9px;
   border-radius: var(--border);
+}
+
+
+#untw > div[data-untw-latest] > div {
+  bottom: 0;
+}
+
+#untw > div > div {
+  position: absolute;
+  height: 88px;
+  bottom: -88px;
+  width: 100%;
+  background-color: var(--black_alpha);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+#untw > div > div > div,
+#untw > div > div > div .actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#untw > div > div > div .actions {
+  justify-content: initial;
+  margin-left: 1px;
+}
+#untw > div > div > div .actions div:not(:first-child) {
+  margin-left: 10px;
+  width: fit-content;
+}
+#untw > div > div > div .actions i::before {
+  font-size: 0.8em;
+}
+
+#untw > div > div .rating i::before {
+  font-size: 1.3em;
+  vertical-align: middle;
+  color: var(--red);
+  margin-right: 7px;
 }
 
 /**
