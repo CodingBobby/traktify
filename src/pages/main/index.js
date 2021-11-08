@@ -55,26 +55,59 @@ const dummyData = [
       runtime: 24,
     }
   },
+  {
+    id: 97525,
+    title: 'To Your Eternity',
+    poster: 'https://walter.trakt.tv/images/shows/000/159/569/posters/thumb/59c0d6f9cd.jpg',
+    poster_wide: 'https://walter.trakt.tv/images/shows/000/159/569/fanarts/full/76332e8d7f.jpg',
+    watched: 5,
+    aired: 20,
+    season: {
+      count: 1,
+    },
+    episode: {
+      id: 97525,
+      title: 'Our Goals',
+      count: 6,
+      absolute_count: 6,
+      rating: 8.0,
+      runtime: 24,
+    }
+  },
+  {
+    id: 46440,
+    title: 'Samurai Girls',
+    poster: 'https://walter.trakt.tv/images/seasons/000/062/813/posters/thumb/88ba84a2c9.jpg',
+    poster_wide: 'https://walter.trakt.tv/images/shows/000/060/994/fanarts/full/f095f22dc5.jpg',
+    watched: 4,
+    aired: 24,
+    season: {
+      count: 1,
+    },
+    episode: {
+      id: 46440,
+      title: 'Here Comes the Warrior of Love!',
+      count: 5,
+      absolute_count: 5,
+      rating: 7.4,
+      runtime: 25,
+    }
+  },
 ]
 /**
  * Will be fully documented once there has been a proper API as its subject to change completely once implemented.
  */
 setTimeout(() => {
-  untw.querySelectorAll('[loading]').forEach(elm => {
-    elm.removeAttribute('loading')
-  });
-
   Array.from(untw.children).forEach((elm, i) => {
     if (i > 0) {
       if (dummyData[i-1]) {
         setTileData(i, dummyData[i-1])
       } else {
         elm.style = 'background-color:var(--watchlist);'
+        elm.removeAttribute('loading')
       }
     }
   })
-
-  setTextUNTW(untw.querySelector('[data-untw-latest]'))
 }, 2000)
 
 function setTileData(order, data) {
@@ -104,7 +137,47 @@ function setTileData(order, data) {
   tile.onmouseleave = () => setTextUNTW(untw.children[1]);
 
   setTileActionButton(tile, data, 'play', false);
-  setTileActionButton(tile, data, 'watchlist', true)
+  setTileActionButton(tile, data, 'watchlist', true);
+
+  if (tile.hasAttribute('data-untw-latest')) {
+    setTextUNTW(tile)
+  }
+
+  if (tile.hasAttribute('loading')) {
+    tile.removeAttribute('loading')
+  }
+}
+
+/**
+ * When user finishes playing an episode / adds to history, the tile list is updated accordingly.
+ * @param {HTMLElement} tile 
+ */
+function updateNextTile(tile) {
+  if (tile.hasAttribute('data-untw-latest')) {
+    tile.nextElementSibling.setAttribute('data-untw-latest', '');
+    setTextUNTW(tile.nextElementSibling)
+  }
+
+  tile.remove()
+
+  // creates a new tile to fill in blanks
+  if (untw.children.length < 15) {
+    untw.appendChild(createTile())
+  }
+}
+
+/**
+ * Used to fill blanks in the tile list.
+ * Will be responsible for creating show recommendations, etc.
+ * @returns {HTMLElement}
+ */
+function createTile() {
+  let tile = document.createElement('div');
+  
+  tile.classList.add('shadow');
+  tile.style.backgroundColor = 'var(--history)';
+
+  return tile 
 }
 
 /**
@@ -118,7 +191,7 @@ function setTileActionButton(tile, data, type, secondary) {
   let actionContent;
 
   // when api is available, callback will change according to action type
-  let callback = () => {window.location.reload()};
+  let callback = () => {updateNextTile(tile);toggleAlert(false)};
 
   let actionBtns = tile.children[0].children[0].children[0];
   let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
@@ -147,20 +220,15 @@ function setTileActionButton(tile, data, type, secondary) {
  * @param {HTMLElement} tile 
  */
 function setTextUNTW(tile) {
-  let text = untw.children[0];
+  let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisode];
 
-  text.children[0].innerHTML = 'up next to watch';
-  text.children[1].innerHTML = tile.dataset.untwTitle;
-  text.children[2].innerHTML = tile.dataset.untwEpisode
-}
+  Array.from(untw.children[0].children).forEach((elm, i) => {
+    elm.innerHTML = data[i];
 
-/**
- * Checks if the tile provided is the main tile, the one that takes most space.
- * @param {HTMLElement} tile
- * @returns {boolean}
- */
-function isMainTile(tile) {
-  return tile.dataset.untwLatest == ''
+    if (elm.hasAttribute('loading')) {
+      elm.removeAttribute('loading')
+    }
+  })
 }
 
 /**
@@ -188,7 +256,7 @@ function parseEpisodeTitle(data) {
  * @returns {string} image url
  */
  function parseEpisodeImage(tile, data) {
-  if (isMainTile(tile)) {
+  if (tile.hasAttribute('data-untw-latest')) {
     return data.season.poster || data.poster
   } else {
     return data.season.poster_wide || data.poster_wide || data.season.poster || data.poster
