@@ -76,12 +76,10 @@ setTimeout(() => {
         
         elm.onmouseover = () => {
           updateTextUNTW(elm);
-          toggleEpisodeInfo(elm, true)
         };
 
         elm.onmouseleave = () => {
           updateTextUNTW(untw.querySelector('[data-untw-latest]'));
-          toggleEpisodeInfo(elm, false)
         };
 
         elm.innerHTML = `
@@ -139,17 +137,6 @@ function updateTextUNTW(tile) {
   text.children[0].innerHTML = 'up next to watch';
   text.children[1].innerHTML = tile.dataset.untwTitle;
   text.children[2].innerHTML = tile.dataset.untwEpisode
-}
-
-/**
- * Shows the episode's interactive components.
- * @param {HTMLElement} tile
- * @param {boolean} cond
- */
-function toggleEpisodeInfo(tile, cond) {
-  if (!isMainTile(tile)) {
-    tile.children[0].style.bottom = cond ? '0' : '-88px'    
-  }
 }
 
 /**

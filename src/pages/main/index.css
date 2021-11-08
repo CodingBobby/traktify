@@ -54,11 +54,6 @@
   border-radius: var(--border);
 }
 
-
-#untw > div[data-untw-latest] > div {
-  bottom: 0;
-}
-
 #untw > div > div {
   position: absolute;
   height: 88px;
@@ -67,6 +62,11 @@
   background-color: var(--black_alpha);
   padding: 20px;
   box-sizing: border-box;
+}
+
+#untw > div[data-untw-latest] > div,
+#untw > div:not([data-untw-latest]):hover > div {
+  bottom: 0;
 }
 
 #untw > div > div > div,

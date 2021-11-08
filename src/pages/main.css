@@ -213,6 +213,7 @@ hr {
 [loading] {
   background-color: var(--white2)!important;
   overflow: hidden;
+  cursor: initial!important;
 }
 [loading="dark"] {
   background-color: var(--white3)!important;
