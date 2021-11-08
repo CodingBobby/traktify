@@ -21,10 +21,19 @@
   font-display: swap;
   src: url(../assets/fonts/manrope_semibold.woff2) format('woff2');
 }
+
+@font-face {
+  font-family: 'icons';
+  font-style: normal;
+  font-weight: normal;
+  font-display: swap;
+  src: url(../assets/fonts/icons.woff) format('woff');
+}
 /*====================================INITIAL====================================*/
 :root {
   --black: #303030;
   --black2: #171717;
+  --black_alpha: #171717CC;
   --white: #FFFFFF;
   --white2: #CECECE;
   --white3: #696969;
@@ -68,6 +77,25 @@ body[no-user] {
   align-items: center;
   margin: auto;
 }
+/*====================================ICONS====================================*/
+[class*='icon-']:before{
+  display: inline-block;
+  font-family: 'icons';
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  font-size: 0.7em;
+}
+
+.icon-heart:before{content:'\0041'}
+.icon-history:before{content:'\0042'}
+.icon-play:before{content:'\0043'}
+.icon-reload:before{content:'\0044'}
+.icon-search:before{content:'\0045'}
+.icon-settings:before{content:'\0046'}
+.icon-user:before{content:'\0047'}
+.icon-watchlist:before{content:'\0048'}
 /*====================================BRAND-STYLES====================================*/
 img {
   -webkit-user-drag: none;
@@ -95,6 +123,9 @@ hr {
 .btn.red {
   background-color: var(--red);
 }
+.btn.small {
+  padding: 3px 10px;
+}
 /*====================================COMPONENTS====================================*/
 #progress {
   position: absolute;
@@ -103,34 +134,23 @@ hr {
   background-color: var(--black);
   border-radius: var(--border);
   display: none;
+  padding: 20px;
 }
 #progress span {
-  margin: 18px 0 0 20px;
   display: block;
 }
 #progress span::first-letter {
   text-transform: capitalize;
 }
-#progress div {
-  position: relative;
+#progress .progress {
   width: 330px;
-  height: 7px;
-  border-radius: var(--border);
-  background-color: var(--red2);
-  margin: 10px 20px 20px;
-}
-#progress div div {
-  margin: 0;
-  position: absolute;
-  background-color: var(--red);
-  width: 0%;
 }
 
 .overlay {
   width: 100%;
   height: 100%;
   position: absolute;
-  background: #17171761;
+  background: var(--black_alpha);
   backdrop-filter: blur(8px);
 }
 
@@ -155,19 +175,67 @@ hr {
 #alerts .alertbox p {
   margin: 0;
 }
+#alerts .alertbox p span {
+  color: var(--white);
+  font-weight: 600;
+}
 #alerts .alertbox p::first-letter {
   text-transform: capitalize;
 }
 #alerts .alertbox > div {
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 #alerts .alertbox > div .btn {
   width: fit-content;
 }
 #alerts .alertbox > div .btn:first-child:not(:last-child) {
   margin-right: 15px;
+}
+
+.progress {
+  height: 7px;
+  border-radius: var(--border);
+  background-color: var(--red2);
+  position: relative;
+  margin-top: 10px;
+}
+.progress div {
+  position: absolute;
+  background-color: var(--red);
+  width: 0%;
+  margin: 0;
+  height: 100%;
+  border-radius: var(--border);
+}
+
+[loading] {
+  background-color: var(--white2)!important;
+  overflow: hidden;
+  cursor: initial!important;
+}
+[loading="dark"] {
+  background-color: var(--white3)!important;
+}
+[loading]::after {
+  display: block;
+  height: 100%;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+  rgba(255, 255, 255, 0) 0%,
+  rgba(255, 255, 255, 0.2) 20%,
+  rgba(255, 255, 255, 0.5) 60%,
+  rgba(255, 255, 255, 0) 100%
+  );
+  animation: loading 2s infinite;
+  content: '';
+}
+@keyframes loading {
+  100% {
+    transform: translateX(100%);
+  }
 }
 /*====================================TYPOGRAPHY====================================*/
 .fs32,

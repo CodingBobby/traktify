@@ -55,9 +55,9 @@ function shuffleArray(array) {
  */
 function createSlide(path, filename) {
   return `
-  <div class="wrapper">
-    <h1 class="fs32 fwSemiBold">${filename.replace('.png', '')}</h1>
-    <img src="${'../../' + path + filename}">
-  </div>
+    <div class="wrapper">
+      <h1 class="fs32 fwSemiBold">${filename.replace('.png', '')}</h1>
+      <img src="${'../../' + path + filename}">
+    </div>
   `
 }
