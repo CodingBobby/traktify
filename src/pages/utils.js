@@ -17,7 +17,7 @@ window.traktify.listen('report.progress', info => {
  * The user proceeds to click on the reload button instead of the app doing it on its own.
  */
 window.traktify.listen('report.error', reason => {
-  modifyAlertbox('Error', reason, {
+  setAlertbox('Error', reason, {
     text: 'reload',
     cb: () => window.location.reload()
   })
@@ -39,7 +39,7 @@ function toggleAlert(cond) {
  * @param {{text: string, cb: function}} btn must have both button name as well as its function
  * @param {{text: string, cb: function}} btn2 
  */
-function modifyAlertbox(title, text, btn, btn2) {
+function setAlertbox(title, text, btn, btn2) {
   let textElm = alerts.getElementsByTagName('p')[0];
   let btnsElm = textElm.nextElementSibling;
 

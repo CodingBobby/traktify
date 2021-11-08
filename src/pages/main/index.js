@@ -66,72 +66,87 @@ setTimeout(() => {
 
   Array.from(untw.children).forEach((elm, i) => {
     if (i > 0) {
-      let data = dummyData[i-1];
-
-      if (data) {
-        elm.dataset.untwId = data.episode.id;
-        elm.dataset.untwTitle = data.title;
-        elm.dataset.untwEpisode = parseEpisodeTitle(data);
-        elm.style.backgroundImage = `url(${parseEpisodeImage(elm, data)})`;
-        
-        elm.onmouseover = () => {
-          updateTextUNTW(elm);
-        };
-
-        elm.onmouseleave = () => {
-          updateTextUNTW(untw.querySelector('[data-untw-latest]'));
-        };
-
-        elm.innerHTML = `
-          <div>
-            <div class="fs16 fwSemiBold">
-              <div class="actions">
-                <div class="btn small red">play now</div>
-                <div class="btn small" style="background-color:var(--watchlist)"><i class="icon-watchlist"></i></div>
-              </div>
-              <div class="rating"><i class="icon-heart"></i> ${data.episode.rating}</div>
-            </div>
-            <div class="progress">
-              <div style="width:${getProgressRatio(data.watched, data.aired)}%"></div>
-            </div>
-          </div>
-        `;
-        
-        
-        elm.querySelector('.actions').children[0].onclick = () => {
-          modifyAlertbox(
-            'Info',
-            `Start playing <span>${data.title}: ${parseEpisodeTitle(data)}</span>?`,
-            {text: 'ok', cb: () => window.location.reload()},
-            {text: 'revert action', cb: () => toggleAlert(false)
-          })
-          toggleAlert(true)
-        }
-
-        elm.querySelector('.actions').children[1].onclick = () => {
-          modifyAlertbox(
-            'Info',
-            `Add <span>${data.title}: ${parseEpisodeTitle(data)}</span> to your watchlist?`,
-            {text: 'ok', cb: () => window.location.reload()},
-            {text: 'revert action', cb: () => toggleAlert(false)
-          })
-          toggleAlert(true)
-        }
-        
+      if (dummyData[i-1]) {
+        setTileData(i, dummyData[i-1])
       } else {
         elm.style = 'background-color:var(--watchlist);'
       }
     }
   })
 
-  updateTextUNTW(untw.querySelector('[data-untw-latest]'))
+  setTextUNTW(untw.querySelector('[data-untw-latest]'))
 }, 2000)
+
+function setTileData(order, data) {
+  let tile = untw.children[order];
+
+  tile.dataset.untwId = data.episode.id;
+  tile.dataset.untwTitle = data.title;
+  tile.dataset.untwEpisode = parseEpisodeTitle(data);
+  tile.style.backgroundImage = `url(${parseEpisodeImage(tile, data)})`;
+
+  tile.innerHTML = `
+    <div>
+      <div class="fs16 fwSemiBold">
+        <div class="actions">
+          <div class="btn small"></div>
+          <div class="btn small"></div>
+        </div>
+        <div class="rating"><i class="icon-heart"></i> ${data.episode.rating}</div>
+      </div>
+      <div class="progress">
+        <div style="width:${getProgressRatio(data.watched, data.aired)}%"></div>
+      </div>
+    </div>
+  `;
+
+  tile.onmouseover = () => setTextUNTW(tile);
+  tile.onmouseleave = () => setTextUNTW(untw.children[1]);
+
+  setTileActionButton(tile, data, 'play', false);
+  setTileActionButton(tile, data, 'watchlist', true)
+}
+
+/**
+ * Sets the tile action buttons with the configured settings, its type (play, watchlist, history) and if its the main or secondary button.
+ * @param {HTMLElement} tile 
+ * @param {string} type
+ * @param {boolean} secondary
+ */
+function setTileActionButton(tile, data, type, secondary) {
+  let message;
+  let actionContent;
+
+  // when api is available, callback will change according to action type
+  let callback = () => {window.location.reload()};
+
+  let actionBtns = tile.children[0].children[0].children[0];
+  let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
+
+  if (type == 'play') {
+    message = `Start playing <span>${data.title}: ${parseEpisodeTitle(data)}</span>?`;
+    actionContent = secondary ? '<i class="icon-play"></i>' : 'play now'
+  } else if (type == 'watchlist') {
+    message = `Add <span>${data.title}: ${parseEpisodeTitle(data)}</span> to your watchlist?`;
+    actionContent = secondary ? '<i class="icon-watchlist"></i>' : 'add to watchlist'
+  } else if (type == 'history') {
+    message = `Add <span>${data.title}: ${parseEpisodeTitle(data)}</span> to your history?`;
+    actionContent = secondary ? '<i class="icon-history"></i>' : 'add to history'
+  }
+
+  btn.innerHTML = actionContent;
+  btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`
+  btn.onclick = () => {
+    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => toggleAlert(false)})
+    toggleAlert(true)
+  }
+}
 
 /**
  * Updates show and episode name in UNTW.
  * @param {HTMLElement} tile 
  */
-function updateTextUNTW(tile) {
+function setTextUNTW(tile) {
   let text = untw.children[0];
 
   text.children[0].innerHTML = 'up next to watch';
