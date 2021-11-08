@@ -167,7 +167,7 @@ function isMainTile(tile) {
  * Calculates the ratio between number of episodes watched to total aired episodes in percentage for progress bar.
  * @param {number} number number of episodes watched 
  * @param {number} total number of episodes that have aired
- * @returns 
+ * @returns {number} float in range 0.0–100.0
  */
  function getProgressRatio(number, total) {
   return ((number/total)*100).toFixed(1)
