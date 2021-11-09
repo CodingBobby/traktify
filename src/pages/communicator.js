@@ -147,142 +147,83 @@ const API = {
 
 
     /**
-     * @callback WatchedShowCallback
-     * @param {Modules.API.TRAKT_SHOW_SUMMARY} showSummary
-     * @returns {*} doesn't have to return anything
-     */
-
-    /**
-     * @callback WatchedShowFilter
-     * @param {Object} watchedShow
-     * @param {Modules.API.TRAKT_WATCHED_SHOW} watchedShow.user
-     * @param {Modules.API.TRAKT_SHOW_SUMMARY} watchedShow.details
-     * @returns {boolean} whether the item should be kept or not
-     */
-
-    /**
-     * @callback WatchedShowDone
-     * @param {Array.<Modules.API.TRAKT_SHOW_SUMMARY>} showSummaries
-     * @returns {*} doesn't have to return anything
-     */
-
-    /**
      * Get a list of shows the user started (and finished) to watch.
      * Results can be used for up-next or history dashboards.
-     * The default removes hidden items from that list, but this filter can be turned off with `options.includeHidden`.
-     * With `options.getDetails`, it's possible to get the trakt summary for the results directly.
-     * As this will require an additional request for each item, the number should be limited with `options.getDetails.firstN`.
-     * For each finishing summary request, `options.getDetails.callback` will fire with the result passed through its parameter.
-     * During this procedure, `options.getDetails.filter` is optionally applied so that the items for which the summary is returned matches specific conditions that can be defined customly.
-     * With and without filtering, `options.getDetails.firstN`-many items will be returned unless the user has watched fewer items that match.
+     * The default removes hidden and finished shows from that list, but these filters can be turned off with the `options` parameters.
+     * Filtering is done here and not on the backend of the API because the filtered result doesn't need to be cached.
+     * Can be used in combination with {@link Modules.Renderer.Get.progress} to get a fully detailed list of upcoming episodes.
      * @param {Object} [options]
      * @param {boolean} [options.includeHidden] removes hidden items when false
-     * @param {Object} [options.getDetails]
-     * @param {number} options.getDetails.firstN get details for n elements
-     * @param {WatchedShowCallback} options.getDetails.callback fires each time details are ready
-     * @param {WatchedShowFilter} [options.getDetails.filter] applied to each item
-     * @param {WatchedShowDone} [options.getDetails.done] fires when search has finished
+     * @param {boolean} [options.includeFinished] removes finished items when false
      * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
      * @memberof Modules.Renderer.Get
      */
     shows: options => {
       options = options ?? {}
-      let result;
 
-      if (options.includeHidden) {
-        result = SB.send('get', {
-          method: 'watchedShows'
-        })
-        
-      } else {
-        result = Promise.all([
-          SB.send('get', {
-            method: 'watchedShows'
-          }),
-          SB.send('get', {
+      return SB.send('get', {
+        method: 'watchedShows'
+      }).then(async all => {
+        if (!options.includeHidden) {
+          return await SB.send('get', {
             method: 'hiddenShows'
-          })
-        ]).then(([all, hidden]) => {
-          let hiddenIDs = hidden.map(item => item.show.ids.trakt)
+          }).then(hidden => {
+            // get a list of IDs to compare
+            let hiddenIDs = hidden.map(item => item.show.ids.trakt)
 
-          return all.filter(item => {
-            // only keep shows that were not hidden
-            return !hiddenIDs.includes(item.show.ids.trakt)
-          })
-        })
-      }
-
-      if (options.getDetails !== undefined) {
-        result.then(list => {
-          // use dummy filter if none was specified
-          let filter = options.getDetails.filter
-            ? options.getDetails.filter
-            : _ => true // does nothing
-          
-          /**
-           * @param {number} n index in total list
-           * @param {number} m index in matching list
-           * @param {Array} found list of items that match so far
-           * @returns {Array} the list of all found items
-           */
-          async function looper(n, m, found) {
-            let item = list[n]
-            let details = await SB.send('get', {
-              method: 'itemSummary',
-              query: { type: 'show', id: item.show.ids.trakt }
+            return all.filter(item => {
+              // only keep shows that were not hidden
+              return !hiddenIDs.includes(item.show.ids.trakt)
             })
-            
-            n++
-            if (filter({
-              user: item,
-              details: details
-            })) {
-              // report item so that it can be used without waiting for the rest
-              options.getDetails.callback(details)
-              // save it for the final return value
-              found.push(details)
-              m++
-            }
+          })
+        }
 
-            if (n < list.length && m < options.getDetails.firstN) {
-              // look for next item
-              looper(n, m, found)
-            } else {
-              // all items that match filter have been found
-              options.getDetails.done(found)
-              return found
-            }
-          }
+        // when options.includeHidden === true
+        return all
+      }).then(pre => {
+        if (!options.includeFinished) {
+          return pre.filter(item => {
+            // count episodes that appear in watched structure
+            let watchedEpisodes = 0
+            item.seasons.forEach(season => {
+              watchedEpisodes += season.episodes.length
+            })
 
-          // find items that match filter
-          return looper(0, 0, [])
-        })
-      }
+            // only keep show when it has more episodes than the user has watched
+            return item.show.aired_episodes > watchedEpisodes
+          })
+        }
 
-      return result // still a Promise after the .thens
-
-
-      /**
-       * This nullish check returns undefined only when both parameters are missing.
-       * Otherwise it returns the smallest of both numbers, which means one or both of them were set to a value.
-       */
-      // if (options.minRating ?? options.maxRating !== undefined) {
-      //   result.then(items => {
-      //     return items.filter(item => {
-      //       // only keep shows that lie within the bounds
-      //       let above = item.rating >= options.minRating
-      //       let below = item.rating <= options.maxRating
-      //       return above && below
-      //     })
-      //   })
-      // }
+        // when options.includeFinished === true
+        if (!{}.rick?.({}.ashley?.('gives you up'))) {
+          return pre
+        }
+      })
     },
 
 
     /**
+     * Get information about the progress a user has for a single show.
+     * Includes details about last watched episode and the next one coming up.
+     * Useful for various dashboards.
+     * @param {number} showID identifier formatted as trakt
+     * @returns {Promise.<Array.<Modules.API.TRAKT_SHOW_PROGRESS>>}
+     * @memberof Modules.Renderer.Get
+     * @example window.traktify.get.shows().then(shows => {
+     *   // get details of first 5 items
+     *   for (let i=0; i<5; i++) {
+     *     let show = shows[i].show
+     *     let showID = show.ids.trakt
      * 
-     * @param {*} showID 
-     * @returns {Promise}
+     *     traktify.get.progress(showID).then(progress => {
+     *       // summary of show
+     *       console.log(show)
+     * 
+     *       // summary of next episode
+     *       console.log(progress.next_episode)
+     *     })
+     *   }
+     * })
      */
     progress: showID => {
       return SB.send('get', {

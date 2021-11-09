@@ -81,7 +81,7 @@ const isRenderer = require('is-electron-renderer')
    * @param {string} route channel to listen on
    * @param {IPC_CB} callback fires when message over {@link route} is received
    */
-   on(route, callback) {
+  on(route, callback) {
     this.listener.on(route, (_event, data) => {
       callback(data.args, result => {
         this.sender.send(data.replyTo, result)

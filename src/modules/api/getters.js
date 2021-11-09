@@ -131,12 +131,43 @@ function runWithTimer(request) {
  * @property {string} language 2-letter code of original language
  * @property {Array.<string>} available_translations list of 2-letter codes
  * @property {Array.<string>} genres list of categories
- * @property {string} certification PG-age recommendation
+ * @property {string} certification age recommendation like PG, TV-14, etc.
  * @memberof Modules.API
  */
 
 /**
- * @typedef {Modules.API.TRAKT_MOVIE_SUMMARY|Modules.API.TRAKT_SHOW_SUMMARY} TRAKT_ITEM_DETAILS
+ * @typedef {Object} TRAKT_EPISODE_SUMMARY
+ * @property {string} title
+ * @property {number} number position of episode in its season
+ * @property {number} number_abs position of episode in entire show
+ * @property {number} season number of season that contains this episode
+ * @property {Modules.API.TRAKT_IDS} ids
+ * @property {string} overview short description of story
+ * @property {string} first_aired full date of first release
+ * @property {Array.<string>} available_translations list of 2-letter codes
+ * @property {number} runtime duration in minutes
+ * @property {number} rating float from 0–10
+ * @property {number} votes count of votes
+ * @property {number} comment_count comments on trakt.tv
+ * @property {string} updated_at date of last change
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_SHOW_PROGRESS
+ * @property {number} aired number of existing episodes
+ * @property {number} completed number of watched episodes excluding multiwatches
+ * @property {Array} hidden_seasons
+ * @property {Array} seasons
+ * @property {string} last_watched_at date of last watch
+ * @property {string} reset_at of restated watching, could be null
+ * @property {Modules.API.TRAKT_EPISODE_SUMMARY} last_episode last one the user watched
+ * @property {Modules.API.TRAKT_EPISODE_SUMMARY} next_episode next one the user has not watched yet
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Modules.API.TRAKT_MOVIE_SUMMARY|Modules.API.TRAKT_SHOW_SUMMARY|Modules.API.TRAKT_EPISODE_SUMMARY} TRAKT_ITEM_DETAILS
  * @memberof Modules.API
  */
 
@@ -146,11 +177,8 @@ function runWithTimer(request) {
  * @property {string} last_watched_at date of last watch
  * @property {string} last_updated_at date of last interaction
  * @property {string} reset_at date of restated watching, could be null
- * @property {Object} show details about the show
- * @property {string} show.title name of the show
- * @property {number} show.year year of first airing
- * @property {Modules.API.TRAKT_IDS} show.ids all ID formats for this show
  * @property {Array.<Modules.API.TRAKT_WATCHED_SEASON>} seasons list of seasons which contain a watched episode
+ * @property {Modules.API.TRAKT_SHOW_SUMMARY} show details about the show
  * @memberof Modules.API
  */
 
@@ -260,26 +288,25 @@ class Traktor {
   /**
    * Get more details about an item.
    * @param {Object} query
-   * @param {'movie'|'show'|'episode'|'person'} type
+   * @param {'movie'|'show'|'episode'|'person'} query.type
    * @param {number} query.id trakt-formatted identifier
-   * @returns @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
+   * @param {number} [query.season] required when `type` is episode
+   * @param {number} [query.episode] required when `type` is episode
+   * @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
    */
   itemSummary(query) {
-    // trakt would freak out if there are more parameters than allowed
-    let options = {
-      id: query.id,
-      extended: 'full' // full details are always wanted
-    }
+    // full details are always wanted
+    query.extended = 'full'
     
     switch (query.type) {
       case 'movie':
-        return runWithTimer(() => this.trakt.movies.summary(options))
+        return runWithTimer(() => this.trakt.movies.summary(query))
       case 'show':
-        return runWithTimer(() => this.trakt.shows.summary(options))
+        return runWithTimer(() => this.trakt.shows.summary(query))
       case 'episode':
-        return runWithTimer(() => this.trakt.episodes.summary(options))
+        return runWithTimer(() => this.trakt.episodes.summary(query))
       case 'person': // only because of this, a switch is needed
-        return runWithTimer(() => this.trakt.people.summary(options))
+        return runWithTimer(() => this.trakt.people.summary(query))
     }
   }
 
@@ -298,13 +325,30 @@ class Traktor {
 
 
   /**
-   * Get a list of all shows the user started to watch.
+   * Get a list of all shows the user started or finished to watch.
+   * The resulting array is sorted by the parameter `last_watched_at` so that latest watches are appearing first.
    * Forwarded by {@link Modules.Renderer.Get.shows}.
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
    */
   watchedShows() {
     return runWithTimer(() => this.trakt.sync.watched({
-      type: 'shows'
+      type: 'shows',
+      extended: 'full'
+    }))
+  }
+
+
+  /**
+   * Get a detailed structure of which parts of a show the user has watched and which are still up to be watched.
+   * Forwarded by {@link Modules.Renderer.Get.progress}.
+   * @param {Object} query
+   * @param {number} query.id identifier of the show in trakt format
+   * @returns {Promise.<Array.<Modules.API.TRAKT_SHOW_PROGRESS>>}
+   */
+  showProgress(query) {
+    return runWithTimer(() => this.trakt.shows.progress.watched({
+      id: query.id,
+      extended: 'full'
     }))
   }
 
