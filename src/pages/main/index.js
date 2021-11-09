@@ -1,143 +1,89 @@
-const dummyData = [
-  {
-    id: 65930,
-    title: 'My Hero Academia',
-    poster: 'https://walter.trakt.tv/images/shows/000/104/311/posters/thumb/af633add9b.jpg',
-    poster_wide: 'https://walter.trakt.tv/images/shows/000/104/311/fanarts/full/22c3c6efc2.jpg',
-    watched: 89,
-    aired: 113,
-    season: {
-      count: 5,
-      poster: 'https://walter.trakt.tv/images/seasons/000/236/954/posters/thumb/76b746ab1e.jpg'
-    },
-    episode: {
-      id: 65930,
-      title: 'Vestiges',
-      count: 2,
-      absolute_count: 90,
-      rating: 7.8,
-      runtime: 24,
-    }
-  },
-  {
-    id: 123446,
-    title: 'The Great Jahy Will Not Be Defeated!',
-    poster: 'https://walter.trakt.tv/images/seasons/000/255/423/posters/thumb/09aa5ef81e.jpg',
-    poster_wide: 'https://walter.trakt.tv/images/shows/000/179/526/fanarts/full/adbedecb31.jpg',
-    watched: 8,
-    aired: 14,
-    season: {
-      count: 1,
-    },
-    episode: {
-      id: 123446,
-      title: 'Saurva Can\'t Catch a Break...',
-      count: 9,
-      rating: 7.1,
-      runtime: 24,
-    }
-  },
-  {
-    id: 118821,
-    title: 'The World\'s Finest Assassin Gets Reincarnated in Another World as an Aristocrat',
-    poster: 'https://walter.trakt.tv/images/shows/000/175/074/posters/thumb/5515ffd419.jpg',
-    poster_wide: 'https://walter.trakt.tv/images/shows/000/175/074/fanarts/full/271fc6689c.jpg',
-    watched: 4,
-    aired: 5,
-    season: {
-      count: 1,
-    },
-    episode: {
-      id: 118821,
-      title: 'Qualifications of Assassins',
-      count: 5,
-      rating: 7.1,
-      runtime: 24,
-    }
-  },
-  {
-    id: 97525,
-    title: 'To Your Eternity',
-    poster: 'https://walter.trakt.tv/images/shows/000/159/569/posters/thumb/59c0d6f9cd.jpg',
-    poster_wide: 'https://walter.trakt.tv/images/shows/000/159/569/fanarts/full/76332e8d7f.jpg',
-    watched: 5,
-    aired: 20,
-    season: {
-      count: 1,
-    },
-    episode: {
-      id: 97525,
-      title: 'Our Goals',
-      count: 6,
-      absolute_count: 6,
-      rating: 8.0,
-      runtime: 24,
-    }
-  },
-  {
-    id: 46440,
-    title: 'Samurai Girls',
-    poster: 'https://walter.trakt.tv/images/seasons/000/062/813/posters/thumb/88ba84a2c9.jpg',
-    poster_wide: 'https://walter.trakt.tv/images/shows/000/060/994/fanarts/full/f095f22dc5.jpg',
-    watched: 4,
-    aired: 24,
-    season: {
-      count: 1,
-    },
-    episode: {
-      id: 46440,
-      title: 'Here Comes the Warrior of Love!',
-      count: 5,
-      absolute_count: 5,
-      rating: 7.4,
-      runtime: 25,
-    }
-  },
-]
 /**
- * Will be fully documented once there has been a proper API as its subject to change completely once implemented.
+ * Retrieves all data for uncompleted shows to update to the UNTW tiles.
  */
-setTimeout(() => {
-  Array.from(untw.children).forEach((elm, i) => {
-    if (i > 0) {
-      if (dummyData[i-1]) {
-        setTileData(i, dummyData[i-1])
-      } else {
-        elm.style = 'background-color:var(--watchlist);'
-        elm.removeAttribute('loading')
-      }
+window.traktify.get.shows().then(shows => {
+  for (let i = 0; i < 14; i++) {
+
+    // will be replaced later with recommended shows
+    if (!shows[i]) {
+      setTileData('empty', i+1);
+      continue
     }
-  })
-}, 2000)
 
-function setTileData(order, data) {
-  let tile = untw.children[order];
+    let show = shows[i].show;
+    let showId = show.ids.trakt;
 
-  tile.dataset.untwId = data.episode.id;
-  tile.dataset.untwTitle = data.title;
-  tile.dataset.untwEpisode = parseEpisodeTitle(data);
-  tile.style.backgroundImage = `url(${parseEpisodeImage(tile, data)})`;
+    window.traktify.get.progress(showId).then(progress => {
+      let nextEp = progress.next_episode;
 
-  tile.innerHTML = `
-    <div>
-      <div class="fs16 fwSemiBold">
-        <div class="actions">
-          <div class="btn small"></div>
-          <div class="btn small"></div>
+      setTileData('show', i+1, {
+        id: showId,
+        title: show.title,
+        // api for images still in progress
+        poster: 'https://walter.trakt.tv/images/seasons/000/236/954/posters/thumb/76b746ab1e.jpg',
+        aired: progress.aired,
+        completed: progress.completed,
+        season: {
+          number: nextEp.season
+        },
+        episode: {
+          id: nextEp.ids.trakt,
+          title: nextEp.title,
+          number: nextEp.number,
+          number_abs: nextEp.number_abs,
+          rating: nextEp.rating.toFixed(1),
+          runtime: nextEp.runtime
+        }
+      })
+    })
+  }
+})
+
+/**
+ * Responsible for setting the tile data and its functionality as a whole.
+ * Manages both empty tiles and recommendations.
+ * @param {string} type 
+ * @param {number} order 
+ * @returns {HTMLDocument}
+ */
+function setTileData(type, order, data) {
+  let tile;
+
+  if (order) {
+    tile = untw.children[order]
+  } else {
+    tile = document.createElement('div')
+  }
+
+  if (type == 'show') {
+    tile.dataset.untwId = data.episode.id;
+    tile.dataset.untwTitle = data.title;
+    tile.dataset.untwEpisode = parseEpisodeTitle(data);
+    tile.style.backgroundImage = `url(${parseEpisodeImage(tile, data)})`;
+  
+    tile.innerHTML = `
+      <div>
+        <div class="fs16 fwSemiBold">
+          <div class="actions">
+            <div class="btn small"></div>
+            <div class="btn small"></div>
+          </div>
+          <div class="rating"><i class="icon-heart"></i> ${data.episode.rating}</div>
         </div>
-        <div class="rating"><i class="icon-heart"></i> ${data.episode.rating}</div>
+        <div class="progress">
+          <div style="width:${getProgressRatio(data.completed, data.aired)}%"></div>
+        </div>
       </div>
-      <div class="progress">
-        <div style="width:${getProgressRatio(data.watched, data.aired)}%"></div>
-      </div>
-    </div>
-  `;
-
-  tile.onmouseover = () => setTextUNTW(tile);
-  tile.onmouseleave = () => setTextUNTW(untw.children[1]);
-
-  setTileActionButton(tile, data, 'play', false);
-  setTileActionButton(tile, data, 'watchlist', true);
+    `;
+  
+    tile.onmouseover = () => setTextUNTW(tile);
+    tile.onmouseleave = () => setTextUNTW(untw.children[1]);
+  
+    setTileActionButton(tile, data, 'play', false);
+    setTileActionButton(tile, data, 'watchlist', true);
+  } else if (type == 'empty') {
+    tile.style.backgroundColor = 'var(--watchlist)'
+  }
 
   if (tile.hasAttribute('data-untw-latest')) {
     setTextUNTW(tile)
@@ -146,6 +92,8 @@ function setTileData(order, data) {
   if (tile.hasAttribute('loading')) {
     tile.removeAttribute('loading')
   }
+
+  return tile
 }
 
 /**
@@ -162,22 +110,8 @@ function updateNextTile(tile) {
 
   // creates a new tile to fill in blanks
   if (untw.children.length < 15) {
-    untw.appendChild(createTile())
+    untw.appendChild(setTileData('empty'))
   }
-}
-
-/**
- * Used to fill blanks in the tile list.
- * Will be responsible for creating show recommendations, etc.
- * @returns {HTMLElement}
- */
-function createTile() {
-  let tile = document.createElement('div');
-  
-  tile.classList.add('shadow');
-  tile.style.backgroundColor = 'var(--history)';
-
-  return tile 
 }
 
 /**
@@ -220,6 +154,11 @@ function setTileActionButton(tile, data, type, secondary) {
  * @param {HTMLElement} tile 
  */
 function setTextUNTW(tile) {
+  // prevents from changing title when the main tile has not loaded yet
+  if (!untw.children[1].hasAttribute('data-untw-title')) {
+    return
+  }
+
   let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisode];
 
   Array.from(untw.children[0].children).forEach((elm, i) => {
@@ -246,8 +185,8 @@ function setTextUNTW(tile) {
  * @returns {string} "0 x 00 (0) Episode Title"
  */
 function parseEpisodeTitle(data) {
-  let show_count = data.episode.absolute_count;
-  return `${data.season.count} &#215; ${data.episode.count} ${show_count ? `(${show_count})`: ''} ${data.episode.title}`
+  let abs = data.episode.number_abs;
+  return `${data.season.number} &#215; ${data.episode.number} ${abs ? `(${abs})`: ''} ${data.episode.title}`
 }
 
 /**
