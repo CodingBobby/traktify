@@ -2,6 +2,8 @@ const tracer = require('../manager/log.js')
 const { SwitchBoard } = require('../manager/ipc.js')
 const { Traktor, CachedTraktor } = require('../api/getters.js')
 const { shell } = require('electron')
+const Trakt = require('trakt.tv')
+const Fanart = require('fanart.tv')
 const fs = require('fs')
 
 
@@ -27,12 +29,13 @@ function initLogListener(SB) {
 /**
  * Starts a listener for the GET requests sent from the frontend via {@link Modules.Renderer.Get}.
  * Methods return cached data but are being forwarded to {@link Modules.API.Traktor} when a fresh API request is required.
- * @param {} trakt
+ * @param {Trakt} trakt authenticated API instance of trakt.tv
+ * @param {Fanart} fanart authenticated API instance of fanart.tv
  * @param {SwitchBoard} SB manager connected to related window
  * @memberof Modules.App
  */
-function initGetListener(trakt, SB) {
-  const GET = new CachedTraktor(trakt)
+function initGetListener(trakt, fanart, SB) {
+  const GET = new CachedTraktor(trakt, fanart)
 
   SB.on('get', (data, send) => {
     // data: { method: '', query: {} }

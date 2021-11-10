@@ -1,6 +1,7 @@
 const tracer = require('../manager/log.js')
 const Cache = require('../manager/cache.js')
 const Trakt = require('trakt.tv')
+const Fanart = require('fanart.tv')
 const filters = require('./filters.js') // required for docs
 const { Queue, Task } = require('../manager/queue.js')
 
@@ -220,6 +221,44 @@ function runWithTimer(request) {
  * @memberof Modules.API
  */
 
+/**
+ * @typedef {Object} FANART_IMAGE
+ * @property {string} id fanart image ID
+ * @property {string} lang 2-letter language code like 'en', '00' if not applicable
+ * @property {string} likes number of upvotes, sign of quality
+ * @property {string} url link to full-resolution image
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} FANART_IMAGE_SEASON
+ * @property {string} id fanart image ID
+ * @property {string} season number of season, might be shown on image 
+ * @property {string} lang 2-letter language code like 'en', '00' if not applicable
+ * @property {string} likes number of upvotes, sign of quality
+ * @property {string} url link to full-resolution image
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} FANART_SHOW_IMAGES
+ * @property {string} title
+ * @property {string} thetvdb_id ID in tvdb format
+ * @property {Array.<FANART_IMAGE>} characterart
+ * @property {Array.<FANART_IMAGE>} hdclearart
+ * @property {Array.<FANART_IMAGE>} hdtvlogo
+ * @property {Array.<FANART_IMAGE_SEASON>} seasonbanner
+ * @property {Array.<FANART_IMAGE_SEASON>} seasonposter
+ * @property {Array.<FANART_IMAGE_SEASON>} seasonthumb
+ * @property {Array.<FANART_IMAGE>} showbackground
+ * @property {Array.<FANART_IMAGE>} tvbanner
+ * @property {Array.<FANART_IMAGE>} tvposter
+ * @property {Array.<FANART_IMAGE>} tvthumb
+ * @memberof Modules.API
+ */
+
+// TODO: docs for FANART_MOVIE_IMAGES
+
 
 /**
  * @memberof Modules.API
@@ -229,9 +268,11 @@ class Traktor {
    * Backend side of the internal API.
    * All methods should return Promises.
    * @param {Trakt} trakt authenticated API instance of trakt.tv
+   * @param {Fanart} fanart authenticated API instance of fanart.tv
    */
-  constructor(trakt) {
+  constructor(trakt, fanart) {
     this.trakt = trakt
+    this.fanart = fanart
   }
 
 
@@ -363,6 +404,25 @@ class Traktor {
       type: 'movies'
     }))
   }
+
+
+  /**
+   * Get a list of images available for a show.
+   * @param {Object} query
+   * @param {number} query.id identifier in TVDB format
+   */
+  showImages(query) {
+    return runWithTimer(() => this.fanart.shows.get(query.id))
+  }
+
+  /**
+   * Get a list of images available for a movie.
+   * @param {Object} query
+   * @param {number} query.id identifier in TVDB format
+   */
+  movieImages(query) {
+    return runWithTimer(() => this.fanart.movies.get(query.id))
+  }
 }
 
 
@@ -373,9 +433,10 @@ class CachedTraktor extends Traktor {
   /**
    * A cached version of the class {@link Modules.API.Traktor} which looks for content saved in cache which could be served instead of doing the actual API request.
    * @param {Trakt} trakt authenticated API instance of trakt.tv
+   * @param {Fanart} fanart authenticated API instance of fanart.tv
    */
-  constructor(trakt) {
-    super(trakt)
+  constructor(trakt, fanart) {
+    super(trakt, fanart)
 
     /**
      * @type {Object.<string,Cache>}

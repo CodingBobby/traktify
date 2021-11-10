@@ -277,6 +277,23 @@ const API = {
         method: 'itemSummary',
         query: query
       })
+    },
+
+
+    /**
+     * Get a list of images available for a show or movie.
+     * Pay attention, as the tvdb-id is required here, *not* trakt.
+     * @param {Object} query
+     * @param {'movie'|'show'} query.type
+     * @param {number} query.id identifier in TVDB format
+     * @returns {Modules.API.FANART_MOVIE_IMAGES|Modules.API.FANART_SHOW_IMAGES}
+     * @memberof Modules.Renderer.Get
+     */
+    image: query => {
+      return SB.send('get', {
+        method: `${query.type}Images`,
+        query: query
+      })
     }
   }
 

@@ -63,7 +63,7 @@ process.env.INIT_TIME = INIT_TIME
 const BASE_PATH = __dirname
 process.env.BASE_PATH = BASE_PATH
 
-
+const Fanart = require('fanart.tv')
 const tracer = require('./modules/manager/log.js')
 const { SwitchBoard } = require('./modules/manager/ipc.js')
 const { startApp, loadPage, userLoading } = require('./modules/app/start.js')
@@ -86,7 +86,7 @@ startApp(appWindow => {
   initSystemListener(SB)
 
   // check the API keys
-  getAPIKeys()
+  const APIKEYS = getAPIKeys()
 
   // check/fix the local file structure
   initFileStructure().then((_PATHS, rejected) => {
@@ -99,6 +99,9 @@ startApp(appWindow => {
     // check if user exists in config
     const CONFIG = readConfig()
 
+    // no need for fancy authentication here
+    const fanart = new Fanart(APIKEYS.fanart_key)
+
     if (CONFIG.user.trakt.auth) {
       tracer.log('found existing user')
 
@@ -109,7 +112,7 @@ startApp(appWindow => {
           window: appWindow,
           page: 'loading'
         }, () => {
-          startLoading(trakt, false)
+          startLoading(trakt, fanart, false)
         })
       }, () => {
         // connecting user didn't work, potentially because of revokation
@@ -133,7 +136,7 @@ startApp(appWindow => {
             window: appWindow,
             page: 'loading'
           }, () => {
-            startLoading(trakt, true)
+            startLoading(trakt, fanart, true)
           })
 
         }, errorReason => {
@@ -152,14 +155,15 @@ startApp(appWindow => {
 
     /**
      * @param {Trakt} trakt authenticated trakt.tv instance
+     * @param {Fanart} fanart authenticated fanart.tv instance
      * @param {boolean} firstTime if user was logged in for the first time
      */
-    async function startLoading(trakt, firstTime) {
+    async function startLoading(trakt, fanart, firstTime) {
       // user is now connected
 
       // enable renderer to ask for requests
       // this listener should remain active
-      initGetListener(trakt, SB)
+      initGetListener(trakt, fanart, SB)
 
       // loading can proceed with user-specific things
       userLoading(trakt, SB, () => {
