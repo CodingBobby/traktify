@@ -244,16 +244,16 @@ function runWithTimer(request) {
  * @typedef {Object} FANART_SHOW_IMAGES
  * @property {string} title
  * @property {string} thetvdb_id ID in tvdb format
- * @property {Array.<FANART_IMAGE>} characterart
- * @property {Array.<FANART_IMAGE>} hdclearart
- * @property {Array.<FANART_IMAGE>} hdtvlogo
- * @property {Array.<FANART_IMAGE_SEASON>} seasonbanner
- * @property {Array.<FANART_IMAGE_SEASON>} seasonposter
- * @property {Array.<FANART_IMAGE_SEASON>} seasonthumb
- * @property {Array.<FANART_IMAGE>} showbackground
- * @property {Array.<FANART_IMAGE>} tvbanner
- * @property {Array.<FANART_IMAGE>} tvposter
- * @property {Array.<FANART_IMAGE>} tvthumb
+ * @property {Array.<Modules.API.FANART_IMAGE>} characterart
+ * @property {Array.<Modules.API.FANART_IMAGE>} hdclearart
+ * @property {Array.<Modules.API.FANART_IMAGE>} hdtvlogo
+ * @property {Array.<Modules.API.FANART_IMAGE_SEASON>} seasonbanner
+ * @property {Array.<Modules.API.FANART_IMAGE_SEASON>} seasonposter
+ * @property {Array.<Modules.API.FANART_IMAGE_SEASON>} seasonthumb
+ * @property {Array.<Modules.API.FANART_IMAGE>} showbackground
+ * @property {Array.<Modules.API.FANART_IMAGE>} tvbanner
+ * @property {Array.<Modules.API.FANART_IMAGE>} tvposter
+ * @property {Array.<Modules.API.FANART_IMAGE>} tvthumb
  * @memberof Modules.API
  */
 
