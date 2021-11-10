@@ -289,7 +289,7 @@ const API = {
      * @returns {Modules.API.FANART_MOVIE_IMAGES|Modules.API.FANART_SHOW_IMAGES}
      * @memberof Modules.Renderer.Get
      */
-    image: query => {
+    images: query => {
       return SB.send('get', {
         method: `${query.type}Images`,
         query: query
