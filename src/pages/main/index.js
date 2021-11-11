@@ -1,9 +1,8 @@
 /**
- * Retrieves all data for uncompleted shows to update to the UNTW tiles.
+ * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
 window.traktify.get.shows().then(shows => {
   for (let i = 0; i < 14; i++) {
-
     // will be replaced later with recommended shows
     if (!shows[i]) {
       setTileData('empty', i+1);
@@ -16,24 +15,28 @@ window.traktify.get.shows().then(shows => {
     window.traktify.get.progress(showId).then(progress => {
       let nextEp = progress.next_episode;
 
-      setTileData('show', i+1, {
-        id: showId,
-        title: show.title,
-        // api for images still in progress
-        poster: 'https://walter.trakt.tv/images/seasons/000/236/954/posters/thumb/76b746ab1e.jpg',
-        aired: progress.aired,
-        completed: progress.completed,
-        season: {
-          number: nextEp.season
-        },
-        episode: {
-          id: nextEp.ids.trakt,
-          title: nextEp.title,
-          number: nextEp.number,
-          number_abs: nextEp.number_abs,
-          rating: nextEp.rating.toFixed(1),
-          runtime: nextEp.runtime
-        }
+      window.traktify.get.images({type: 'show', id: show.ids.tvdb}).then(images => {
+        setTileData('show', i+1, {
+          id: showId,
+          title: show.title,
+          aired: progress.aired,
+          completed: progress.completed,
+          poster: images.tvposter ? images.tvposter[0].url : null,
+          banner: images.tvbanner ? images.tvbanner[0].url : null,
+          season: {
+            number: nextEp.season,
+            poster: images.seasonposter ? images.seasonposter[0].url : null,
+            banner: images.seasonbanner ? images.seasonbanner[0].url : null
+          },
+          episode: {
+            id: nextEp.ids.trakt,
+            title: nextEp.title,
+            number: nextEp.number,
+            number_abs: nextEp.number_abs,
+            rating: nextEp.rating.toFixed(1),
+            runtime: nextEp.runtime
+          }
+        })
       })
     })
   }
@@ -47,13 +50,7 @@ window.traktify.get.shows().then(shows => {
  * @returns {HTMLDocument}
  */
 function setTileData(type, order, data) {
-  let tile;
-
-  if (order) {
-    tile = untw.children[order]
-  } else {
-    tile = document.createElement('div')
-  }
+  let tile = order ? untw.children[order] :  document.createElement('div');
 
   if (type == 'show') {
     tile.dataset.untwId = data.episode.id;
@@ -80,7 +77,7 @@ function setTileData(type, order, data) {
     tile.onmouseleave = () => setTextUNTW(untw.children[1]);
   
     setTileActionButton(tile, data, 'play', false);
-    setTileActionButton(tile, data, 'watchlist', true);
+    setTileActionButton(tile, data, 'watchlist', true)
   } else if (type == 'empty') {
     tile.style.backgroundColor = 'var(--watchlist)'
   }
@@ -142,9 +139,9 @@ function setTileActionButton(tile, data, type, secondary) {
   }
 
   btn.innerHTML = actionContent;
-  btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`
+  btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`;
   btn.onclick = () => {
-    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => toggleAlert(false)})
+    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => toggleAlert(false)});
     toggleAlert(true)
   }
 }
@@ -198,6 +195,6 @@ function parseEpisodeTitle(data) {
   if (tile.hasAttribute('data-untw-latest')) {
     return data.season.poster || data.poster
   } else {
-    return data.season.poster_wide || data.poster_wide || data.season.poster || data.poster
+    return data.season.banner || data.banner || data.season.poster || data.poster
   }
 }

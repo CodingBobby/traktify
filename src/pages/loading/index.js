@@ -34,7 +34,7 @@ function playSlides() {
 }
 
 /**
- * Shuffles an array of string.
+ * Shuffles an array of strings.
  * @param {Array.<string>} array 
  * @returns {Array.<string>}
  */

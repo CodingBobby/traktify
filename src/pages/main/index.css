@@ -1,3 +1,7 @@
+:root {
+  --tile_height: 88px;
+}
+
 .wrapper {
   height: 100%;
 }
@@ -7,11 +11,11 @@
   grid-template-columns: repeat(4, 324px);
   gap: 20px;
   /* Because of how CSS grid does things, this was the only way to retain the UNTW height while not breaking the entire grid.*/
-  grid-auto-rows: 136px 88px 88px 88px 88px 88px 88px;
+  grid-auto-rows: 136px var(--tile_height) var(--tile_height) var(--tile_height) var(--tile_height) var(--tile_height) var(--tile_height);
 }
 
 #untw > div {
-  background: var(--black) no-repeat center center / cover;
+  background: var(--black) no-repeat left center / cover;
   border-radius: var(--border);
   color: var(--white);
   position: relative;
@@ -24,6 +28,7 @@
 
 #untw > div[data-untw-latest] {
   grid-row: 1/5;
+  background: var(--black) no-repeat top center / cover;
 }
 
 #untw > div[data-untw-text] {
@@ -56,8 +61,8 @@
 
 #untw > div > div {
   position: absolute;
-  height: 88px;
-  bottom: -88px;
+  height: var(--tile_height);
+  bottom: calc(-1 * var(--tile_height));
   width: 100%;
   background-color: var(--black_alpha);
   padding: 20px;

@@ -21,7 +21,8 @@ window.traktify.listen('report.error', reason => {
     text: 'reload',
     cb: () => window.location.reload()
   })
-  toggleAlert(true);
+
+  toggleAlert(true)
 })
 
 /**
