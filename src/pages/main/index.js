@@ -207,7 +207,7 @@ function parseEpisodeTitle(data) {
 }
 
 /**
- * Recieves the image type wether it was banner or poster and filters it through
+ * Recieves the image type wether it was banner or poster and filters it through.
  * @returns {string} image url
  */
 function checkImage(imgType, filter) {
