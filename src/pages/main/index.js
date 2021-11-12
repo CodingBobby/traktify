@@ -71,7 +71,13 @@ function setTileData(type, order, data) {
     `;
   
     tile.onmouseover = () => setTextUNTW(tile);
-    tile.onmouseleave = () => setTextUNTW(untw.children[1]);
+    tile.onmouseleave = (e) => {
+      if (alerts.contains(e.toElement)) {
+        return tile.children[0].style.bottom = 0
+      }
+    
+      setTextUNTW(untw.children[1])
+    };
   
     setTileActionButton(tile, data, 'play', false);
     setTileActionButton(tile, data, 'watchlist', true)
@@ -119,7 +125,7 @@ function setTileActionButton(tile, data, type, secondary) {
   let actionContent;
 
   // when api is available, callback will change according to action type
-  let callback = () => {updateNextTile(tile);toggleAlert(false)};
+  let callback = () => {updateNextTile(tile); toggleAlert(false); resetTile(tile)};
 
   let actionBtns = tile.children[0].children[0].children[0];
   let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
@@ -138,9 +144,20 @@ function setTileActionButton(tile, data, type, secondary) {
   btn.innerHTML = actionContent;
   btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`;
   btn.onclick = () => {
-    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => toggleAlert(false)});
+    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => {
+      toggleAlert(false); resetTile(tile)
+    }});
     toggleAlert(true)
   }
+}
+
+/**
+ * Resets UNTW tiles to its default state.
+ * @param {HTMLElement} tile 
+ */
+ function resetTile(tile) {
+  tile.children[0].style = '';
+  setTextUNTW(untw.children[1])
 }
 
 /**
