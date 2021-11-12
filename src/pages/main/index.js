@@ -21,12 +21,9 @@ window.traktify.get.shows().then(shows => {
           title: show.title,
           aired: progress.aired,
           completed: progress.completed,
-          poster: images.tvposter ? images.tvposter[0].url : null,
-          banner: images.tvbanner ? images.tvbanner[0].url : null,
+          images: images,
           season: {
             number: nextEp.season,
-            poster: images.seasonposter ? images.seasonposter[0].url : null,
-            banner: images.seasonbanner ? images.seasonbanner[0].url : null
           },
           episode: {
             id: nextEp.ids.trakt,
@@ -56,7 +53,7 @@ function setTileData(type, order, data) {
     tile.dataset.untwId = data.episode.id;
     tile.dataset.untwTitle = data.title;
     tile.dataset.untwEpisode = parseEpisodeTitle(data);
-    tile.style.backgroundImage = `url(${parseEpisodeImage(tile, data)})`;
+    tile.style.backgroundImage = `url(${parseItemImage(tile.hasAttribute('data-untw-latest') ? 'poster' : 'banner', data)})`;
   
     tile.innerHTML = `
       <div>
@@ -188,13 +185,45 @@ function parseEpisodeTitle(data) {
 
 /**
  * Optimal image for the tiles with fallback for non-existent ones.
- * @param {HTMLElement} tile 
+ * @param {string} imgType 
  * @returns {string} image url
  */
- function parseEpisodeImage(tile, data) {
-  if (tile.hasAttribute('data-untw-latest')) {
-    return data.season.poster || data.poster
-  } else {
-    return data.season.banner || data.banner || data.season.poster || data.poster
+ function parseItemImage(imgType, data) {
+  let img;
+  let imgs = data.images;
+  let filters = [{lang: 'en', season: data.season.number}, {season: data.season.number}, {}]
+
+  for (let filter of filters) {
+    if (imgType == 'poster') {
+      img = checkImage(imgs.seasonposter, filter) || checkImage(imgs.tvposter, filter)
+    } else if (imgType == 'banner') {
+      img = checkImage(imgs.seasonbanner, filter) || checkImage(imgs.tvbanner, filter)
+    }
+    
+    console.log(img)
+    if (img) break;
   }
+
+  return img
+}
+
+/**
+ * Recieves the image type wether it was banner or poster and filters it through
+ * @returns {string} image url
+ */
+function checkImage(imgType, filter) {
+  let img;
+
+  if (!imgType) {
+    return
+  }
+
+  // if the filter is an empty object, it will just return first iteration without filtering
+  if (Object.keys(filter).length === 0 && filter.constructor === Object) {
+    img = imgType[0]
+  } else {
+    img = filterItems(imgType, filter)[0]
+  }
+
+  return img ? img.url : undefined
 }

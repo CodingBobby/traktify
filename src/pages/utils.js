@@ -60,3 +60,13 @@ function setAlertbox(title, text, btn, btn2) {
     btnsElm.children[0].onclick = btn.cb
   }
 }
+
+function filterItems(items, filter) {
+  return items.filter(item => {
+    for (let key in filter) {
+      if (item[key] != filter[key]) return false
+    }
+    
+    return true
+  })
+}
