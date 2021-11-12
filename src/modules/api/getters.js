@@ -18,6 +18,9 @@ function runWithTimer(request) {
   return request().then(result => {
     tracer.info(`request was made in ${Date.now() - timer} ms`)
     return result
+  }).catch(err => {
+    tracer.error(err)
+    return undefined // frontend will decide what to show instead
   })
 }
 
