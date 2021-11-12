@@ -64,9 +64,7 @@ body > * {
 }
 
 body[no-user] {
-  background-image: url(../assets/media/background.png);
-  background-size: cover;
-  background-repeat: no-repeat;
+  background: url(../assets/media/background.png) no-repeat center / cover;
   display: flex;
 }
 

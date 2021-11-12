@@ -27,9 +27,9 @@ window.traktify.listen('report.error', reason => {
  */
 function toggleAlert(type, cond) {
   if (cond) {
-    type.classList.add('show');
+    type.classList.add('show')
   } else {
-    type.classList.remove('show');
+    type.classList.remove('show')
   }
 }
 
@@ -53,7 +53,8 @@ function setAlertbox(type, title, text, btn, btn2) {
         <div class="fs16 fwMedium btn">${btn.text}</div>
       </div>
     </div>
-  `
+  `;
+  
   let btnsElm = type.children[1].children[3];
 
   if (btn2) {
