@@ -1,7 +1,7 @@
 /**
  * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
-window.traktify.get.shows().then(shows => {
+ window.traktify.get.shows().then(shows => {
   for (let i = 0; i < 14; i++) {
     // will be replaced later with recommended shows
     if (!shows[i]) {
@@ -72,7 +72,7 @@ function setTileData(type, order, data) {
   
     tile.onmouseover = () => setTextUNTW(tile);
     tile.onmouseleave = (e) => {
-      if (e.toElement.closest('.alertContainer')) {
+      if (e.toElement && e.toElement.closest('.alertContainer')) {
         return tile.children[0].style.bottom = 0
       }
     
@@ -103,10 +103,10 @@ function setTileData(type, order, data) {
 function updateNextTile(tile) {
   if (tile.hasAttribute('data-untw-latest')) {
     tile.nextElementSibling.setAttribute('data-untw-latest', '');
-    setTextUNTW(tile.nextElementSibling)
+    setTextUNTW(tile.nextElementSibling);
   }
 
-  tile.remove()
+  tile.remove();
 
   // creates a new tile to fill in blanks
   if (untw.children.length < 15) {
@@ -160,7 +160,7 @@ function setTileActionButton(tile, data, type, secondary) {
  * Resets UNTW tiles to its default state.
  * @param {HTMLElement} tile 
  */
- function resetTile(tile) {
+function resetTile(tile) {
   tile.children[0].style = '';
   setTextUNTW(untw.children[1])
 }
@@ -213,19 +213,21 @@ function parseEpisodeTitle(data) {
 function parseItemImage(imgType, data) {
   let img;
   let imgs = data.images;
-  let filters = [{lang: 'en', season: data.season.number}, {season: data.season.number}, {}]
+  let filters = [{lang: 'en', season: data.season.number}, {season: data.season.number}, {}];
 
-  for (let filter of filters) {
-    if (imgType == 'poster') {
-      img = checkImage(imgs.seasonposter, filter) || checkImage(imgs.tvposter, filter)
-    } else if (imgType == 'banner') {
-      img = checkImage(imgs.seasonbanner, filter) || checkImage(imgs.tvbanner, filter)
+  if (imgs) {
+    for (let filter of filters) {
+      if (imgType == 'poster') {
+        img = checkImage(imgs.seasonposter, filter) || checkImage(imgs.tvposter, filter)
+      } else if (imgType == 'banner') {
+        img = checkImage(imgs.seasonbanner, filter) || checkImage(imgs.tvbanner, filter)
+      }
+      
+      if (img) break
     }
-    
-    if (img) break;
   }
-
-  return img
+  
+  return img ? img : (FALLCHECKER ? FALLBACKIMG : `../../assets/media/placeholders/${imgType}.png`)
 }
 
 /**
