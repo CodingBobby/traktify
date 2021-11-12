@@ -13,7 +13,7 @@ const {
 const path = require('path')
 const tracer = require('../manager/log.js')
 const Cache = require('../manager/cache.js')
-const { Traktor } = require('../api/getters.js')
+const { Traktor, CachedTraktor } = require('../api/getters.js')
 
 const BASE_PATH = process.env.BASE_PATH
 
@@ -140,7 +140,7 @@ async function userLoading(trakt, SB, done) {
   // trakt.tv requests can now be done for loading
   let syncingCache = new Cache('syncing')
 
-  let traktor = new Traktor(trakt)
+  let traktor = new CachedTraktor(trakt)
 
   traktor.latestActivities().then(async latest => {
     SB.send('report.progress', {
@@ -220,31 +220,26 @@ async function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 3/steps,
       message: 'fetching movies'
     })
-    await delay(1e3)
+    await traktor.watchedMovies()
   }
 
-  if (scopes.includes('episodes')) {
+  if (scopes.includes('episodes') || scopes.includes('shows') || scopes.includes('seasons')) {
     SB.send('report.progress', {
       fraction: 4/steps,
       message: 'fetching episodes'
     })
-    await delay(1e3)
-  }
+    await traktor.watchedShows().then(shows => {
+      let i = 0
 
-  if (scopes.includes('shows')) {
-    SB.send('report.progress', {
-      fraction: 5/steps,
-      message: 'fetching shows'
+      return Promise.all(shows.map(s => traktor.showProgress({
+        id: s.show.ids.trakt
+      }).then(_ => {
+        SB.send('report.progress', {
+          fraction: (4 + 3(i+++1)/shows.length)/steps,
+          message: 'fetching episodes'
+        })
+      })))
     })
-    await delay(1e3)
-  }
-
-  if (scopes.includes('seasons')) {
-    SB.send('report.progress', {
-      fraction: 6/steps,
-      message: 'fetching seasons'
-    })
-    await delay(1e3)
   }
 
   if (scopes.includes('comments')) {
