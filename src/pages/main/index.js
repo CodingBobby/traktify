@@ -200,7 +200,6 @@ function parseEpisodeTitle(data) {
       img = checkImage(imgs.seasonbanner, filter) || checkImage(imgs.tvbanner, filter)
     }
     
-    console.log(img)
     if (img) break;
   }
 
