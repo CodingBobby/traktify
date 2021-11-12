@@ -22,5 +22,5 @@ actions.children[0].addEventListener('click', () => {
     actions.children[1].addEventListener('click', (e) => {
       window.traktify.browse(e.target.dataset.url)
     })
-  }).catch(err => console.error(err))
+  }).catch(err => alertError(err.message))
 }, { once: true })

@@ -154,16 +154,19 @@ hr {
   backdrop-filter: blur(8px);
 }
 
-#alerts {
+.alertContainer {
   position: absolute;
-  display: flex;
   height: 100vh;
   width: 100vw;
   justify-content: center;
+  display: flex;
   align-items: center;
-  display: none;
+  visibility: hidden;
 }
-#alerts .alertbox {
+.alertContainer.show {
+  visibility: visible;
+}
+.alertContainer .alertbox {
   position: relative;
   background-color: var(--black);
   border-radius: var(--border);
@@ -171,27 +174,33 @@ hr {
   width: 100%;
   max-width: 475px;
 }
-#alerts .alertbox h3,
-#alerts .alertbox p {
+.alertContainer .alertbox h3,
+.alertContainer .alertbox p {
   margin: 0;
 }
-#alerts .alertbox p span {
+.alertContainer .alertbox p span {
   color: var(--white);
   font-weight: 600;
 }
-#alerts .alertbox p::first-letter {
+.alertContainer .alertbox p::first-letter {
   text-transform: capitalize;
 }
-#alerts .alertbox > div {
+.alertContainer .alertbox > div {
   display: flex;
   justify-content: flex-end;
   margin-top: 15px;
 }
-#alerts .alertbox > div .btn {
+.alertContainer .alertbox > div .btn {
   width: fit-content;
 }
-#alerts .alertbox > div .btn:first-child:not(:last-child) {
+
+.alertContainer .alertbox > div .btn {
+  background-color: var(--accent);
+}
+.alertContainer .alertbox > div .btn:first-child:not(:last-child) {
   margin-right: 15px;
+  color: var(--white2);
+  background-color: transparent;
 }
 
 .progress {

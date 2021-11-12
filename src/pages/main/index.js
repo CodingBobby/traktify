@@ -34,10 +34,10 @@ window.traktify.get.shows().then(shows => {
             runtime: nextEp.runtime
           }
         })
-      })
-    })
+      }).catch(err => alertError(err.message))
+    }).catch(err => alertError(err.message))
   }
-})
+}).catch(err => alertError(err.message))
 
 /**
  * Responsible for setting the tile data and its functionality as a whole.
@@ -72,7 +72,7 @@ function setTileData(type, order, data) {
   
     tile.onmouseover = () => setTextUNTW(tile);
     tile.onmouseleave = (e) => {
-      if (alerts.contains(e.toElement)) {
+      if (e.toElement.closest('.alertContainer')) {
         return tile.children[0].style.bottom = 0
       }
     
@@ -125,7 +125,11 @@ function setTileActionButton(tile, data, type, secondary) {
   let actionContent;
 
   // when api is available, callback will change according to action type
-  let callback = () => {updateNextTile(tile); toggleAlert(false); resetTile(tile)};
+  let callback = () => {
+    updateNextTile(tile);
+    toggleAlert(actionAlerts, false);
+    resetTile(tile)
+  };
 
   let actionBtns = tile.children[0].children[0].children[0];
   let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
@@ -144,10 +148,11 @@ function setTileActionButton(tile, data, type, secondary) {
   btn.innerHTML = actionContent;
   btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`;
   btn.onclick = () => {
-    setAlertbox('Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => {
-      toggleAlert(false); resetTile(tile)
+    setAlertbox(actionAlerts, 'Info', message, {text: 'OK', cb: callback}, {text: 'revert action', cb: () => {
+      toggleAlert(actionAlerts, false); resetTile(tile)
     }});
-    toggleAlert(true)
+
+    toggleAlert(actionAlerts, true)
   }
 }
 
@@ -187,7 +192,7 @@ function setTextUNTW(tile) {
  * @param {number} total number of episodes that have aired
  * @returns {number} float in range 0.0–100.0
  */
- function getProgressRatio(number, total) {
+function getProgressRatio(number, total) {
   return ((number/total)*100).toFixed(1)
 }
 
@@ -205,7 +210,7 @@ function parseEpisodeTitle(data) {
  * @param {string} imgType 
  * @returns {string} image url
  */
- function parseItemImage(imgType, data) {
+function parseItemImage(imgType, data) {
   let img;
   let imgs = data.images;
   let filters = [{lang: 'en', season: data.season.number}, {season: data.season.number}, {}]
