@@ -22,7 +22,7 @@ const isRenderer = require('is-electron-renderer')
 
     /** @private */
     this.options = options || {}
-    this.options.timeout = this.options.timeout || Math.PI*1e3
+    this.options.timeout = this.options.timeout || 1e3*Math.PI**2
     this.options.window = this.options.window || null
 
     if (!isRenderer && !this.options.window) {
