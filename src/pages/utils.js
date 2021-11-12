@@ -61,6 +61,10 @@ function setAlertbox(title, text, btn, btn2) {
   }
 }
 
+/**
+ * Takes an array and filters it with the provided conditions. 
+ * @returns {Array} filtered array
+ */
 function filterItems(items, filter) {
   return items.filter(item => {
     for (let key in filter) {
