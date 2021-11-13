@@ -15,28 +15,16 @@
 }
 
 #untw > div {
-  background: var(--black) no-repeat left center / cover;
   border-radius: var(--border);
   color: var(--white);
   position: relative;
   overflow: hidden;
 }
 
-#untw > div:not([data-untw-text]) {
-  cursor: pointer;
-}
-
-#untw > div[untw-latest] {
-  grid-row: 1/5;
-  background: var(--black) no-repeat top center / cover;
-}
-
 #untw > div[data-untw-text] {
   margin-top: 29px;
   grid-column: 2/5;
-  background-color: transparent;
 }
-
 #untw > div[data-untw-text] span {
   display: block;
   line-height: 1.2;
@@ -47,7 +35,6 @@
 #untw > div[data-untw-text] span:first-child {
   text-transform: uppercase;
 }
-
 #untw > div[data-untw-text] span[loading]:first-child {
   margin-top: 0;
   width: 33%;
@@ -59,7 +46,23 @@
   border-radius: var(--border);
 }
 
-#untw > div > div {
+#untw > div[untw-latest] {
+  grid-row: 1/5;
+}
+#untw > div:not([untw-latest]) {
+  cursor: pointer;
+}
+
+#untw > div .tileImg {
+  cursor: pointer;
+  height: 100%;
+  background: var(--black) no-repeat top center / cover;
+}
+#untw > div:not([untw-latest]) .tileImg {
+  background: var(--black) no-repeat left center / cover;
+}
+
+#untw > div .tileInfo {
   position: absolute;
   height: var(--tile_height);
   bottom: calc(-1 * var(--tile_height));
@@ -69,31 +72,36 @@
   box-sizing: border-box;
 }
 
-#untw > div[untw-latest] > div,
-#untw > div:not([untw-latest]):hover > div {
+#untw > div[untw-latest] .tileInfo,
+#untw > div:not([untw-latest]):hover .tileInfo {
   bottom: 0;
 }
 
-#untw > div > div > div,
-#untw > div > div > div .actions {
+#untw > div .tileInfo > div,
+#untw > div .tileInfo .actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-#untw > div > div > div .actions {
+#untw > div .tileInfo .actions {
   justify-content: initial;
   margin-left: 1px;
 }
-#untw > div > div > div .actions div:not(:first-child) {
+#untw > div .tileInfo .actions div:not(:first-child) {
   margin-left: 10px;
   width: fit-content;
 }
-#untw > div > div > div .actions i::before {
+#untw > div .tileInfo .actions i::before {
   font-size: 0.8em;
 }
 
-#untw > div > div .rating i::before {
+#untw > div .tileInfo .progress,
+#untw > div .tileInfo .rating {
+  cursor: pointer;
+}
+
+#untw > div .tileInfo .rating i::before {
   font-size: 1.3em;
   vertical-align: middle;
   color: var(--red);

@@ -52,7 +52,7 @@ window.traktify.get.shows().then(shows => {
 function setTileData(type, order, data) {
   let tile;
   let tileById;
-  
+
   if (order) {
     tile = untw.children[order] || document.createElement('div')
   } else {
@@ -64,10 +64,10 @@ function setTileData(type, order, data) {
     tile.dataset.untwTitle = data.title;
     tile.dataset.untwEpisodeTitle = parseEpisodeTitle(data);
     tile.dataset.posterImg = parseItemImage('poster', data);
-    tile.style.backgroundImage = `url(${parseItemImage(tile.hasAttribute('untw-latest') ? 'poster' : 'banner', data)})`;
     
     tile.innerHTML = `
-      <div>
+      <div class="tileImg" style="background-image: url(${parseItemImage(tile.hasAttribute('untw-latest') ? 'poster' : 'banner', data)})"></div>
+      <div class="tileInfo">
         <div class="fs16 fwSemiBold">
           <div class="actions">
             <div class="btn small"></div>
@@ -84,11 +84,22 @@ function setTileData(type, order, data) {
     tile.onmouseover = () => setTextUNTW(tile);
     tile.onmouseleave = (e) => {
       if (e.toElement && e.toElement.closest('.alertContainer')) {
-        return tile.children[0].style.bottom = 0
+        return tile.querySelector('.tileInfo').style.bottom = 0
       }
     
       setTextUNTW(untw.children[1])
     };
+
+    // will have episode cards later
+    tile.onclick = (e) => {
+      if (e.target == tile.children[0]) {
+        console.log('show episode card')
+      }
+
+      if (!e.target.closest('[untw-latest]') && !e.target.closest('.actions') && !e.target.closest('.progress') && !e.target.closest('.rating')) {
+        console.log('show episode card')
+      }
+    }
   
     setTileActionButton(tile, data, 'play', false);
     setTileActionButton(tile, data, 'watchlist', true)
@@ -116,8 +127,11 @@ function updateNextTile(tile) {
     let nextTile = tile.nextElementSibling;
 
     nextTile.setAttribute('untw-latest', '');
-    nextTile.style.backgroundImage = `url(${nextTile.dataset.posterImg})`;
-    setTextUNTW(nextTile)
+    
+    if (nextTile.dataset.id) {
+      nextTile.querySelector('.tileImg').style.backgroundImage = `url(${nextTile.dataset.posterImg})`;
+      setTextUNTW(nextTile)
+    }
   }
 
   tile.remove();
@@ -146,7 +160,7 @@ function setTileActionButton(tile, data, type, secondary) {
     resetTile(tile)
   };
 
-  let actionBtns = tile.children[0].children[0].children[0];
+  let actionBtns = tile.querySelector('.actions');
   let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
 
   if (type == 'play') {
@@ -176,7 +190,7 @@ function setTileActionButton(tile, data, type, secondary) {
  * @param {HTMLElement} tile 
  */
 function resetTile(tile) {
-  tile.children[0].style = '';
+  tile.querySelector('.tileInfo').style = '';
   setTextUNTW(untw.children[1])
 }
 
