@@ -14,9 +14,12 @@ window.traktify.get.shows().then(shows => {
 
     window.traktify.get.progress(showId).then(progress => {
       let nextEp = progress.next_episode;
+      let epId = nextEp.ids.trakt;
+
+      untw.children[i+1].dataset.id = epId;
 
       window.traktify.get.images({type: 'show', id: show.ids.tvdb}).then(images => {
-        setTileData('show', i+1, {
+        setTileData('show', null, {
           id: showId,
           title: show.title,
           aired: progress.aired,
@@ -26,7 +29,7 @@ window.traktify.get.shows().then(shows => {
             number: nextEp.season,
           },
           episode: {
-            id: nextEp.ids.trakt,
+            id: epId,
             title: nextEp.title,
             number: nextEp.number,
             number_abs: nextEp.number_abs,
@@ -47,10 +50,16 @@ window.traktify.get.shows().then(shows => {
  * @returns {HTMLDocument}
  */
 function setTileData(type, order, data) {
-  let tile = order ? untw.children[order] :  document.createElement('div');
+  let tile;
+
+  if (order) {
+    tile = untw.children[order] || document.createElement('div')
+  } else {
+    let tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
+    tile = tileById ? tileById :  document.createElement('div')
+  }
 
   if (type == 'show') {
-    tile.dataset.untwId = data.episode.id;
     tile.dataset.untwTitle = data.title;
     tile.dataset.untwEpisodeTitle = parseEpisodeTitle(data);
     tile.dataset.posterImg = parseItemImage('poster', data);
@@ -113,8 +122,9 @@ function updateNextTile(tile) {
   tile.remove();
 
   // creates a new tile to fill in blanks
-  if (untw.children.length < 15) {
-    untw.appendChild(setTileData('empty'))
+  let children = untw.children.length;
+  if (children < 15) {
+    untw.appendChild(setTileData('empty', children+1))
   }
 }
 
@@ -182,11 +192,15 @@ function setTextUNTW(tile) {
   let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisodeTitle];
 
   Array.from(untw.children[0].children).forEach((elm, i) => {
-    elm.innerHTML = data[i];
-
-    if (elm.hasAttribute('loading')) {
-      elm.removeAttribute('loading')
-    }
+    if (!data[i]) {
+      elm.innerHTML = '';
+      elm.setAttribute('loading', 'dark')
+    } else {
+      elm.innerHTML = data[i];
+      if (elm.hasAttribute('loading')) {
+        elm.removeAttribute('loading')
+      }
+    }    
   })
 }
 
