@@ -235,7 +235,7 @@ async function requestUpdateDetails(steps, scopes, traktor, SB, done) {
         id: s.show.ids.trakt
       }).then(_ => {
         SB.send('report.progress', {
-          fraction: (4 + 3(i+++1)/shows.length)/steps,
+          fraction: (4 + 3*(i+++1)/shows.length)/steps,
           message: 'fetching episodes'
         })
       })))
