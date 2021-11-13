@@ -1,7 +1,7 @@
 /**
  * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
- window.traktify.get.shows().then(shows => {
+window.traktify.get.shows().then(shows => {
   for (let i = 0; i < 14; i++) {
     // will be replaced later with recommended shows
     if (!shows[i]) {
@@ -34,10 +34,10 @@
             runtime: nextEp.runtime
           }
         })
-      }).catch(err => alertError(err.message))
-    }).catch(err => alertError(err.message))
+      }).catch(err => alertError(err))
+    }).catch(err => alertError(err))
   }
-}).catch(err => alertError(err.message))
+}).catch(err => alertError(err))
 
 /**
  * Responsible for setting the tile data and its functionality as a whole.
@@ -52,9 +52,10 @@ function setTileData(type, order, data) {
   if (type == 'show') {
     tile.dataset.untwId = data.episode.id;
     tile.dataset.untwTitle = data.title;
-    tile.dataset.untwEpisode = parseEpisodeTitle(data);
-    tile.style.backgroundImage = `url(${parseItemImage(tile.hasAttribute('data-untw-latest') ? 'poster' : 'banner', data)})`;
-  
+    tile.dataset.untwEpisodeTitle = parseEpisodeTitle(data);
+    tile.dataset.posterImg = parseItemImage('poster', data);
+    tile.style.backgroundImage = `url(${parseItemImage(tile.hasAttribute('untw-latest') ? 'poster' : 'banner', data)})`;
+    
     tile.innerHTML = `
       <div>
         <div class="fs16 fwSemiBold">
@@ -64,8 +65,8 @@ function setTileData(type, order, data) {
           </div>
           <div class="rating"><i class="icon-heart"></i> ${data.episode.rating}</div>
         </div>
-        <div class="progress">
-          <div style="width:${getProgressRatio(data.completed, data.aired)}%"></div>
+        <div class="progress" data-tooltip="${minutesToText(data.episode.runtime * data.completed)}-- ${data.completed}/${data.aired}">
+          <div style="width:${getProgressPercentage(data.completed, data.aired)}%"></div>
         </div>
       </div>
     `;
@@ -85,7 +86,7 @@ function setTileData(type, order, data) {
     tile.style.backgroundColor = 'var(--watchlist)'
   }
 
-  if (tile.hasAttribute('data-untw-latest')) {
+  if (tile.hasAttribute('untw-latest')) {
     setTextUNTW(tile)
   }
 
@@ -101,9 +102,12 @@ function setTileData(type, order, data) {
  * @param {HTMLElement} tile 
  */
 function updateNextTile(tile) {
-  if (tile.hasAttribute('data-untw-latest')) {
-    tile.nextElementSibling.setAttribute('data-untw-latest', '');
-    setTextUNTW(tile.nextElementSibling);
+  if (tile.hasAttribute('untw-latest')) {
+    let nextTile = tile.nextElementSibling;
+
+    nextTile.setAttribute('untw-latest', '');
+    nextTile.style.backgroundImage = `url(${nextTile.dataset.posterImg})`;
+    setTextUNTW(nextTile)
   }
 
   tile.remove();
@@ -171,11 +175,11 @@ function resetTile(tile) {
  */
 function setTextUNTW(tile) {
   // prevents from changing title when the main tile has not loaded yet
-  if (!untw.children[1].hasAttribute('data-untw-title')) {
+  if (!untw.children[1].dataset.untwTitle) {
     return
   }
 
-  let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisode];
+  let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisodeTitle];
 
   Array.from(untw.children[0].children).forEach((elm, i) => {
     elm.innerHTML = data[i];
@@ -192,7 +196,7 @@ function setTextUNTW(tile) {
  * @param {number} total number of episodes that have aired
  * @returns {number} float in range 0.0–100.0
  */
-function getProgressRatio(number, total) {
+function getProgressPercentage(number, total) {
   return ((number/total)*100).toFixed(1)
 }
 

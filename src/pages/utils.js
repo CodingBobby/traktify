@@ -69,12 +69,13 @@ function setAlertbox(type, title, text, btn, btn2) {
  * Generalized alertbox for error handling.
  * @param {string} message 
  */
-function alertError(message) {
-  setAlertbox(appAlerts, 'Error', message, {
+function alertError(error) {
+  setAlertbox(appAlerts, 'Error', error.message, {
     text: 'reload',
     cb: () => window.location.reload()
   })
 
+  console.error(error);
   toggleAlert(appAlerts, true)
 }
 
@@ -90,4 +91,24 @@ function filterItems(items, filter) {
     
     return true
   })
+}
+
+/**
+ * Converts minutes to a human-readable text.
+ * @param {number} num 
+ * @returns {string} 0d 0h 0m
+ */
+function minutesToText(num) {
+  let text = '';
+  let h = Math.floor(num/60);
+  let d = Math.floor(h/24);
+  let m = Math.floor(num%60);
+  
+  h = h - d * 24;
+  
+  d != 0 ? text += `${d}d ` : '';
+  h != 0 ? text += `${h}h ` : '';
+  m != 0 ? text += `${m}m ` : '';
+
+  return text
 }

@@ -43,6 +43,7 @@
   --accent2: var(--red2);
   --history: #BD57E8;
   --watchlist: #3796D5;
+  --shadow: 0 0 34px 3px #0000004d;
   --font: 14px;
   --border: 5px;
   --margin: 30px;
@@ -86,14 +87,14 @@ body[no-user] {
   font-size: 0.7em;
 }
 
-.icon-heart:before{content:'\0041'}
-.icon-history:before{content:'\0042'}
-.icon-play:before{content:'\0043'}
-.icon-reload:before{content:'\0044'}
-.icon-search:before{content:'\0045'}
-.icon-settings:before{content:'\0046'}
-.icon-user:before{content:'\0047'}
-.icon-watchlist:before{content:'\0048'}
+.icon-heart::before{content:'\0041'}
+.icon-history::before{content:'\0042'}
+.icon-play::before{content:'\0043'}
+.icon-reload::before{content:'\0044'}
+.icon-search::before{content:'\0045'}
+.icon-settings::before{content:'\0046'}
+.icon-user::before{content:'\0047'}
+.icon-watchlist::before{content:'\0048'}
 /*====================================BRAND-STYLES====================================*/
 img {
   -webkit-user-drag: none;
@@ -107,7 +108,7 @@ hr {
 }
 
 .shadow {
-  box-shadow: 0 0 34px 3px #0000004d;
+  box-shadow: var(--shadow);
 }
 
 .btn {
@@ -243,6 +244,35 @@ hr {
   100% {
     transform: translateX(100%);
   }
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  background-color: var(--white3);
+  box-shadow: var(--shadow);
+  z-index: 1;
+  width: max-content;
+  padding: 5px 15px;
+  border-radius: var(--border);
+  bottom: 17px;
+  left: 50%;
+  transform: translateX(-50%);
+  visibility: hidden;
+}
+[data-tooltip]:hover::after {
+  content: '';
+  bottom: 2px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid var(--white3);
+  border-color: var(--white3) transparent transparent;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  visibility: visible;
 }
 /*====================================TYPOGRAPHY====================================*/
 .fs32,
