@@ -51,11 +51,12 @@ window.traktify.get.shows().then(shows => {
  */
 function setTileData(type, order, data) {
   let tile;
-
+  let tileById;
+  
   if (order) {
     tile = untw.children[order] || document.createElement('div')
   } else {
-    let tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
+    tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
     tile = tileById ? tileById :  document.createElement('div')
   }
 
