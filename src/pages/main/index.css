@@ -11,6 +11,9 @@
   color: var(--white);
   position: relative;
   overflow: hidden;
+}
+
+#untw > div:not([data-untw-text]) {
   cursor: pointer;
 }
 
