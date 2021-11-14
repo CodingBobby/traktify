@@ -1,9 +1,9 @@
-const MAX_TILES = 12;
+const MAX_TILES = 9;
 
 /**
  * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
-window.traktify.get.shows().then(shows => {
+window.traktify.get.shows({}, {overwrite: true}).then(shows => {
   for (let i = 0; i < MAX_TILES; i++) {
     // will be replaced later with recommended shows
     if (!shows[i]) {
@@ -52,12 +52,12 @@ window.traktify.get.shows().then(shows => {
  * @returns {HTMLDocument}
  */
 function setTileData(type, order, data) {
-  let tile;
+  let tile = document.createElement('div');
   let tileById;
 
   if (order) {
-    tile = untw.children[order] || document.createElement('div')
-  } else {
+    tile = untw.children[order]
+  } else if (data) {
     tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
     tile = tileById ? tileById :  document.createElement('div')
   }
@@ -102,7 +102,7 @@ function setTileData(type, order, data) {
       if (!e.target.closest('.actions') && !e.target.closest('.progress') && !e.target.closest('.rating')) {
         if (!e.target.closest('[untw-latest]')) {
           console.log('show episode card')
-        } else if (e.target.closest('[untw-latest]') && window.innerWidth < 1150) {
+        } else if (e.target.closest('[untw-latest]') && window.innerWidth < 1000) {
           console.log('show episode card')
         }
       }
