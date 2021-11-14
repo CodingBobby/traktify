@@ -1,8 +1,10 @@
+const MAX_TILES = 12;
+
 /**
  * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
 window.traktify.get.shows().then(shows => {
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < MAX_TILES; i++) {
     // will be replaced later with recommended shows
     if (!shows[i]) {
       setTileData('empty', i+1);
@@ -62,11 +64,9 @@ function setTileData(type, order, data) {
 
   if (type == 'show') {
     tile.dataset.untwTitle = data.title;
-    tile.dataset.untwEpisodeTitle = parseEpisodeTitle(data);
-    tile.dataset.posterImg = parseItemImage('poster', data);
-    
+    tile.dataset.untwEpisodeTitle = parseEpisodeTitle(data);    
     tile.innerHTML = `
-      <div class="tileImg" style="background-image: url(${parseItemImage(tile.hasAttribute('untw-latest') ? 'poster' : 'banner', data)})"></div>
+      <div class="tileImg" style="--poster-img:url(${parseItemImage('poster', data)});background-image:url(${parseItemImage('banner', data)})"></div>
       <div class="tileInfo">
         <div class="fs16 fwSemiBold">
           <div class="actions">
@@ -129,7 +129,6 @@ function updateNextTile(tile) {
     nextTile.setAttribute('untw-latest', '');
     
     if (nextTile.dataset.id) {
-      nextTile.querySelector('.tileImg').style.backgroundImage = `url(${nextTile.dataset.posterImg})`;
       setTextUNTW(nextTile)
     }
   }
@@ -138,7 +137,7 @@ function updateNextTile(tile) {
 
   // creates a new tile to fill in blanks
   let children = untw.children.length;
-  if (children < 15) {
+  if (children < MAX_TILES+1) {
     untw.appendChild(setTileData('empty', children+1))
   }
 }
