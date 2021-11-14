@@ -135,7 +135,6 @@ async function userLoading(trakt, SB, done) {
     fraction: 0/steps,
     message: 'fetching latest activities'
   })
-  await delay(1e3)
 
   // trakt.tv requests can now be done for loading
   let syncingCache = new Cache('syncing')
@@ -147,14 +146,12 @@ async function userLoading(trakt, SB, done) {
       fraction: 1/steps,
       message: 'comparing with local data'
     })
-    await delay(1e3)
 
     syncingCache.retrieve('latestActivities', async setKey => {
       SB.send('report.progress', {
         fraction: 2/steps,
         message: 'updating local data'
       })
-      await delay(1e3)
 
       // cache is empty
       setKey(latest)
@@ -166,7 +163,6 @@ async function userLoading(trakt, SB, done) {
         fraction: 2/steps,
         message: 'updating local data'
       })
-      await delay(1e3)
 
       if (latest.all === cacheContent.all) {
         // nothing new happened
@@ -247,7 +243,6 @@ async function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 7/steps,
       message: 'fetching comments'
     })
-    await delay(1e3)
   }
 
   if (scopes.includes('lists')) {
@@ -255,14 +250,12 @@ async function requestUpdateDetails(steps, scopes, traktor, SB, done) {
       fraction: 8/steps,
       message: 'fetching lists'
     })
-    await delay(1e3)
   }
 
   SB.send('report.progress', {
     fraction: 9/steps,
     message: 'proceeding to dashboard'
   })
-  await delay(1e3)
 
   done()
 }
@@ -280,6 +273,7 @@ function delay(time) {
     }, time)
   })
 }
+
 
 module.exports = {
   startApp, loadPage, userLoading
