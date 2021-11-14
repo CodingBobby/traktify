@@ -92,12 +92,19 @@ function setTileData(type, order, data) {
 
     // will have episode cards later
     tile.onclick = (e) => {
+      // opens episode from clicking on tile's image
       if (e.target == tile.children[0]) {
         console.log('show episode card')
       }
 
-      if (!e.target.closest('[untw-latest]') && !e.target.closest('.actions') && !e.target.closest('.progress') && !e.target.closest('.rating')) {
-        console.log('show episode card')
+      // opens episode if the tile is in banner format
+      // also handles when main tile is in banner format or not
+      if (!e.target.closest('.actions') && !e.target.closest('.progress') && !e.target.closest('.rating')) {
+        if (!e.target.closest('[untw-latest]')) {
+          console.log('show episode card')
+        } else if (e.target.closest('[untw-latest]') && window.innerWidth < 1150) {
+          console.log('show episode card')
+        }
       }
     }
   
