@@ -95,6 +95,29 @@ const API = {
 
 
   /**
+   * Execute any API method even when it is not included in {@link Modules.API.Traktor} yet.
+   * @param {Object} query
+   * @param {string} query.path method.path.like.this
+   * @param {Object} query.args anything that would be passed to the method
+   * @param {boolean} [overwrite] whether to bypass the cache
+   * @returns {*}
+   * @example window.traktify.exec({
+   *   path: 'trakt.shows.next_episode',
+   *   args: {
+   *     id: 10887
+   *   }
+   * })
+   */
+  exec: query => {
+    return SB.send('get', {
+      method: 'execRequest',
+      query,
+      overwrite
+    })
+  },
+
+
+  /**
    * Get requests wrapping the trakt.tv API.
    * @namespace Get
    * @memberof Modules.Renderer
@@ -109,26 +132,30 @@ const API = {
     /**
      * Searches the trakt.tv database and allows shortcuts within the search string.
      * @param {string} query search string
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>} resolves a list of objects
      * @example window.traktify.get.search('m:inception')
      * @memberof Modules.Renderer.Get
      */
-    search: query => {
+    search: (query, overwrite) => {
       return SB.send('get', {
         method: 'traktSearch',
-        query: formatSearch(query)
+        query: formatSearch(query),
+        overwrite
       })
     },
 
 
     /**
      * Get a summary of the latest activities of the user in each (sub)category.
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
      * @memberof Modules.Renderer.Get
      */
-    latest: () => {
+    latest: overwrite => {
       return SB.send('get', {
-        method: 'latestActivities'
+        method: 'latestActivities',
+        overwrite
       })
     },
 
@@ -136,12 +163,14 @@ const API = {
     /**
      * Lists the methods trakt.js offers.
      * Note: These are *not* available through the internal API directly.
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<string>>}
      * @memberof Modules.Renderer.Get
      */
-    available: () => {
+    available: overwrite => {
       return SB.send('get', {
-        method: 'availableMethods'
+        method: 'availableMethods',
+        overwrite
       })
     },
 
@@ -155,18 +184,21 @@ const API = {
      * @param {Object} [options]
      * @param {boolean} [options.includeHidden] removes hidden items when false
      * @param {boolean} [options.includeFinished] removes finished items when false
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
      * @memberof Modules.Renderer.Get
      */
-    shows: options => {
+    shows: (options, overwrite) => {
       options = options ?? {}
 
       return SB.send('get', {
-        method: 'watchedShows'
+        method: 'watchedShows',
+        overwrite
       }).then(async all => {
         if (!options.includeHidden) {
           return await SB.send('get', {
-            method: 'hiddenShows'
+            method: 'hiddenShows',
+            overwrite
           }).then(hidden => {
             // get a list of IDs to compare
             let hiddenIDs = hidden.map(item => item.show.ids.trakt)
@@ -207,6 +239,7 @@ const API = {
      * Includes details about last watched episode and the next one coming up.
      * Useful for various dashboards.
      * @param {number} showID identifier formatted as trakt
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<Modules.API.TRAKT_SHOW_PROGRESS>>}
      * @memberof Modules.Renderer.Get
      * @example window.traktify.get.shows().then(shows => {
@@ -225,36 +258,41 @@ const API = {
      *   }
      * })
      */
-    progress: showID => {
+    progress: (showID, overwrite) => {
       return SB.send('get', {
         method: 'showProgress',
         query: {
           id: showID
-        }
+        },
+        overwrite
       })
     },
 
 
     /**
      * Get a list of movies the user watched at least once.
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_MOVIE>>}
      * @memberof Modules.Renderer.Get
      */
-    movies: () => {
+    movies: overwrite => {
       return SB.send('get', {
-        method: 'watchedMovies'
+        method: 'watchedMovies',
+        overwrite
       })
     },
 
 
     /**
      * Get a list of shows the user wishes to hide from the progress table.
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Array.<Modules.API.TRAKT_HIDDEN_SHOW>>}
      * @memberof Modules.Renderer.Get
      */
-    hidden: () => {
+    hidden: overwrite => {
       return SB.send('get', {
-        method: 'hiddenShows'
+        method: 'hiddenShows',
+        overwrite
       })
     },
 
@@ -265,6 +303,7 @@ const API = {
      * @param {Object} query
      * @param {'movie'|'show'|'episode'|'person'} query.type
      * @param {number} query.id identification number in trakt format
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
      * @memberof Modules.Renderer.Get
      * @example window.traktify.get.details({
@@ -272,10 +311,11 @@ const API = {
      *   id: 796
      * })
      */
-    details: query => {
+    details: (query, overwrite) => {
       return SB.send('get', {
         method: 'itemSummary',
-        query: query
+        query,
+        overwrite
       })
     },
 
@@ -286,13 +326,15 @@ const API = {
      * @param {Object} query
      * @param {'movie'|'show'} query.type
      * @param {number} query.id identifier in TVDB format
+     * @param {boolean} [overwrite] whether to bypass the cache
      * @returns {Modules.API.FANART_MOVIE_IMAGES|Modules.API.FANART_SHOW_IMAGES}
      * @memberof Modules.Renderer.Get
      */
-    images: query => {
+    images: (query, overwrite) => {
       return SB.send('get', {
         method: `${query.type}Images`,
-        query: query
+        query,
+        overwrite
       })
     }
   }

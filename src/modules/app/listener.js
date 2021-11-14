@@ -40,7 +40,10 @@ function initGetListener(trakt, fanart, SB) {
   SB.on('get', (data, send) => {
     // data: { method: '', query: {} }
 
-    GET[data.method](data.query).then(result => {
+    let query = data.query || {}
+    query.overwrite = data.overwrite
+
+    GET[data.method](query).then(result => {
       send(result)
     })
   })

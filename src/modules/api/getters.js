@@ -7,6 +7,29 @@ const { Queue, Task } = require('../manager/queue.js')
 
 
 /**
+ * Find property of object by a string.
+ * Shamelessly stolen from Alnitak.
+ * @param {Object} o 
+ * @param {string} s 
+ * @returns {*}
+ */
+Object.byString = function(o, s) {
+  s = s.replace(/\[(\w+)\]/g, '.$1')
+  s = s.replace(/^\./, '')
+  let a = s.split('.')
+  for (let i = 0, n = a.length; i < n; ++i) {
+    let k = a[i]
+    if (k in o) {
+      o = o[k]
+    } else {
+      return
+    }
+  }
+  return o
+}
+
+
+/**
  * Wraps functions into a logger that records execution-time.
  * This one is used for requests from the trakt API.
  * @param {Function} request API request
@@ -24,6 +47,11 @@ function runWithTimer(request) {
   })
 }
 
+/**
+ * @typedef {Object} QUERY
+ * @property {boolean} [overwrite] bypasses cache retrieval when true
+ * @memberof Modules.API
+ */
 
 /**
  * @typedef {Object} TRAKT_IDS
@@ -278,13 +306,18 @@ class Traktor {
     this.fanart = fanart
   }
 
+  /**
+   * NOTE:
+   * Sometimes the `query` parameter is not used within the mothods, but it will be extracted by {@link Module.API.CachedTraktor} when in use.
+   */
 
   /**
    * Get list of methods that are available through the trakt API.
    * Forwarded by {@link Modules.Renderer.Get.available}.
+   * @param {Modules.API.QUERY} [query]
    * @returns {Promise.<Array.<string>>}
    */
-  availableMethods() {
+  availableMethods(query) {
     // has to be wrapped in a Promise to match type of the other methods
     return new Promise((res, _rej) => {
       res(Object.keys(this.trakt))
@@ -295,9 +328,10 @@ class Traktor {
   /**
    * Get a summary of the user's latest activities.
    * Forwarded by {@link Modules.Renderer.Get.latest}.
+   * @param {Modules.API.QUERY} [query]
    * @returns {Promise.<Modules.API.TRAKT_ACTIVITY_OBJECT>}
    */
-  latestActivities() {
+  latestActivities(query) {
     return runWithTimer(() => this.trakt.sync.last_activities())
   }
 
@@ -306,6 +340,7 @@ class Traktor {
    * Search the trakt.tv database.
    * Forwarded by {@link Modules.Renderer.Get.search}.
    * @param {Modules.API.FILTERED_EXT} query result from {@link Modules.API.formatSearch}
+   * @param {boolean} [query.overwrite]
    * @returns {Promise.<Array.<Modules.API.TRAKT_SEARCH_OBJECT>>}
    */
   traktSearch(query) {
@@ -318,20 +353,21 @@ class Traktor {
 
   /**
    * Get more details about an item from the list of search results.
-   * @param {Modules.API.TRAKT_SEARCH_OBJECT} searchResult
+   * @param {Modules.API.TRAKT_SEARCH_OBJECT} query
+   * @param {boolean} [query.overwrite]
    * @returns {Promise.<Modules.API.TRAKT_ITEM_DETAILS>}
    */
-  extractSearchResultDetails(searchResult) {
+  extractSearchResultDetails(query) {
     return this.itemSummary({
-      type: searchResult.type,
-      id: searchResult[searchResult.type].ids.trakt
+      type: query.type,
+      id: query[query.type].ids.trakt
     })
   }
 
 
   /**
    * Get more details about an item.
-   * @param {Object} query
+   * @param {Modules.API.QUERY} query
    * @param {'movie'|'show'|'episode'|'person'} query.type
    * @param {number} query.id trakt-formatted identifier
    * @param {number} [query.season] required when `type` is episode
@@ -358,9 +394,10 @@ class Traktor {
   /**
    * Get a list of shows the user has hidden from his progress table.
    * Forwarded by {@link Modules.Renderer.Get.hidden}.
+   * @param {Modules.API.QUERY} [query]
    * @returns {Promise.<Array.<Modules.API.TRAKT_HIDDEN_SHOW>>}
    */
-  hiddenShows() {
+  hiddenShows(query) {
     return runWithTimer(() => this.trakt.users.hidden.get({
       section: 'progress_watched',
       limit: 100 // this request is paginated (why tho?)
@@ -372,9 +409,10 @@ class Traktor {
    * Get a list of all shows the user started or finished to watch.
    * The resulting array is sorted by the parameter `last_watched_at` so that latest watches are appearing first.
    * Forwarded by {@link Modules.Renderer.Get.shows}.
+   * @param {Modules.API.QUERY} [query]
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_SHOW>>}
    */
-  watchedShows() {
+  watchedShows(query) {
     return runWithTimer(() => this.trakt.sync.watched({
       type: 'shows',
       extended: 'full'
@@ -385,7 +423,7 @@ class Traktor {
   /**
    * Get a detailed structure of which parts of a show the user has watched and which are still up to be watched.
    * Forwarded by {@link Modules.Renderer.Get.progress}.
-   * @param {Object} query
+   * @param {Modules.API.QUERY} query
    * @param {number} query.id identifier of the show in trakt format
    * @returns {Promise.<Array.<Modules.API.TRAKT_SHOW_PROGRESS>>}
    */
@@ -400,9 +438,10 @@ class Traktor {
   /**
    * Get a list of movies the user has watched at least once.
    * Forwarded by {@link Modules.Renderer.Get.movies}.
+   * @param {Modules.API.QUERY} [query]
    * @returns {Promise.<Array.<Modules.API.TRAKT_WATCHED_MOVIE>>}
    */
-  watchedMovies() {
+  watchedMovies(query) {
     return runWithTimer(() => this.trakt.sync.watched({
       type: 'movies'
     }))
@@ -411,8 +450,9 @@ class Traktor {
 
   /**
    * Get a list of images available for a show.
-   * @param {Object} query
+   * @param {Modules.API.QUERY} query
    * @param {number} query.id identifier in TVDB format
+   * @returns {Promise}
    */
   showImages(query) {
     return runWithTimer(() => this.fanart.shows.get(query.id))
@@ -420,11 +460,25 @@ class Traktor {
 
   /**
    * Get a list of images available for a movie.
-   * @param {Object} query
+   * @param {Modules.API.QUERY} query
    * @param {number} query.id identifier in TVDB format
+   * @returns {Promise}
    */
   movieImages(query) {
     return runWithTimer(() => this.fanart.movies.get(query.id))
+  }
+
+
+  /**
+   * Execute any API method even when it is not included in {@link Modules.API.Traktor} yet.
+   * @param {Modules.API.QUERY} query
+   * @param {string} query.path method.path.like.this
+   * @param {Object} query.args anything that would be passed to the method
+   * @returns {Promise}
+   */
+  execRequest(query) {
+    tracer.warn(query)
+    return runWithTimer(() => Object.byString(this, query.path)?.(query.args))
   }
 }
 
@@ -454,7 +508,9 @@ class CachedTraktor extends Traktor {
           this.cache[prop] = new Cache(prop)
 
           // callback that is actually being proxied
-          return (...args) => obj.cacheware(prop, args)
+          return ({ overwrite, ...query } = {}) => {
+            return obj.cacheware(prop, query, overwrite)
+          }
         })()
     })
   }
@@ -463,17 +519,22 @@ class CachedTraktor extends Traktor {
   /**
    * This middleware wraps the original get-methods into {@link Modules.Manager.Cache}'s `retrieval` method.
    * @param {string} prop method's name which to execute from super
-   * @param {*} args whatever should be passed to that method
+   * @param {Object} args whatever should be passed to that method
+   * @param {boolean} [overwrite] whether to request without checking cache before
    * @returns {Promise.<*>} whatever the original method would return
    */
-  cacheware(prop, args) {
+  cacheware(prop, args, overwrite) {
     // this is executed when no valid cache content was found
-    const parent = () => this[prop].apply(this, args)
+    const parent = () => this[prop]?.(args)
 
     // stringify arguments so each configuration can be cached individually
     const cacheKey = JSON.stringify(args)
 
     return new Promise((resolve, _rej) => {
+      if (overwrite) {
+        this.cache[prop].removeKey(cacheKey)
+      }
+
       this.cache[prop].retrieve(cacheKey, async setKey => {
         const requestResult = await parent()
 
