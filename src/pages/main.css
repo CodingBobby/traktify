@@ -259,6 +259,8 @@ hr {
   left: 50%;
   transform: translateX(-50%);
   visibility: hidden;
+  font-size: 1rem;
+  color: var(--white);
 }
 [data-tooltip]:hover::after {
   content: '';
