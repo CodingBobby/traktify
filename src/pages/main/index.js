@@ -56,7 +56,7 @@ function setTileData(type, order, data) {
   let tileById;
 
   if (order) {
-    tile = untw.children[order]
+    tile = untw.children[order] || document.createElement('div')
   } else if (data) {
     tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
     tile = tileById ? tileById :  document.createElement('div')
