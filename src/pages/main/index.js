@@ -3,7 +3,7 @@ const MAX_TILES = 9;
 /**
  * Retrieves all data for uncompleted shows to update the UNTW tiles.
  */
-window.traktify.get.shows({}, {overwrite: true}).then(shows => {
+window.traktify.get.shows({}, true).then(shows => {
   for (let i = 0; i < MAX_TILES; i++) {
     // will be replaced later with recommended shows
     if (!shows[i]) {
