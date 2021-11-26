@@ -524,10 +524,10 @@ class Traktor {
 
 
   /**
-   * 
+   * Post ratings to trakt.tv.
    * @param {Modules.API.QUERY} query
    * @param {Object} query.changes
-   * @returns {Promise.<Modules.API.TRAKT_POST_RESULT}
+   * @returns {Promise.<Modules.API.TRAKT_POST_RESULT>}
    */
   postRating(query) {
     return runWithTimer(() => this.trakt.sync.ratings.add(query.changes))
