@@ -16,6 +16,11 @@ window.traktify.get.shows({}, true).then(shows => {
 
     window.traktify.get.progress(showId).then(progress => {
       let nextEp = progress.next_episode;
+      // if show is complete or has no data for next episode, dont continue.
+      if (!nextEp) {
+        setTileData('empty', i+1)
+        return
+      }
       let epId = nextEp.ids.trakt;
 
       untw.children[i+1].dataset.id = epId;
