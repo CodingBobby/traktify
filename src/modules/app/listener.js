@@ -35,7 +35,8 @@ function initLogListener(SB) {
  * @memberof Modules.App
  */
 function initGetListener(trakt, fanart, SB) {
-  const GET = new CachedTraktor(trakt, fanart)
+  const CT = new CachedTraktor(trakt, fanart)
+  const UT = new Traktor(trakt, fanart)
 
   SB.on('get', (data, send) => {
     // data: { method: '', query: {} }
@@ -43,9 +44,14 @@ function initGetListener(trakt, fanart, SB) {
     let query = data.query || {}
     query.overwrite = data.overwrite
 
-    GET[data.method](query).then(result => {
-      send(result)
-    })
+    CT[data.method](query).then(send)
+  })
+
+  SB.on('post', (data, send) => {
+    // data: { method: '', query: {} }
+
+    let query = data.query || {}
+    UT[data.method](query).then(send)
   })
 }
 

@@ -327,7 +327,7 @@ const API = {
      * @param {'movie'|'show'} query.type
      * @param {number} query.id identifier in TVDB format
      * @param {boolean} [overwrite] whether to bypass the cache
-     * @returns {Modules.API.FANART_MOVIE_IMAGES|Modules.API.FANART_SHOW_IMAGES}
+     * @returns {Promise.<Modules.API.FANART_MOVIE_IMAGES|Modules.API.FANART_SHOW_IMAGES>}
      * @memberof Modules.Renderer.Get
      */
     images: (query, overwrite) => {
@@ -335,6 +335,57 @@ const API = {
         method: `${query.type}Images`,
         query,
         overwrite
+      })
+    }
+  },
+
+
+  /**
+   * Post requests wrapping the trakt.tv API.
+   * @namespace Post
+   * @memberof Modules.Renderer
+   */
+
+  /**
+   * @type {Object.<string,Function>}
+   * @memberof Modules.Renderer
+   */
+  post: {
+
+    /**
+     * Upload one or multiple history updates.
+     * @param {Object} query
+     * @param {Object} query.changes
+     * @param {Array.<Modules.API.TRAKT_HISTORY_POST>} query.changes.movies
+     * @param {Array.<Modules.API.TRAKT_HISTORY_POST>} query.changes.episodes
+     * @param {Array} query.changes.shows
+     * @param {Array} query.changes.seasons
+     * @returns {Promise.<Modules.API.TRAKT_POST_RESULT>}
+     * @memberof Modules.Renderer.Post
+     */
+    history: query => {
+      return SB.send('post', {
+        method: 'postHistory', 
+        query
+      })
+    },
+
+    
+    /**
+     * Upload one or multiple rating updates.
+     * @param {Object} query
+     * @param {Object} query.changes
+     * @param {Array.<Modules.API.TRAKT_RATING_POST>} query.changes.movies
+     * @param {Array.<Modules.API.TRAKT_RATING_POST>} query.changes.episodes
+     * @param {Array} query.changes.shows
+     * @param {Array} query.changes.seasons
+     * @returns {Promise.<Modules.API.TRAKT_POST_RESULT>}
+     * @memberof Modules.Renderer.Post
+     */
+    rating: query => {
+      return SB.send('post', {
+        method: 'postRating', 
+        query
       })
     }
   }

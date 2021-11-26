@@ -288,6 +288,36 @@ function runWithTimer(request) {
  * @memberof Modules.API
  */
 
+/**
+ * @typedef {Object} TRAKT_HISTORY_POST
+ * @property {string|'released'} [watched_at] set to `now` if not specified
+ * @property {Modules.API.TRAKT_IDS} ids at least one of them has to be given
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_RATING_POST
+ * @property {string} [rated_at] set to `now` if not specified
+ * @property {1|2|3|4|5|6|7|8|9|10} rating user's input
+ * @property {Modules.API.TRAKT_IDS} ids at least one of them has to be given
+ * @memberof Modules.API
+ */
+
+/**
+ * @typedef {Object} TRAKT_POST_RESULT
+ * @property {Object} added
+ * @property {number} added.episodes
+ * @property {number} added.movies
+ * @property {Object} not_found
+ * @property {Array} not_found.episodes
+ * @property {Array} not_found.movies
+ * @property {Array} not_found.people
+ * @property {Array} not_found.seasons
+ * @property {Array} not_found.shows
+ * @memberof Modules.API
+ */
+
+
 // TODO: docs for FANART_MOVIE_IMAGES
 
 
@@ -479,6 +509,28 @@ class Traktor {
   execRequest(query) {
     tracer.warn(query)
     return runWithTimer(() => Object.byString(this, query.path)?.(query.args))
+  }
+
+
+  /**
+   * Post history updates to trakt.tv.
+   * @param {Modules.API.QUERY} query
+   * @param {Object} query.changes list of objects with updates
+   * @returns {Promise.<Modules.API.TRAKT_POST_RESULT>}
+   */
+  postHistory(query) {
+    return runWithTimer(() => this.trakt.sync.history.add(query.changes))
+  }
+
+
+  /**
+   * 
+   * @param {Modules.API.QUERY} query
+   * @param {Object} query.changes
+   * @returns {Promise.<Modules.API.TRAKT_POST_RESULT}
+   */
+  postRating(query) {
+    return runWithTimer(() => this.trakt.sync.ratings.add(query.changes))
   }
 }
 
