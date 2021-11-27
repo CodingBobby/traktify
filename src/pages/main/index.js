@@ -23,7 +23,9 @@ window.traktify.get.shows({}, true).then(shows => {
       }
       let epId = nextEp.ids.trakt;
 
-      untw.children[i+1].dataset.id = epId;
+      untw.children[i+1].dataset.untwId = showId;
+      untw.children[i+1].dataset.untwEpisodeId = epId;
+      untw.children[i+1].dataset.untwTvdb = show.ids.tvdb;
 
       window.traktify.get.images({type: 'show', id: show.ids.tvdb}).then(images => {
         setTileData('show', null, {
@@ -50,21 +52,30 @@ window.traktify.get.shows({}, true).then(shows => {
 }).catch(err => alertError(err))
 
 /**
- * Responsible for setting the tile data and its functionality as a whole.
- * Manages both empty tiles and recommendations.
+ * Responsible for setting the tile data of UNTW tiles and its functionality as a whole.
+ * Tile states are: show, loading, empty
  * @param {string} type 
- * @param {number} order 
- * @returns {HTMLDocument}
+ * @returns {HTMLElement}
  */
-function setTileData(type, order, data) {
-  let tile = document.createElement('div');
-  let tileById;
+ function setTileData(type, tileElm, data) {
+  let tile;
 
-  if (order) {
-    tile = untw.children[order] || document.createElement('div')
-  } else if (data) {
-    tileById = untw.querySelector(`[data-id="${data.episode.id}"`);
-    tile = tileById ? tileById :  document.createElement('div')
+  if (typeof tileElm == 'number') {
+    tile = untw.children[tileElm]
+  } else if (tileElm instanceof HTMLElement) {
+    tile = tileElm
+  }
+
+  if (data) {
+    if (tileElm instanceof HTMLElement) {
+      tile = tileElm
+    } else {
+      tile = untw.querySelector(`[data-untw-id="${data.id}"`)
+    }
+  }
+
+  if (!tile) {
+    tile = document.createElement('div');
   }
 
   if (type == 'show') {
@@ -113,17 +124,23 @@ function setTileData(type, order, data) {
       }
     }
   
-    setTileActionButton(tile, data, 'play', false);
+    setTileActionButton(tile, data, 'history', false);
     setTileActionButton(tile, data, 'watchlist', true)
+  } else if (type == 'loading') {
+    tile.innerHTML = '';
+    tile.dataset.untwTitle = '';
+    tile.dataset.untwEpisodeTitle = '';
+    tile.setAttribute('loading', '');
   } else if (type == 'empty') {
-    tile.style.backgroundColor = 'var(--watchlist)'
+    tile.style.backgroundColor = 'var(--watchlist)';
+    tile.classList = 'shadow'
   }
 
   if (tile.hasAttribute('untw-latest')) {
     setTextUNTW(tile)
   }
 
-  if (tile.hasAttribute('loading')) {
+  if (tile.hasAttribute('loading') && type != 'loading') {
     tile.removeAttribute('loading')
   }
 
@@ -140,7 +157,7 @@ function updateNextTile(tile) {
 
     nextTile.setAttribute('untw-latest', '');
     
-    if (nextTile.dataset.id) {
+    if (nextTile.dataset.untwId) {
       setTextUNTW(nextTile)
     }
   }
@@ -164,9 +181,9 @@ function setTileActionButton(tile, data, type, secondary) {
   let message;
   let actionContent;
 
-  // when api is available, callback will change according to action type
+  // triggers the action api according to type
   let callback = () => {
-    updateNextTile(tile);
+    updateOnAction(tile, type, data);
     toggleAlert(actionAlerts, false);
     resetTile(tile)
   };
@@ -201,7 +218,8 @@ function setTileActionButton(tile, data, type, secondary) {
  * @param {HTMLElement} tile 
  */
 function resetTile(tile) {
-  tile.querySelector('.tileInfo').style = '';
+  let tileInfo = tile.querySelector('.tileInfo');
+  tileInfo ? tileInfo.style = '' : '';
   setTextUNTW(untw.children[1])
 }
 
@@ -210,11 +228,6 @@ function resetTile(tile) {
  * @param {HTMLElement} tile 
  */
 function setTextUNTW(tile) {
-  // prevents from changing title when the main tile has not loaded yet
-  if (!untw.children[1].dataset.untwTitle) {
-    return
-  }
-
   let data = ['up next to watch', tile.dataset.untwTitle, tile.dataset.untwEpisodeTitle];
 
   Array.from(untw.children[0].children).forEach((elm, i) => {
@@ -293,4 +306,51 @@ function checkImage(imgType, filter) {
   }
 
   return img ? img.url : undefined
+}
+
+/**
+ * Handles the states of UNTW tiles when interacted with through action buttons.
+ * @param {HTMLElement} tile
+ * @param {string} type
+ */
+function updateOnAction(tile, type) {
+  if (type == 'history') {
+    // save show title before changing tile state to loading
+    let showTitle = tile.dataset.untwTitle;
+    setTileData('loading', tile);
+    
+    window.traktify.post.history({changes: {episodes: [{ids: {trakt: tile.dataset.untwEpisodeId}}]}}).then(() => {
+      window.traktify.get.progress(tile.dataset.untwId, true).then(progress => {   
+        // checks if the show is complete or not
+        if (progress.aired == progress.completed) {
+          updateNextTile(tile);
+          return
+        }
+        
+        let nextEp = progress.next_episode;
+        tile.dataset.untwEpisodeId = nextEp.ids.trakt;
+        
+        window.traktify.get.images({type: 'show', id: tile.dataset.untwTvdb}).then(images => {
+          setTileData('show', tile, {
+            id: tile.dataset.untwId,
+            title: showTitle,
+            aired: progress.aired,
+            completed: progress.completed,
+            images: images,
+            season: {
+              number: nextEp.season,
+            },
+            episode: {
+              id: nextEp.ids.trakt,
+              title: nextEp.title,
+              number: nextEp.number,
+              number_abs: nextEp.number_abs,
+              rating: nextEp.rating.toFixed(1),
+              runtime: nextEp.runtime
+            }
+          })
+        })
+      })
+    })
+  }
 }

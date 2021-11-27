@@ -13,7 +13,7 @@
   overflow: hidden;
 }
 
-#untw > div:not([data-untw-text]) {
+#untw > div[data-untw-id] {
   cursor: pointer;
 }
 
@@ -168,7 +168,6 @@
     grid-row: 2/6;
   }
 }
-
 
 /*=================DISPLAYING-TILES-THIRD-COLUMN=================*/
 @media screen and (min-width: 1450px) and (max-height: 750px) {
