@@ -108,7 +108,7 @@ const API = {
    *   }
    * })
    */
-  exec: query => {
+  exec: (query, overwrite) => {
     return SB.send('get', {
       method: 'execRequest',
       query,

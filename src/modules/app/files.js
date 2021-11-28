@@ -13,7 +13,7 @@ const defConfigRaw = fs.readFileSync(defConfigDir, 'utf8')
 /**
  * Initializes a directory tree that is used for system-files.
  * It detects existing files and does not overwrite them to keep custom settings.
- * @returns {Promise<PATHS.SystemPaths>} resolves paths of system-files
+ * @returns {Promise.<PATHS.SystemPaths>} resolves paths of system-files
  * @memberof Modules.App
  */
 function initFileStructure() {
