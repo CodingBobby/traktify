@@ -1,22 +1,29 @@
 let slideIndex = 0;
 const imgsPath = 'assets/media/loading/';
 
+
 /**
  * Gets an array of filenames (loading images) from a path and proceeds to shuffle them.
  * Shuffling is done to create a random start each time the user is loading.
  */
 window.traktify.files('./src/' + imgsPath).then(result => {
-  shuffleArray(result).forEach(filename => {
-    carousel.innerHTML += createSlide(imgsPath, filename)
+  shuffleSlides(result).forEach(filename => {
+    carousel.innerHTML += `
+      <div class="wrapper">
+        <h1 class="fs32 fwSemiBold">${filename.replace('.png', '')}</h1>
+        <img src="${'../../' + imgsPath + filename}">
+      </div>
+    `
   });
   
-  playSlides()
+  initSlide()
 })
 
+
 /**
- * Starts playing the slides on the page at a fixed interval.
+ * Starts playing the slides at a fixed interval.
  */
-function playSlides() {
+function initSlide() {
   let slide = carousel.children;
 
   for (let i = 0; i < slide.length; i++) {
@@ -30,34 +37,21 @@ function playSlides() {
   }
 
   slide[slideIndex - 1].style.visibility = 'visible';
-  setTimeout(playSlides, 8000)
+  setTimeout(initSlide, 8000)
 }
+
 
 /**
  * Shuffles an array of strings.
+ * Mainly used to shuffle the slides for a random slide everytime the app is opened.
  * @param {Array.<string>} array 
  * @returns {Array.<string>}
  */
-function shuffleArray(array) {
+function shuffleSlides(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]]
   }
 
   return array
-}
-
-/**
- * Creates the DOM content for the slide.
- * Since there is some complexity in how paths work between backend and frontend, everything is handled here.
- * @param {string} path directory of the image
- * @returns {string} 
- */
-function createSlide(path, filename) {
-  return `
-    <div class="wrapper">
-      <h1 class="fs32 fwSemiBold">${filename.replace('.png', '')}</h1>
-      <img src="${'../../' + path + filename}">
-    </div>
-  `
 }

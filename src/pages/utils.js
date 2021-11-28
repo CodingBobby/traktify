@@ -12,6 +12,7 @@ window.traktify.listen('report.progress', info => {
   }
 })
 
+
 /**
  * Shows an alertbox when an error appears within the app.
  * The user proceeds to click on the reload button instead of the app doing it on its own.
@@ -19,6 +20,7 @@ window.traktify.listen('report.progress', info => {
 window.traktify.listen('report.error', reason => {
   alertError(reason)
 })
+
 
 /**
  * Toggles the visibility of the alertbox with its overlay.
@@ -32,6 +34,7 @@ function toggleAlert(type, cond) {
     type.classList.remove('show')
   }
 }
+
 
 /**
  * Modifies the content of the alertbox given that its provided the content it needs.
@@ -65,6 +68,7 @@ function setAlertbox(type, title, text, btn, btn2) {
   }
 }
 
+
 /**
  * Generalized alertbox for error handling.
  * @param {string} message 
@@ -79,6 +83,7 @@ function alertError(error) {
   toggleAlert(appAlerts, true)
 }
 
+
 /**
  * Takes an array and filters it with the provided conditions. 
  * @returns {Array} filtered array
@@ -92,6 +97,7 @@ function filterItems(items, filter) {
     return true
   })
 }
+
 
 /**
  * Converts minutes to a human-readable text.

@@ -54,17 +54,18 @@ class Tile {
         rating: data[2].rating.toFixed(1),
         runtime: data[2].runtime
       }
-    } : null;
+    } : null
   }
+
 
   /**
    * Responsible for setting the tile data and its functionality as a whole.
    * Tile states are: show, loading, empty
-   * @param {string} type
+   * @param {string} state
    * @returns {HTMLElement}
    */
-  set(type) {
-    switch(type) {
+  set(state) {
+    switch(state) {
       case 'show':
         this.tile.dataset.untwTitle = this.data.title;
         this.tile.dataset.untwEpisodeTitle = parseEpisodeTitle(this.data);
@@ -109,8 +110,18 @@ class Tile {
           }
         };
         
-        this.actionButton('history', false);
-        this.actionButton('watchlist', true);
+        let confirm = (type) => {
+          this.update(type)
+          toggleAlert(actionAlerts, false);
+        };
+
+        let revert = () => {
+          toggleAlert(actionAlerts, false)
+          this.reset()
+        };
+
+        setActionButton(this.tile, 'play', this.data, false, () => confirm('play'), revert);
+        setActionButton(this.tile, 'watchlist', this.data, true, () => confirm('watchlist'), revert);
         break;
       case 'loading':
         this.tile.innerHTML = '';
@@ -120,15 +131,14 @@ class Tile {
         break;
       case 'empty':
         this.tile.style.backgroundColor = 'var(--watchlist)';
-        this.tile.classList = 'shadow';
-        break;
+        this.tile.classList = 'shadow'
     }
 
     if (this.tile.hasAttribute('untw-latest')) {
       UpNext.setText(this.tile)
     }
 
-    if (this.tile.hasAttribute('loading') && type != 'loading') {
+    if (this.tile.hasAttribute('loading') && state != 'loading') {
       this.tile.removeAttribute('loading')
     }
 
@@ -169,49 +179,6 @@ class Tile {
 
 
   /**
-   * Sets the tile action buttons with the configured settings while checking if its primary button or not.
-   * Current available actions: play, history, watchlist.
-   * @param {string} type
-   * @param {boolean} secondary
-   */
-  actionButton(type, secondary) {
-    let message;
-    let actionContent;
-
-    let confirm = () => {
-      this.update(type);
-      toggleAlert(actionAlerts, false);
-    }
-
-    let revert = () => {
-      toggleAlert(actionAlerts, false);
-      this.reset(this.tile)
-    }
-
-    let actionBtns = this.tile.querySelector('.actions');
-    let btn = secondary ? actionBtns.children[1] : actionBtns.children[0];
-
-    if (type == 'play') {
-      message = `Start playing <span>${this.data.title}: ${parseEpisodeTitle(this.data)}</span>?`;
-      actionContent = secondary ? '<i class="icon-play"></i>' : 'play now'
-    } else if (type == 'watchlist') {
-      message = `Add <span>${this.data.title}: ${parseEpisodeTitle(this.data)}</span> to your watchlist?`;
-      actionContent = secondary ? '<i class="icon-watchlist"></i>' : 'add to watchlist'
-    } else if (type == 'history') {
-      message = `Add <span>${this.data.title}: ${parseEpisodeTitle(this.data)}</span> to your history?`;
-      actionContent = secondary ? '<i class="icon-history"></i>' : 'add to history'
-    }
-
-    btn.innerHTML = actionContent;
-    btn.style.backgroundColor = `var(--${type == 'play' ? 'red' : type})`;
-    btn.onclick = () => {
-      setAlertbox(actionAlerts, 'Info', message, {text: 'OK', cb: confirm}, {text: 'revert action', cb: revert});
-      toggleAlert(actionAlerts, true)
-    }
-  }
-
-
-  /**
    * Updates tile based on the interacted action.
    * @param {string} type
    */
@@ -242,6 +209,9 @@ class Tile {
           })
         })
       })
+    } else {
+      // for now till other apis are available
+      this.next()
     }
   }
 }

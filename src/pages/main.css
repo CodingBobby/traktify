@@ -41,6 +41,7 @@
   --red2: #AF101B;
   --accent: var(--red);
   --accent2: var(--red2);
+  --play: var(--red);
   --history: #BD57E8;
   --watchlist: #3796D5;
   --shadow: 0 0 34px 3px #0000004d;
