@@ -120,7 +120,7 @@ class Tile {
           this.reset()
         };
 
-        setActionButton(this.tile, 'play', this.data, false, () => confirm('play'), revert);
+        setActionButton(this.tile, 'history', this.data, false, () => confirm('history'), revert);
         setActionButton(this.tile, 'watchlist', this.data, true, () => confirm('watchlist'), revert);
         break;
       case 'loading':
