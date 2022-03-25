@@ -23,7 +23,7 @@
   },
   "homepage": "https://codingbobby.xyz/traktify",
   "devDependencies": {
-    "electron": "^4.2.8"
+    "electron": "^13.6.6"
   },
   "dependencies": {
     "background": "^0.3.3",
